@@ -22,6 +22,17 @@
 #include <SdkTrays.h>
 #include <SdkCameraMan.h>
 
+#include <btBulletCollisionCommon.h>
+#include <btBulletDynamicsCommon.h>
+
+#include <BulletSoftBody\btSoftRigidDynamicsWorld.h>
+#include <BulletSoftBody\btDefaultSoftBodySolver.h>
+#include <BulletSoftBody\btSoftBodyHelpers.h>
+#include <BulletSoftBody\btSoftBodyRigidBodyCollisionConfiguration.h>
+
+#include <CEGUI.h>
+#include <RendererModules\Ogre\CEGUIOgreRenderer.h>
+
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
