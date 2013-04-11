@@ -77,6 +77,16 @@ protected:
     OIS::InputManager* mInputManager;
     OIS::Mouse*    mMouse;
     OIS::Keyboard* mKeyboard;
+
+	//Bullet physics
+	btSoftRigidDynamicsWorld *mWorld;
+	btDispatcher *mDispatcher;
+	btCollisionConfiguration *mCollisionConfig;
+	btBroadphaseInterface *mBroadphase;
+	btSequentialImpulseConstraintSolver *mConstraintSolver;
+	btSoftBodySolver *mSoftBodySolver;
+
+
 };
 
 #endif // #ifndef __CartoonHairSimulation_h_

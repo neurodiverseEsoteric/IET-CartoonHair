@@ -43,6 +43,12 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mMouse(0),
     mKeyboard(0)
 {
+	mWorld = NULL;
+	mSoftBodySolver = NULL;
+	mConstraintSolver = NULL;
+	mBroadphase = NULL;
+	mDispatcher = NULL;
+	mCollisionConfig = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -54,7 +60,21 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
     //Remove ourself as a Window listener
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
     windowClosed(mWindow);
-    delete mRoot;
+
+	delete mRoot;
+
+	//clean up physics
+	if(mWorld)
+	{
+		delete mWorld;
+		delete mSoftBodySolver;
+		delete mConstraintSolver;
+		delete mBroadphase;
+		delete mDispatcher;
+		delete mCollisionConfig;
+	}
+
+	//TO DO: add any clean up you need here
 }
 
 //-------------------------------------------------------------------------------------
@@ -251,6 +271,14 @@ bool CartoonHairSimulation::setup(void)
 
 	createFrameListener();
 
+	//setup physics
+	mCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
+	mDispatcher = new btCollisionDispatcher(mCollisionConfig);
+	mBroadphase = new btDbvtBroadphase();
+	mConstraintSolver = new btSequentialImpulseConstraintSolver();
+	mSoftBodySolver = new btDefaultSoftBodySolver();
+	mWorld = new btSoftRigidDynamicsWorld(mDispatcher,mBroadphase,mConstraintSolver,mCollisionConfig,mSoftBodySolver);
+
     return true;
 };
 //-------------------------------------------------------------------------------------
@@ -297,6 +325,14 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
             mDetailsPanel->setParamValue(7, Ogre::StringConverter::toString(mCamera->getDerivedOrientation().z));
         }
     }
+
+	
+	float timestep = evt.timeSinceLastFrame;
+	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
+	//if odd physics problems arise - consider adding paramters for maxSubstep and fixedTimeStep
+	mWorld->stepSimulation(timestep);
+
+	//TO DO: add any methods you would like to be called
 
     return true;
 }
