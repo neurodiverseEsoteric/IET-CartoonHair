@@ -247,6 +247,14 @@ void CartoonHairSimulation::go(void)
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::setup(void)
 {
+	//setup physics
+	mCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
+	mDispatcher = new btCollisionDispatcher(mCollisionConfig);
+	mBroadphase = new btDbvtBroadphase();
+	mConstraintSolver = new btSequentialImpulseConstraintSolver();
+	mSoftBodySolver = new btDefaultSoftBodySolver();
+	mWorld = new btSoftRigidDynamicsWorld(mDispatcher,mBroadphase,mConstraintSolver,mCollisionConfig,mSoftBodySolver);
+
     mRoot = new Ogre::Root(mPluginsCfg);
 
     setupResources();
@@ -271,23 +279,15 @@ bool CartoonHairSimulation::setup(void)
 
 	createFrameListener();
 
-	//setup physics
-	mCollisionConfig = new btSoftBodyRigidBodyCollisionConfiguration();
-	mDispatcher = new btCollisionDispatcher(mCollisionConfig);
-	mBroadphase = new btDbvtBroadphase();
-	mConstraintSolver = new btSequentialImpulseConstraintSolver();
-	mSoftBodySolver = new btDefaultSoftBodySolver();
-	mWorld = new btSoftRigidDynamicsWorld(mDispatcher,mBroadphase,mConstraintSolver,mCollisionConfig,mSoftBodySolver);
-
     return true;
 };
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
-	Ogre::Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
+	/*Ogre::Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	headNode->attachObject(ogreHead);
+	headNode->attachObject(ogreHead);*/
 
 	// Set ambient light
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
@@ -295,6 +295,30 @@ void CartoonHairSimulation::createScene(void)
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(20,80,50);
+
+	//http://www.youtube.com/watch?v=d7_lJJ_j2NE
+	float s=4, h=20;
+	body = btSoftBodyHelpers::CreatePatch(mWorld->getWorldInfo(),
+		btVector3(-s,h,-s),btVector3(s,h,-s),btVector3(-s,h,s),btVector3(s,h,s),
+		50,50,4+8,true);
+	body->m_cfg.viterations = 10;
+	body->m_cfg.piterations = 10;
+	mWorld->addSoftBody(body);
+
+	plane = mSceneMgr->createManualObject("plane");
+	plane->setDynamic(true);
+	plane->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+	for(int i = 0 ; i < body->m_faces.size() ; i++)
+	{
+		for(int j = 0 ; j < 3 ; j++)
+		{
+			plane->position(body->m_faces[i].m_n[j]->m_x.x(),
+				body->m_faces[i].m_n[j]->m_x.y(),
+				body->m_faces[i].m_n[j]->m_x.z());
+		}
+	}
+	plane->end();
+	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(plane);
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -331,6 +355,18 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding paramters for maxSubstep and fixedTimeStep
 	mWorld->stepSimulation(timestep);
+
+	plane->beginUpdate(0);
+	for(int i = 0 ; i < body->m_faces.size() ; i++)
+	{
+		for(int j = 0 ; j < 3 ; j++)
+		{
+			plane->position(body->m_faces[i].m_n[j]->m_x.x(),
+				body->m_faces[i].m_n[j]->m_x.y(),
+				body->m_faces[i].m_n[j]->m_x.z());
+		}
+	}
+	plane->end();
 
 	//TO DO: add any methods you would like to be called
 

@@ -86,6 +86,9 @@ protected:
 	btSequentialImpulseConstraintSolver *mConstraintSolver;
 	btSoftBodySolver *mSoftBodySolver;
 
+	btSoftBody *body;
+	Ogre::ManualObject *plane;
+
 
 };
 
