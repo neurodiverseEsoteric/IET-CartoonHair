@@ -86,9 +86,8 @@ protected:
 	btSequentialImpulseConstraintSolver *mConstraintSolver;
 	btSoftBodySolver *mSoftBodySolver;
 
-	btSoftBody *body;
-	Ogre::ManualObject *plane;
-
+	//btSoftBody *body;
+	//Ogre::ManualObject *plane;
 };
 
 #endif // #ifndef __CartoonHairSimulation_h_

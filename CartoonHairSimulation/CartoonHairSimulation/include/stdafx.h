@@ -30,8 +30,13 @@
 #include <BulletSoftBody\btSoftBodyHelpers.h>
 #include <BulletSoftBody\btSoftBodyRigidBodyCollisionConfiguration.h>
 
-#include <CEGUI.h>
-#include <RendererModules\Ogre\CEGUIOgreRenderer.h>
+//#include <CEGUI.h>
+//#include <RendererModules\Ogre\CEGUIOgreRenderer.h>
+
+//https://github.com/atduskgreg/pcl-marching-squares-example/blob/master/marching_cubes.cpp
+
+//#include <pcl/point_types.h>
+//#include <pcl/surface/marching_cubes_rbf.h>
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN

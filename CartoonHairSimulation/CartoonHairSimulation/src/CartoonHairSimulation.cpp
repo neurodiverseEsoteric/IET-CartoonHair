@@ -284,10 +284,10 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
-	/*Ogre::Entity* ogreHead = mSceneMgr->createEntity("Head", "ogrehead.mesh");
+	Ogre::Entity* ogreHead = mSceneMgr->createEntity("Head", "headbust.mesh");
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	headNode->attachObject(ogreHead);*/
+	headNode->attachObject(ogreHead);
 
 	// Set ambient light
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
@@ -297,7 +297,7 @@ void CartoonHairSimulation::createScene(void)
 	l->setPosition(20,80,50);
 
 	//http://www.youtube.com/watch?v=d7_lJJ_j2NE
-	float s=4, h=20;
+	/*float s=4, h=20;
 	body = btSoftBodyHelpers::CreatePatch(mWorld->getWorldInfo(),
 		btVector3(-s,h,-s),btVector3(s,h,-s),btVector3(-s,h,s),btVector3(s,h,s),
 		50,50,4+8,true);
@@ -318,7 +318,7 @@ void CartoonHairSimulation::createScene(void)
 		}
 	}
 	plane->end();
-	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(plane);
+	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(plane);*/
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -356,7 +356,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//if odd physics problems arise - consider adding paramters for maxSubstep and fixedTimeStep
 	mWorld->stepSimulation(timestep);
 
-	plane->beginUpdate(0);
+	/*plane->beginUpdate(0);
 	for(int i = 0 ; i < body->m_faces.size() ; i++)
 	{
 		for(int j = 0 ; j < 3 ; j++)
@@ -366,7 +366,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 				body->m_faces[i].m_n[j]->m_x.z());
 		}
 	}
-	plane->end();
+	plane->end();*/
 
 	//TO DO: add any methods you would like to be called
 
