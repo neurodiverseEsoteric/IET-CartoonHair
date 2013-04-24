@@ -1,5 +1,6 @@
 bl_info = {
-"name":"Timothy Costigan <costigt@tcd.ie>",
+"name":"Hair Strand Export Addon",
+"author":"Timothy Costigan <costigt@tcd.ie>",
 "version":(0,1),
 "blender":(2,6,6),
 "location":"",
@@ -23,11 +24,45 @@ class HairExporter(bpy.types.Operator,ExportHelper):
         filepath = self.filepath
         filepath = bpy.path.ensure_ext(filepath,self.filename_ext)
         
-        #PERFORM ACTION HERE
+        #PERFORM ACTIONS HERE
         
+        #create XML document
         doc = Document()
         
-        #CREATE DOCUMENT
+        #convert the hair particles to a mesh of edges
+        bpy.ops.object.modifier_convert(modifier="ParticleSystem 1")
+        
+        #break it up into individual strands
+        bpy.ops.mesh.separate(type = 'LOOSE')
+        
+        #create hair node
+        hair = doc.createElement("hair")
+        
+        #iterate through hair strands
+        polylines = bpy.context.selected_objects
+        
+        for line in polylines:
+            #create strand node
+            strand = doc.createElement("strand")
+            
+            #iterate through all the hair vertices
+            for vertex in line.data.vertices:
+                #create particle node
+                particle = doc.createElement("particle")
+                #flip axes to xz-y as per ogre standard
+                particle.setAttribute("x",str(vertex.co.x))
+                particle.setAttribute("y",str(vertex.co.z))
+                particle.setAttribute("z",str(-vertex.co.y))
+                strand.appendChild(particle)
+            
+            #add strand to hair
+            hair.appendChild(strand)
+            
+        #append hair to document
+        doc.appendChild(hair)
+        
+        #clean up hair
+        bpy.ops.object.delete()
         
         file = open(filepath,"w")
         file.write(doc.toprettyxml())
@@ -42,6 +77,18 @@ class HairExporter(bpy.types.Operator,ExportHelper):
             return {'RUNNING_MODAL'}
         elif False:
             return wm.invoke_props_popup(self,event)
-        
+
 def exporter_func(self,context):
-    #self.layout.operator(HairExporter.bl_idname,text = "
+    self.layout.operator(HairExporter.bl_idname,text = "Hair Strand (.xml)")
+    
+def register():
+    bpy.utils.register_module(__name__)
+    bpy.types.INFO_MT_file_export.append(exporter_func)
+    bpy
+
+def unregister():
+    bpy.utils.unregister_module(__name__)
+    bpy.types.INFO_MT_file_export.remove(exporter_func)
+
+if __name__ == "__main__":
+    register()
