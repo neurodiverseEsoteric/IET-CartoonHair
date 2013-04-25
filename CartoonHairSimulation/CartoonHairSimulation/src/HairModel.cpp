@@ -2,16 +2,14 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
-HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftBodyWorldInfo &worldInfo, btSoftRigidDynamicsWorld *world)
+HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world)
 {
 	tinyxml2::XMLDocument doc;
 
 	//load xml document
-	tinyxml2::XMLElement *hair = doc.FirstChildElement();
+	doc.LoadFile(filename);
 
-	//create manual hair object
-	//hairMesh = sceneMgr->createManualObject("hair");
-	//hairMesh->setDynamic(true);
+	tinyxml2::XMLElement *hair = doc.FirstChildElement();
 
 	//get the first strand
 	tinyxml2::XMLElement *strand = hair->FirstChildElement();
@@ -20,7 +18,7 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftB
 	for(strand ; strand ; strand = strand->NextSiblingElement())
 	{
 		//iterate through hair particles - first one is the root and should be fixed in position
-		std::vector<btVector3> particles;
+		btAlignedObjectArray<btVector3> particles;
 		std::vector<float> masses;
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
 
@@ -34,9 +32,12 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftB
 			masses.push_back(1.0f);
 		}
 
-		//now to create the strand softbody
-		btSoftBody *hairStrand = createHairStrand(particles);
+		////now to create the strand softbody
+		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo());
+		world->addSoftBody(hairStrand);
 		m_strandSoftBodies.push_back(hairStrand);
+
+		////clean up
 		particles.clear();
 		masses.clear();
 	}
@@ -48,10 +49,10 @@ HairModel::~HairModel()
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
-btSoftBody *createHairStrand(std::vector<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo *worldInfo)
+btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo)
 {
 	//create softbody
-	btSoftBody *strand = new btSoftBody(worldInfo,particles.size(),&particles[0],&masses[0]);
+	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
 	//fix root
 	strand->setMass(0,0);

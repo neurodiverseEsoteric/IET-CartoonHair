@@ -63,6 +63,8 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 
 	delete mRoot;
 
+	delete m_hairModel;
+
 	//clean up physics
 	if(mWorld)
 	{
@@ -334,6 +336,8 @@ void CartoonHairSimulation::createScene(void)
 
 
 	//headNode->attachObject(hairMesh);
+
+	m_hairModel = new HairModel("../hair/hairtest.xml",mSceneMgr,mWorld);
 
 	//http://www.youtube.com/watch?v=d7_lJJ_j2NE
 	/*float s=4, h=20;
