@@ -32,6 +32,8 @@
 #include <BulletSoftBody\btSoftBodyHelpers.h>
 #include <BulletSoftBody\btSoftBodyRigidBodyCollisionConfiguration.h>
 
+#include <vector>
+
 //https://github.com/atduskgreg/pcl-marching-squares-example/blob/master/marching_cubes.cpp
 
 //#include <pcl/point_types.h>

@@ -118,12 +118,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\CartoonHairSimulation.h" />
+    <ClInclude Include="include\HairModel.h" />
     <ClInclude Include="include\stdafx.h" />
     <ClInclude Include="include\tinyxml2.h" />
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CartoonHairSimulation.cpp" />
+    <ClCompile Include="src\HairModel.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
     </ClCompile>
