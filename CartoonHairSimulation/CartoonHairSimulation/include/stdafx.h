@@ -3,6 +3,8 @@
 // are changed infrequently
 //
 
+#pragma once
+
 #include <OgreCamera.h>
 #include <OgreEntity.h>
 #include <OgreLogManager.h>
@@ -29,9 +31,6 @@
 #include <BulletSoftBody\btDefaultSoftBodySolver.h>
 #include <BulletSoftBody\btSoftBodyHelpers.h>
 #include <BulletSoftBody\btSoftBodyRigidBodyCollisionConfiguration.h>
-
-//#include <CEGUI.h>
-//#include <RendererModules\Ogre\CEGUIOgreRenderer.h>
 
 //https://github.com/atduskgreg/pcl-marching-squares-example/blob/master/marching_cubes.cpp
 

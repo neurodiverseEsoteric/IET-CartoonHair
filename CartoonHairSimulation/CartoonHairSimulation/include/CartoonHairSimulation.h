@@ -88,6 +88,7 @@ protected:
 
 	//btSoftBody *body;
 	//Ogre::ManualObject *plane;
+	Ogre::ManualObject *hairMesh;
 };
 
 #endif // #ifndef __CartoonHairSimulation_h_
