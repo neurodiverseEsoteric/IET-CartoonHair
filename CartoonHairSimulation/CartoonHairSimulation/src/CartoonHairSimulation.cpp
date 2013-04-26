@@ -49,6 +49,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	mBroadphase = NULL;
 	mDispatcher = NULL;
 	mCollisionConfig = NULL;
+	m_hairModel = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -63,7 +64,10 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 
 	delete mRoot;
 
-	delete m_hairModel;
+	if(m_hairModel)
+	{
+		delete m_hairModel;
+	}
 
 	//clean up physics
 	if(mWorld)
@@ -291,13 +295,25 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	headNode->attachObject(head);
 
+	//setup head collision
+	/*btCollisionShape* headShape = new btSphereShape(3.2);
+	btDefaultMotionState* headMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,2,0)));
+	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,headShape,btVector3(0,0,0));
+	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
+
+	mWorld->addRigidBody(headRigidBody);*/
+
+
+	//setup dynamic hair
+	m_hairModel = new HairModel("../hair/hairtest.xml",mSceneMgr,mWorld);
+	headNode->attachObject(m_hairModel->getManualObject());
+
 	// Set ambient light
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(20,80,50);
-
 
 	////load hair
 	//tinyxml2::XMLDocument doc;
@@ -336,8 +352,6 @@ void CartoonHairSimulation::createScene(void)
 
 
 	//headNode->attachObject(hairMesh);
-
-	m_hairModel = new HairModel("../hair/hairtest.xml",mSceneMgr,mWorld);
 
 	//http://www.youtube.com/watch?v=d7_lJJ_j2NE
 	/*float s=4, h=20;
@@ -398,6 +412,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding paramters for maxSubstep and fixedTimeStep
 	mWorld->stepSimulation(timestep);
+	m_hairModel->updateManualObject();
 
 	/*plane->beginUpdate(0);
 	for(int i = 0 ; i < body->m_faces.size() ; i++)

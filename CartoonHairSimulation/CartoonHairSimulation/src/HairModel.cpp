@@ -14,6 +14,10 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 	//get the first strand
 	tinyxml2::XMLElement *strand = hair->FirstChildElement();
 
+	//create manual hair object
+	m_hairMesh = sceneMgr->createManualObject("hair");
+	m_hairMesh->setDynamic(true);
+
 	//iterate through the strands and save the particles
 	for(strand ; strand ; strand = strand->NextSiblingElement())
 	{
@@ -22,15 +26,21 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		std::vector<float> masses;
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
 
+		m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_STRIP);
 		for(particle ; particle ; particle = particle->NextSiblingElement())
 		{
-			particles.push_back(btVector3(
-				particle->FloatAttribute("x"),
-				particle->FloatAttribute("y"),
-				particle->FloatAttribute("z")
-				));
+
+			float x = particle->FloatAttribute("x");
+			float y = particle->FloatAttribute("y");
+			float z = particle->FloatAttribute("z");
+
+			particles.push_back(btVector3(x,y,z));
 			masses.push_back(1.0f);
+
+			m_hairMesh->colour(1.0,0,0);
+			m_hairMesh->position(x,y,z);
 		}
+		m_hairMesh->end();
 
 		////now to create the strand softbody
 		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo());
@@ -46,6 +56,32 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 HairModel::~HairModel()
 {
 
+}
+
+Ogre::ManualObject* HairModel::getManualObject()
+{
+	return m_hairMesh;
+}
+
+void HairModel::updateManualObject()
+{
+	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
+	{
+		btSoftBody* body = m_strandSoftBodies[section];
+
+		m_hairMesh->beginUpdate(section);
+
+		for(int node = 0 ; node < body->m_nodes.size() ; node++)
+		{
+			m_hairMesh->position(
+				body->m_nodes[node].m_x.x(),
+				body->m_nodes[node].m_x.y(),
+				body->m_nodes[node].m_x.z()
+				);
+		}
+
+		m_hairMesh->end();
+	}
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
