@@ -8,8 +8,8 @@ public:
 	Ogre::ManualObject* getManualObject();
 	void updateManualObject();
 private:
-	std::vector<btSoftBody*> m_strandSoftBodies; 
+	void createOrUpdateManualObject(bool update);
+	std::vector<btSoftBody*> m_strandSoftBodies;
 	Ogre::ManualObject *m_hairMesh;
-
 	btSoftBody *createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo);
 };
