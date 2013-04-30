@@ -412,6 +412,7 @@ bool CartoonHairSimulation::setup(void)
 void CartoonHairSimulation::createScene(void)
 {
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "headbust.mesh");
+	//head->setVisible(false);
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	headNode->attachObject(head);

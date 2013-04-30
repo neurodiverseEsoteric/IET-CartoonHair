@@ -24,10 +24,6 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 	//get the first strand
 	tinyxml2::XMLElement *strand = hair->FirstChildElement();
 
-	//create manual hair object
-	//m_hairMesh = sceneMgr->createManualObject("hair");
-	//m_hairMesh->setDynamic(true);
-
 	//iterate through the strands and save the particles
 	for(strand ; strand ; strand = strand->NextSiblingElement())
 	{
@@ -36,7 +32,6 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		std::vector<float> masses;
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
 
-		//m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_STRIP);
 		for(particle ; particle ; particle = particle->NextSiblingElement())
 		{
 
@@ -45,12 +40,8 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 			float z = particle->FloatAttribute("z");
 
 			particles.push_back(btVector3(x,y,z));
-			masses.push_back(1.0f);/*
-
-			m_hairMesh->colour(1.0,0,0);
-			m_hairMesh->position(x,y,z);*/
+			masses.push_back(1.0f);
 		}
-		//m_hairMesh->end();
 
 		////now to create the strand softbody
 		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo());
@@ -61,6 +52,21 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		particles.clear();
 		masses.clear();
 	}
+
+	//create hair shape
+	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,-0.05));
+	m_hairShape.push_back(Ogre::Vector3(0,0,-0.1));
+	m_hairShape.push_back(Ogre::Vector3(0.0866,0,-0.05));
+	m_hairShape.push_back(Ogre::Vector3(0.0866,0,0.05));
+	m_hairShape.push_back(Ogre::Vector3(0,0,0.1));
+	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,0.05));
+
+	//Ogre::Vector3 vert(1,0,0);
+	//for(int step = 0 ; step < shapeRes ; step++)
+	//{
+	//	m_hairShape.push_back(vert);
+	//	vert = Ogre::Quaternion(Ogre::Degree(360.0f/shapeRes),Ogre::Vector3::UNIT_Y
+	//}
 
 	//create manual hair object
 	m_hairMesh = sceneMgr->createManualObject("hair");
@@ -117,52 +123,94 @@ void HairModel::createOrUpdateManualObject(bool update)
 
 		btSoftBody* body = m_strandSoftBodies[section];
 
+		Ogre::Vector3 *shape1 = new Ogre::Vector3[m_hairShape.size()];
+		Ogre::Vector3 *shape2 = new Ogre::Vector3[m_hairShape.size()];
+
+		//determine rotation between direction shape is facing and hair strand
+		Ogre::Vector3 shapeDir(0,-1,0);
+		Ogre::Vector3 hairDir(
+			Ogre::Vector3(body->m_nodes[1].m_x.x(),body->m_nodes[1].m_x.y(),body->m_nodes[1].m_x.z())
+			-Ogre::Vector3(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z())
+			);
+		Ogre::Quaternion rot = shapeDir.getRotationTo(hairDir);
+
+		//create shape 1 out of the loop as we will be normally we will just be swapping shape 1 with shape 2 every loop
+		for(int i = 0 ; i < m_hairShape.size() ; i++)
+		{
+			Ogre::Vector3 vert = rot*m_hairShape[i];
+
+			shape1[i] = Ogre::Vector3(
+			body->m_nodes[0].m_x.x()+vert.x,
+			body->m_nodes[0].m_x.y()+vert.y,
+			body->m_nodes[0].m_x.z()+vert.z
+				);
+		}
+
 		for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
 		{
-			/*m_hairMesh->position(
-				body->m_nodes[node].m_x.x(),
-				body->m_nodes[node].m_x.y(),
-				body->m_nodes[node].m_x.z()
-				);*/
 
-			//create the two hexagons - need to change as I am double creating the hexagons
-			Ogre::Vector3 hex1[6];
-			Ogre::Vector3 hex2[6];
-			for(int i = 0 ; i < 6 ; i++)
+			//need to calculate direction of node+1 to node+2
+			if(node+2<body->m_nodes.size())
 			{
-				hex1[i] = Ogre::Vector3(
-					body->m_nodes[node].m_x.x()+Hexagon[i].x*4,
-					body->m_nodes[node].m_x.y()+Hexagon[i].y*4,
-					body->m_nodes[node].m_x.z()+Hexagon[i].z*4
-					);
-				hex2[i] = Ogre::Vector3(
-					body->m_nodes[node+1].m_x.x()+Hexagon[i].x*4,
-					body->m_nodes[node+1].m_x.y()+Hexagon[i].y*4,
-					body->m_nodes[node+1].m_x.z()+Hexagon[i].z*4
+				hairDir = Ogre::Vector3(body->m_nodes[node+2].m_x.x(),body->m_nodes[node+2].m_x.y(),body->m_nodes[node+2].m_x.z())
+					-Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
+				rot = shapeDir.getRotationTo(hairDir);
+			}
+
+			for(int i = 0 ; i < m_hairShape.size() ; i++)
+			{
+				Ogre::Vector3 vert = rot*m_hairShape[i];
+
+				shape2[i] = Ogre::Vector3(
+					body->m_nodes[node+1].m_x.x()+vert.x,
+					body->m_nodes[node+1].m_x.y()+vert.y,
+					body->m_nodes[node+1].m_x.z()+vert.z
 					);
 			}
 
 			//create triangles
-			for(int i = 0 ; i < 5 ; i++)
+			m_hairMesh->colour(1,0,0);
+
+			int index1;
+			int index2;
+			//need faces between indices 0-1, 1-2, 2-3, 3-4, 4-5, 5-0 if using a hexagon
+			for(int face = 0 ; face < m_hairShape.size() ; face++)
 			{
-				m_hairMesh->colour(1.0,0.0,0.0);
-				//triangle 1
-				//hex1 i
-				m_hairMesh->position(hex1[i].x,hex1[i].y,hex1[i].z);
-				//hex1 i+1
-				m_hairMesh->position(hex1[i+1].x,hex1[i+1].y,hex1[i+1].z);
-				//hex2 i
-				m_hairMesh->position(hex2[i].x,hex2[i].y,hex2[i].z);
+
+				//ensure the faces wrap around
+				if(face!= m_hairShape.size()-1)
+				{
+					index1 = face;
+					index2 = face+1;
+				}
+				else
+				{
+					index1 = face;
+					index2 = 0;
+				}
+
+				//trangle 1
+				m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
+				m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+				m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
 				//triangle 2
-				//hex1 i+1
-				m_hairMesh->position(hex1[i+1].x,hex1[i+1].y,hex1[i+1].z);
-				//hex2 i+1
-				m_hairMesh->position(hex2[i+1].x,hex2[i+1].y,hex2[i+1].z);
-				//hex2
-				m_hairMesh->position(hex2[i].x,hex2[i].y,hex2[i].z);
+				m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+				m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
+				m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
 			}
+
+			//swap the shapes to avoid re-calculating shape 2
+			delete [] shape1;
+			shape1 = shape2;
+			shape2 = new Ogre::Vector3[m_hairShape.size()];
 		}
+
+		//clean up
+		delete[] shape1;
+		delete[] shape2;
 
 		m_hairMesh->end();
 	}
+
+
 }
