@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+#define SHIFT_X 0.2f
+
 class HairModel
 {
 public:
@@ -8,6 +10,7 @@ public:
 	Ogre::ManualObject* getManualObject();
 	void updateManualObject();
 private:
+	float determineScale(float x);
 	void createOrUpdateManualObject(bool update);
 	std::vector<btSoftBody*> m_strandSoftBodies;
 	std::vector<Ogre::Vector3> m_hairShape;

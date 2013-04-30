@@ -134,10 +134,13 @@ void HairModel::createOrUpdateManualObject(bool update)
 			);
 		Ogre::Quaternion rot = shapeDir.getRotationTo(hairDir);
 
+		float scale = determineScale(0);
+
 		//create shape 1 out of the loop as we will be normally we will just be swapping shape 1 with shape 2 every loop
 		for(int i = 0 ; i < m_hairShape.size() ; i++)
 		{
 			Ogre::Vector3 vert = rot*m_hairShape[i];
+			vert = vert*scale;
 
 			shape1[i] = Ogre::Vector3(
 			body->m_nodes[0].m_x.x()+vert.x,
@@ -157,9 +160,13 @@ void HairModel::createOrUpdateManualObject(bool update)
 				rot = shapeDir.getRotationTo(hairDir);
 			}
 
+			float pos = (float)(node+1)/(body->m_nodes.size());
+			scale = determineScale(pos);
+
 			for(int i = 0 ; i < m_hairShape.size() ; i++)
 			{
 				Ogre::Vector3 vert = rot*m_hairShape[i];
+				vert = vert*scale;
 
 				shape2[i] = Ogre::Vector3(
 					body->m_nodes[node+1].m_x.x()+vert.x,
@@ -197,6 +204,20 @@ void HairModel::createOrUpdateManualObject(bool update)
 				m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
 				m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
 				m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
+
+				//seal the top or bottom - triangle 3
+				if(node==0)
+				{
+					m_hairMesh->position(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z());
+					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
+				}
+				else if(node==body->m_nodes.size()-2)
+				{
+					m_hairMesh->position(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
+					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
+					m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
+				}
 			}
 
 			//swap the shapes to avoid re-calculating shape 2
@@ -211,6 +232,19 @@ void HairModel::createOrUpdateManualObject(bool update)
 
 		m_hairMesh->end();
 	}
+}
 
+float HairModel::determineScale(float x)
+{
+	//this uses the technique from A Stylized Cartoon Hair Renderer (a64-shin.pdf)
+	//return Ogre::Math::Sin(((x+SHIFT_X)*Ogre::Math::PI)/(1+SHIFT_X));
 
+	//http://www.mathopenref.com/quadraticexplorer.html
+
+	//float func = -1.4*x*x + 0.2*x + 1.1;
+	//float func = -4.6*x*x + 2.6*x + 1.1;
+	//float func = -5.8*x*x + 3*x + 2.7;
+	float func = -13.9*x*x+4.9*x+6.4;
+
+	return Ogre::Math::Abs(func);
 }
