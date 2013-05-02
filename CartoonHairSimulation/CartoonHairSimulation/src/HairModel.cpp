@@ -95,6 +95,9 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
+	//assuming each strand is representing 100 strands or 1 gram
+	strand->setTotalMass(0.001);
+
 	//fix root
 	strand->setMass(0,0);
 
@@ -196,28 +199,40 @@ void HairModel::createOrUpdateManualObject(bool update)
 					index2 = 0;
 				}
 
-				//trangle 1
-				m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
-				m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-				m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
-				//triangle 2
-				m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-				m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
-				m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
+				//if we are not on the last node
+				if(node!=body->m_nodes.size()-2)
+				{
+					//trangle 1
+					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
+					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
+					//triangle 2
+					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+					m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
+					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
+				}
+				//if we are on the last node - taper to a point
+				else
+				{
+					//triangle 1
+					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
+					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
+					m_hairMesh->position(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
+				}
 
-				//seal the top or bottom - triangle 3
+				//seal the top - triangle 3
 				if(node==0)
 				{
 					m_hairMesh->position(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z());
 					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
 					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
 				}
-				else if(node==body->m_nodes.size()-2)
+				/*else if(node==body->m_nodes.size()-2)
 				{
 					m_hairMesh->position(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
 					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
 					m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
-				}
+				}*/
 			}
 
 			//swap the shapes to avoid re-calculating shape 2
@@ -246,5 +261,5 @@ float HairModel::determineScale(float x)
 	//float func = -5.8*x*x + 3*x + 2.7;
 	float func = -13.9*x*x+4.9*x+6.4;
 
-	return Ogre::Math::Abs(func);
+	return Ogre::Math::Abs(func)*0.04f;
 }

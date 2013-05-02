@@ -26,6 +26,7 @@
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+#include <BulletCollision\CollisionShapes\btShapeHull.h>
 
 #include <BulletSoftBody\btSoftRigidDynamicsWorld.h>
 #include <BulletSoftBody\btDefaultSoftBodySolver.h>

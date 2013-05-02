@@ -243,12 +243,14 @@ void CartoonHairSimulation::createCamera(void)
     mCamera = mSceneMgr->createCamera("PlayerCam");
 
     // Position it at 500 in Z direction
-    mCamera->setPosition(Ogre::Vector3(0,0,80));
+    mCamera->setPosition(Ogre::Vector3(0,0,2));
     // Look back along -Z
     mCamera->lookAt(Ogre::Vector3(0,0,-300));
-    mCamera->setNearClipDistance(5);
+    mCamera->setNearClipDistance(0.1);
+	mCamera->setFarClipDistance(1000);
 
     mCameraMan = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
+	mCameraMan->setTopSpeed(4.0f);
 }
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createFrameListener(void)
@@ -401,6 +403,11 @@ bool CartoonHairSimulation::setup(void)
     // Load resources
     loadResources();
 
+	//setup debug drawer
+	/*m_debugDrawer = new OgreDebugDrawer(mSceneMgr);
+	m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+	mWorld->setDebugDrawer(m_debugDrawer);*/
+
 	// Create the scene
     createScene();
 
@@ -411,7 +418,7 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
-	Ogre::Entity* head = mSceneMgr->createEntity("Head", "headbust.mesh");
+	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
 	//head->setVisible(false);
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
@@ -431,14 +438,42 @@ void CartoonHairSimulation::createScene(void)
 		Ogre::Quaternion::IDENTITY,
 		Ogre::Vector3::UNIT_SCALE);
 
+	/*Ogre::ManualObject *headPoints = new Ogre::ManualObject("headpoints");
+	headPoints->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_POINT_LIST);
+
+	for(int i = 0 ; i < vertexCount ; i++)
+	{
+		headPoints->position(vertices[i]);
+	}
+
+	headPoints->end();
+
+	headNode->attachObject(headPoints);*/
+
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
-	btConvexHullShape* headHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
+	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
+	/*btShapeHull* shapeHull = new btShapeHull(complexHull);
+	shapeHull->buildHull(complexHull->getMargin());
+	btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));*/
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
-		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
-	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,headHull,btVector3(0,0,0));
+		btTransform(btQuaternion(0,0,0,1),btVector3(0,0.0,0)));
+	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));
 	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
 	mWorld->addRigidBody(headRigidBody);
+
+	/*Ogre::ManualObject *headPoints = new Ogre::ManualObject("headpoints");
+	headPoints->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_POINT_LIST);
+
+	for(int i = 0 ; i < headHull->getNumPoints() ; i++)
+	{
+		btVector3 * vert = headHull->getUnscaledPoints();
+		headPoints->position(vert[i].x(),vert[i].y(),vert[i].z());
+	}
+
+	headPoints->end();
+
+	headNode->attachObject(headPoints);*/
 
 	//clean up
 	delete[] vertices;
@@ -563,6 +598,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	mWorld->stepSimulation(timestep);
 	m_hairModel->updateManualObject();
+	//mWorld->debugDrawWorld();
 
 	/*plane->beginUpdate(0);
 	for(int i = 0 ; i < body->m_faces.size() ; i++)
