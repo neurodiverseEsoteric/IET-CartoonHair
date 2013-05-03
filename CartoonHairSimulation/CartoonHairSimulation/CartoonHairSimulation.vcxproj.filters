@@ -30,9 +30,6 @@
     <ClInclude Include="include\HairModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\OgreBulletUtils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="include\DebugDrawer.h">
       <Filter>Header Files</Filter>
     </ClInclude>

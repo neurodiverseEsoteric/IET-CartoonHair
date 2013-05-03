@@ -403,11 +403,6 @@ bool CartoonHairSimulation::setup(void)
     // Load resources
     loadResources();
 
-	//setup debug drawer
-	/*m_debugDrawer = new OgreDebugDrawer(mSceneMgr);
-	m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
-	mWorld->setDebugDrawer(m_debugDrawer);*/
-
 	// Create the scene
     createScene();
 
@@ -423,6 +418,13 @@ void CartoonHairSimulation::createScene(void)
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	headNode->attachObject(head);
+
+	//setup debug drawer
+	m_debugDrawer = new DebugDrawer(mSceneMgr);
+	//m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
+	mWorld->setDebugDrawer(m_debugDrawer);
+
+	headNode->attachObject(m_debugDrawer->getLinesManualObject());
 
 	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
 	size_t vertexCount, indexCount;
@@ -452,15 +454,20 @@ void CartoonHairSimulation::createScene(void)
 
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
 	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-	/*btShapeHull* shapeHull = new btShapeHull(complexHull);
+	btShapeHull* shapeHull = new btShapeHull(complexHull);
 	shapeHull->buildHull(complexHull->getMargin());
-	btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));*/
+	btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
+
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
 		btTransform(btQuaternion(0,0,0,1),btVector3(0,0.0,0)));
 	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));
 	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
 	mWorld->addRigidBody(headRigidBody);
+
+	//clean up
+	/*delete complexHull;
+	delete shapeHull;*/
 
 	/*Ogre::ManualObject *headPoints = new Ogre::ManualObject("headpoints");
 	headPoints->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_POINT_LIST);
@@ -598,7 +605,10 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	mWorld->stepSimulation(timestep);
 	m_hairModel->updateManualObject();
-	//mWorld->debugDrawWorld();
+
+	m_debugDrawer->begin();
+	mWorld->debugDrawWorld();
+	m_debugDrawer->end();
 
 	/*plane->beginUpdate(0);
 	for(int i = 0 ; i < body->m_faces.size() ; i++)

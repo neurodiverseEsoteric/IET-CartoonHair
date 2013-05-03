@@ -2,15 +2,15 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
-Ogre::Vector3 Hexagon[6] = 
-{
-	Ogre::Vector3(-0.0866,0,-0.05),
-	Ogre::Vector3(0,0,-0.1),
-	Ogre::Vector3(0.0866,0,-0.05),
-	Ogre::Vector3(0.0866,0,0.05),
-	Ogre::Vector3(0,0,0.1),
-	Ogre::Vector3(-0.0866,0,0.05)
-};
+//Ogre::Vector3 Hexagon[6] = 
+//{
+//	Ogre::Vector3(-0.0866,0,-0.05),
+//	Ogre::Vector3(0,0,-0.1),
+//	Ogre::Vector3(0.0866,0,-0.05),
+//	Ogre::Vector3(0.0866,0,0.05),
+//	Ogre::Vector3(0,0,0.1),
+//	Ogre::Vector3(-0.0866,0,0.05)
+//};
 
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world)
 {
@@ -107,7 +107,6 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 		strand->appendLink(node-1,node);
 	}
 
-	//return strand
 	return strand;
 }
 

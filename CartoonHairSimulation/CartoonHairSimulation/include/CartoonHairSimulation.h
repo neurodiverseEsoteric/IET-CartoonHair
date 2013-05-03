@@ -88,7 +88,7 @@ protected:
 	btSequentialImpulseConstraintSolver *mConstraintSolver;
 	btSoftBodySolver *mSoftBodySolver;
 
-	//OgreDebugDrawer *m_debugDrawer;
+	DebugDrawer *m_debugDrawer;
 
 	HairModel *m_hairModel;
 
