@@ -413,6 +413,14 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
+
+	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
+	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
+
+	float scale = 40;
+	mWorld->setGravity(mWorld->getGravity()*scale);
+
+	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
 	//head->setVisible(false);
 
@@ -454,13 +462,17 @@ void CartoonHairSimulation::createScene(void)
 
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
 	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-	btShapeHull* shapeHull = new btShapeHull(complexHull);
-	shapeHull->buildHull(complexHull->getMargin());
-	btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
 
+	//btShapeHull* shapeHull = new btShapeHull(complexHull);
+	//shapeHull->buildHull(complexHull->getMargin());
+	//btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
+
+	//btSphereShape *sphereShape = new btSphereShape(0.26f);
+	
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
-		btTransform(btQuaternion(0,0,0,1),btVector3(0,0.0,0)));
+		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
 	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));
+
 	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
 	mWorld->addRigidBody(headRigidBody);

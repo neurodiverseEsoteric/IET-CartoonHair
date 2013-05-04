@@ -260,5 +260,5 @@ float HairModel::determineScale(float x)
 	//float func = -5.8*x*x + 3*x + 2.7;
 	float func = -13.9*x*x+4.9*x+6.4;
 
-	return Ogre::Math::Abs(func)*0.04f;
+	return Ogre::Math::Abs(func);
 }
