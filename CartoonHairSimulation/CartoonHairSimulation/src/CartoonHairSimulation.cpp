@@ -414,12 +414,6 @@ bool CartoonHairSimulation::setup(void)
 void CartoonHairSimulation::createScene(void)
 {
 
-	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
-	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
-
-	float scale = 40;
-	mWorld->setGravity(mWorld->getGravity()*scale);
-
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
 	//head->setVisible(false);
@@ -510,6 +504,11 @@ void CartoonHairSimulation::createScene(void)
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld);
 	headNode->attachObject(m_hairModel->getManualObject());
+
+	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
+	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
+
+	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
 
 	// Set ambient light
 	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));

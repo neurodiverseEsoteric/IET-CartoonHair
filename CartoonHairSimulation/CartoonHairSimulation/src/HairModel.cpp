@@ -21,6 +21,9 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 
 	tinyxml2::XMLElement *hair = doc.FirstChildElement();
 
+	//get simulation scale
+	m_simulationScale = hair->FloatAttribute("scale");
+
 	//get the first strand
 	tinyxml2::XMLElement *strand = hair->FirstChildElement();
 
@@ -87,6 +90,11 @@ Ogre::ManualObject* HairModel::getManualObject()
 void HairModel::updateManualObject()
 {
 	createOrUpdateManualObject(true);
+}
+
+float HairModel::getSimulationScale()
+{
+	return m_simulationScale;
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
