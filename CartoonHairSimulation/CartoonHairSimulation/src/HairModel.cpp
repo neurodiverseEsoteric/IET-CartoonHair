@@ -46,10 +46,15 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 			masses.push_back(1.0f);
 		}
 
-		////now to create the strand softbody
+		//now to create the strand softbody and its ghost nodes
 		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo());
-		world->addSoftBody(hairStrand);
+		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand);
+
+		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
+		//world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
+
 		m_strandSoftBodies.push_back(hairStrand);
+		m_ghostStrandSoftBodies.push_back(ghostStrand);
 
 		////clean up
 		particles.clear();
@@ -103,19 +108,33 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
-	//assuming each strand is representing 100 strands or 1 gram
-	strand->setTotalMass(0.001);
-
-	//fix root
-	strand->setMass(0,0);
-
 	//create links
 	for(int node = 1 ; node < particles.size() ; node++)
 	{
 		strand->appendLink(node-1,node);
 	}
 
+	//create bending springs
+	//TO DO
+
+	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
+
+	//assuming each strand is representing 100 strands or 1 gram
+	strand->setTotalMass(0.001);
+
+	//fix root
+	strand->setMass(0,0);
+
 	return strand;
+}
+
+btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand)
+{
+	btSoftBody *ghostStrand = new btSoftBody(strand->getWorldInfo());
+
+	//create ghost nodes
+
+	return ghostStrand;
 }
 
 void HairModel::createOrUpdateManualObject(bool update)

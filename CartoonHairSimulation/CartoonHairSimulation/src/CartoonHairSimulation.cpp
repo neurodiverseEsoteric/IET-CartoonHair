@@ -469,7 +469,7 @@ void CartoonHairSimulation::createScene(void)
 
 	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
-	mWorld->addRigidBody(headRigidBody);
+	mWorld->addRigidBody(headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
 
 	//clean up
 	/*delete complexHull;
