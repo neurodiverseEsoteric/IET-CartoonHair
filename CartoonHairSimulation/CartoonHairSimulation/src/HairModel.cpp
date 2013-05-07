@@ -51,7 +51,7 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand);
 
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
-		//world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
+		world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
 
 		m_strandSoftBodies.push_back(hairStrand);
 		m_ghostStrandSoftBodies.push_back(ghostStrand);
@@ -115,7 +115,10 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 	}
 
 	//create bending springs
-	//TO DO
+	for(int node = 0 ; node < strand->m_nodes.size()-2 ; node++)
+	{
+		strand->appendLink(node,node+2);
+	}
 
 	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
 
@@ -128,11 +131,97 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 	return strand;
 }
 
+//http://www.fannieliu.com/hairsim/hairsim.html
 btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand)
 {
-	btSoftBody *ghostStrand = new btSoftBody(strand->getWorldInfo());
+	//used in the triangle calculation below - no point doing it more than once
+	float tan60 = Ogre::Math::Tan(Ogre::Math::PI/3.0f);
+	float halfPI = Ogre::Math::HALF_PI;
 
-	//create ghost nodes
+	btAlignedObjectArray<btVector3> particles;
+	std::vector<float> masses;
+	//create ghost nodes - perpendicular to segment
+	for(int node = 0 ; node < strand->m_nodes.size()-1 ; node++)
+	{
+		btVector3 segment = strand->m_nodes[node+1].m_x - strand->m_nodes[node].m_x;
+
+		//find the length of the segment
+		float length = segment.length();
+
+		//get the direction vector
+		btVector3 direction = segment.normalize();
+
+		//find the mid point
+		btVector3 midPoint = strand->m_nodes[node].m_x + direction*(length/2.0f);
+
+		//find the required distance of the ghost particle to the mid-point - it should form the tip of an equilateral triangle
+		float dist = tan60*(length/2.0f);
+
+		//find rotation to direction
+		Ogre::Vector3 xAxis(1,0,0);
+		Ogre::Vector3 normal(0,1,0);
+		Ogre::Vector3 dir(direction.x(),direction.y(),direction.z());
+		Ogre::Quaternion rot = xAxis.getRotationTo(dir);
+		normal = rot*normal;
+
+		btVector3 norm;
+		norm.setX(normal.x);
+		norm.setY(normal.y);
+		norm.setZ(normal.z);
+
+		//create arbitrary normal
+		//Find the smallest axis - so that we are not just rotating on the spot
+		//btVector3 axis(0,0,0);
+		//switch(direction.minAxis())
+		//{
+		////x
+		//case 0:
+		//	axis.setX(1);
+		//	break;
+		////y
+		//case 1:
+		//	axis.setY(1);
+		//	break;
+		////z
+		//case 3:
+		//	axis.setZ(1);
+		//	break;
+		//}
+
+		//and rotate the direction vector 90 degrees on that axis
+		/*direction = direction.rotate(axis,halfPI);*/
+
+		particles.push_back(midPoint+(norm*dist));
+		masses.push_back(1);
+	}
+
+	btSoftBody *ghostStrand = new btSoftBody(strand->getWorldInfo(),particles.size(),&particles[0],&masses[0]);
+
+	//create bending springs
+	for(int node = 1 ; node < ghostStrand->m_nodes.size() ; node++)
+	{
+		ghostStrand->appendLink(node-1,node);
+	}
+
+	//create edge springs
+	for(int node = 0 ; node < ghostStrand->m_nodes.size() ; node++)
+	{
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node]));
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+1]));
+	}
+
+	//create torsion springs
+	for(int node = 0 ; node <ghostStrand->m_nodes.size()-1 ; node++)
+	{
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+2]));
+		ghostStrand->appendLink(&(strand->m_nodes[node]),&(ghostStrand->m_nodes[node+1]));
+	}
+
+	//clean up
+	particles.clear();
+	masses.clear();
+
+	ghostStrand->setTotalMass(strand->getTotalMass());
 
 	return ghostStrand;
 }

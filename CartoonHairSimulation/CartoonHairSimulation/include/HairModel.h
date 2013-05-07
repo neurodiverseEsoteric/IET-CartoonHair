@@ -7,6 +7,7 @@
 #define HAIR_GROUP 0x2
 #define GHOST_GROUP 0x4
 
+//http://www.fannieliu.com/hairsim/hairsim.html
 class HairModel
 {
 public:
