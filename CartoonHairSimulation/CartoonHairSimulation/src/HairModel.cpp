@@ -12,7 +12,8 @@
 //	Ogre::Vector3(-0.0866,0,0.05)
 //};
 
-HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world)
+HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	tinyxml2::XMLDocument doc;
 
@@ -47,8 +48,8 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		}
 
 		//now to create the strand softbody and its ghost nodes
-		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo());
-		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand);
+		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
+		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
 
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
 		world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
@@ -103,21 +104,22 @@ float HairModel::getSimulationScale()
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
-btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo)
+btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
-	//create links
+	//create edge links
 	for(int node = 1 ; node < particles.size() ; node++)
 	{
-		strand->appendLink(node-1,node);
+		strand->appendLink(node-1,node,edgeMaterial);
 	}
 
 	//create bending springs
 	for(int node = 0 ; node < strand->m_nodes.size()-2 ; node++)
 	{
-		strand->appendLink(node,node+2);
+		strand->appendLink(node,node+2,bendingMaterial);
 	}
 
 	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
@@ -132,7 +134,8 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 }
 
 //http://www.fannieliu.com/hairsim/hairsim.html
-btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand)
+btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	//used in the triangle calculation below - no point doing it more than once
 	float tan60 = Ogre::Math::Tan(Ogre::Math::PI/3.0f);
@@ -200,21 +203,21 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand)
 	//create bending springs
 	for(int node = 1 ; node < ghostStrand->m_nodes.size() ; node++)
 	{
-		ghostStrand->appendLink(node-1,node);
+		ghostStrand->appendLink(node-1,node,bendingMaterial);
 	}
 
 	//create edge springs
 	for(int node = 0 ; node < ghostStrand->m_nodes.size() ; node++)
 	{
-		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node]));
-		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+1]));
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node]),edgeMaterial);
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+1]),edgeMaterial);
 	}
 
 	//create torsion springs
 	for(int node = 0 ; node <ghostStrand->m_nodes.size()-1 ; node++)
 	{
-		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+2]));
-		ghostStrand->appendLink(&(strand->m_nodes[node]),&(ghostStrand->m_nodes[node+1]));
+		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+2]),torsionMaterial);
+		ghostStrand->appendLink(&(strand->m_nodes[node]),&(ghostStrand->m_nodes[node+1]),torsionMaterial);
 	}
 
 	//clean up

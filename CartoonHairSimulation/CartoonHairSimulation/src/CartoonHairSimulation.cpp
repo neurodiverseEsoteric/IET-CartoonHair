@@ -420,14 +420,12 @@ void CartoonHairSimulation::createScene(void)
 
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
-	//head->setVisible(false);
 
 	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	headNode->attachObject(head);
 
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);
-	//m_debugDrawer->setDebugMode(btIDebugDraw::DBG_DrawWireframe);
 	mWorld->setDebugDrawer(m_debugDrawer);
 
 	headNode->attachObject(m_debugDrawer->getLinesManualObject());
@@ -496,22 +494,23 @@ void CartoonHairSimulation::createScene(void)
 	delete[] vertices;
 	delete[] indices;
 
-	//setup head collision
-	/*btCollisionShape* headShape = new btSphereShape(3.2);
-	btDefaultMotionState* headMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,2,0)));
-	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,headShape,btVector3(0,0,0));
-	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
-	mWorld->addRigidBody(headRigidBody);*/
+	//setup spring materials
+	m_edgeMaterial = new btSoftBody::Material();
+	m_bendingMaterial = new btSoftBody::Material();
+	m_torsionMaterial = new btSoftBody::Material();
 
+	m_edgeMaterial->m_kLST = 1;
+	m_bendingMaterial->m_kLST = 0.05;
+	m_torsionMaterial->m_kLST = 0.05;
 
 	//setup dynamic hair
-	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld);
+	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
+		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial);
 	headNode->attachObject(m_hairModel->getManualObject());
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
-
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
 
 	// Set ambient light

@@ -88,6 +88,11 @@ protected:
 	btSequentialImpulseConstraintSolver *mConstraintSolver;
 	btSoftBodySolver *mSoftBodySolver;
 
+	//spring materials
+	btSoftBody::Material *m_edgeMaterial;
+	btSoftBody::Material *m_bendingMaterial;
+	btSoftBody::Material *m_torsionMaterial;
+
 	DebugDrawer *m_debugDrawer;
 
 	HairModel *m_hairModel;

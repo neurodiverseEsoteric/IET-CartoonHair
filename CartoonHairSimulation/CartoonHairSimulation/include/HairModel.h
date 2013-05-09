@@ -11,7 +11,8 @@
 class HairModel
 {
 public:
-	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world);
+	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	~HairModel();
 	Ogre::ManualObject* getManualObject();
 	void updateManualObject();
@@ -24,6 +25,8 @@ private:
 	std::vector<Ogre::Vector3> m_hairShape;
 	float m_simulationScale;
 	Ogre::ManualObject *m_hairMesh;
-	btSoftBody *createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo);
-	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand);
+	btSoftBody *createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
+	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 };
