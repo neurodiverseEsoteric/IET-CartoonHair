@@ -162,7 +162,8 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mShutDown(false),
     mInputManager(0),
     mMouse(0),
-    mKeyboard(0)
+    mKeyboard(0),
+	m_cameraControl(true)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -280,7 +281,6 @@ void CartoonHairSimulation::createFrameListener(void)
 
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mMouse, this);
     mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
-    mTrayMgr->showLogo(OgreBites::TL_BOTTOMRIGHT);
     mTrayMgr->hideCursor();
 
     // create a params panel for displaying sample details
@@ -617,8 +617,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding paramters for maxSubstep and fixedTimeStep
 
-	mWorld->stepSimulation(timestep);
-	m_hairModel->updateManualObject();
+	//mWorld->stepSimulation(timestep);
+	//m_hairModel->updateManualObject();
 
 	m_debugDrawer->begin();
 	mWorld->debugDrawWorld();
@@ -640,7 +640,9 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
     return true;
 }
+
 //-------------------------------------------------------------------------------------
+
 bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 {
     if (mTrayMgr->isDialogVisible()) return true;   // don't process any more keys if dialog is up
@@ -730,35 +732,74 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
     {
         mShutDown = true;
     }
+	else if (arg.key == OIS::KC_P)
+	{
+		if(m_debugDrawer->getLinesManualObject()->isVisible())
+		{
+			m_debugDrawer->getLinesManualObject()->setVisible(false);
+		}
+		else
+		{
+			m_debugDrawer->getLinesManualObject()->setVisible(true);
+		}
+	}
+	else if(arg.key == OIS::KC_M)
+	{
+		if(m_cameraControl)
+		{
+			m_cameraControl = false;
+			mTrayMgr->showCursor();
+		}
+		else
+		{
+			m_cameraControl = true;
+			mTrayMgr->hideCursor();
+		}
+	}
 
-    mCameraMan->injectKeyDown(arg);
+	if(m_cameraControl)
+	{
+		mCameraMan->injectKeyDown(arg);
+	}
     return true;
 }
 
 bool CartoonHairSimulation::keyReleased( const OIS::KeyEvent &arg )
 {
-    mCameraMan->injectKeyUp(arg);
+	if(m_cameraControl)
+	{
+		mCameraMan->injectKeyUp(arg);
+	}
     return true;
 }
 
 bool CartoonHairSimulation::mouseMoved( const OIS::MouseEvent &arg )
 {
-    if (mTrayMgr->injectMouseMove(arg)) return true;
-    mCameraMan->injectMouseMove(arg);
+    mTrayMgr->injectMouseMove(arg);
+	if(m_cameraControl)
+	{
+		mCameraMan->injectMouseMove(arg);
+	}
     return true;
 }
 
 bool CartoonHairSimulation::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
-    if (mTrayMgr->injectMouseDown(arg, id)) return true;
-    mCameraMan->injectMouseDown(arg, id);
+    mTrayMgr->injectMouseDown(arg, id);
+	if(m_cameraControl)
+	{
+		mCameraMan->injectMouseDown(arg, id);
+	}
     return true;
 }
 
 bool CartoonHairSimulation::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
-    if (mTrayMgr->injectMouseUp(arg, id)) return true;
-    mCameraMan->injectMouseUp(arg, id);
+    mTrayMgr->injectMouseUp(arg, id);
+	if(m_cameraControl)
+	{
+		mCameraMan->injectMouseUp(arg, id);
+	}
     return true;
 }
 

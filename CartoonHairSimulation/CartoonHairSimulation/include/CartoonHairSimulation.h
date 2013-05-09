@@ -97,6 +97,8 @@ protected:
 
 	HairModel *m_hairModel;
 
+	bool m_cameraControl;
+
 	//btSoftBody *body;
 	//Ogre::ManualObject *plane;
 	//Ogre::ManualObject *hairMesh;
