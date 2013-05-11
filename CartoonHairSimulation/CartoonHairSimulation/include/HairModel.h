@@ -19,14 +19,18 @@ public:
 	float getSimulationScale();
 private:
 	float determineScale(float x);
+	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
-	std::vector<btSoftBody*> m_strandSoftBodies;
-	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
-	std::vector<Ogre::Vector3> m_hairShape;
-	float m_simulationScale;
-	Ogre::ManualObject *m_hairMesh;
 	btSoftBody *createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
+
+	std::vector<btSoftBody*> m_strandSoftBodies;
+	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
+	std::vector<Ogre::Vector3> m_hairShape;
+	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
+	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
+	float m_simulationScale;
+	Ogre::ManualObject *m_hairMesh;
 };

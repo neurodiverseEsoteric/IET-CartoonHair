@@ -231,138 +231,123 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 void HairModel::createOrUpdateManualObject(bool update)
 {
+
+	//iterate through each section (one for each strand) of the hair mesh
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
+		//variables used to create geometry
+		Ogre::Vector3 shapeDir(0,-1,0);
+		Ogre::Quaternion rot;
+		float scale;
+
 		if(update)
 		{
 			m_hairMesh->beginUpdate(section);
 		}
 		else
 		{
-			m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_STRIP);
+			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 		}
 
 		btSoftBody* body = m_strandSoftBodies[section];
 
-		Ogre::Vector3 *shape1 = new Ogre::Vector3[m_hairShape.size()];
-		Ogre::Vector3 *shape2 = new Ogre::Vector3[m_hairShape.size()];
-
-		//determine rotation between direction shape is facing and hair strand
-		Ogre::Vector3 shapeDir(0,-1,0);
-		Ogre::Vector3 hairDir(
-			Ogre::Vector3(body->m_nodes[1].m_x.x(),body->m_nodes[1].m_x.y(),body->m_nodes[1].m_x.z())
-			-Ogre::Vector3(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z())
-			);
-		Ogre::Quaternion rot = shapeDir.getRotationTo(hairDir);
-
-		float scale = determineScale(0);
-
-		//create shape 1 out of the loop as we will be normally we will just be swapping shape 1 with shape 2 every loop
-		for(int i = 0 ; i < m_hairShape.size() ; i++)
-		{
-			Ogre::Vector3 vert = rot*m_hairShape[i];
-			vert = vert*scale;
-
-			shape1[i] = Ogre::Vector3(
-			body->m_nodes[0].m_x.x()+vert.x,
-			body->m_nodes[0].m_x.y()+vert.y,
-			body->m_nodes[0].m_x.z()+vert.z
-				);
-		}
-
+		//generate geometry
 		for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
 		{
-
-			//need to calculate direction of node+1 to node+2
-			if(node+2<body->m_nodes.size())
-			{
-				hairDir = Ogre::Vector3(body->m_nodes[node+2].m_x.x(),body->m_nodes[node+2].m_x.y(),body->m_nodes[node+2].m_x.z())
-					-Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
-				rot = shapeDir.getRotationTo(hairDir);
-			}
-
-			float pos = (float)(node+1)/(body->m_nodes.size());
+			float pos = (float)(node)/(body->m_nodes.size());
 			scale = determineScale(pos);
 
+			rot = determineRotation(shapeDir,
+				Ogre::Vector3(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z()),
+				Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z())
+				);
+
+			//generate shape
+			//if usual section of hair
 			for(int i = 0 ; i < m_hairShape.size() ; i++)
 			{
 				Ogre::Vector3 vert = rot*m_hairShape[i];
 				vert = vert*scale;
 
-				shape2[i] = Ogre::Vector3(
-					body->m_nodes[node+1].m_x.x()+vert.x,
-					body->m_nodes[node+1].m_x.y()+vert.y,
-					body->m_nodes[node+1].m_x.z()+vert.z
+				vert = Ogre::Vector3(
+					body->m_nodes[node].m_x.x()+vert.x,
+					body->m_nodes[node].m_x.y()+vert.y,
+					body->m_nodes[node].m_x.z()+vert.z
 					);
-			}
 
-			//create triangles
-			m_hairMesh->colour(1,0,0);
-
-			int index1;
-			int index2;
-			//need faces between indices 0-1, 1-2, 2-3, 3-4, 4-5, 5-0 if using a hexagon
-			for(int face = 0 ; face < m_hairShape.size() ; face++)
-			{
-
-				//ensure the faces wrap around
-				if(face!= m_hairShape.size()-1)
+				//update existing geometry
+				if(update)
 				{
-					index1 = face;
-					index2 = face+1;
+					int index = (node*m_hairShape.size())+i;
+					m_strandVertices[section][index] = vert;
 				}
+				//creating new geometry
 				else
 				{
-					index1 = face;
-					index2 = 0;
+					m_strandVertices[section].push_back(vert);
 				}
-
-				//if we are not on the last node
-				if(node!=body->m_nodes.size()-2)
-				{
-					//trangle 1
-					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
-					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
-					//triangle 2
-					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-					m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
-					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
-				}
-				//if we are on the last node - taper to a point
-				else
-				{
-					//triangle 1
-					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
-					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-					m_hairMesh->position(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
-				}
-
-				//seal the top - triangle 3
-				if(node==0)
-				{
-					m_hairMesh->position(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z());
-					m_hairMesh->position(shape1[index2].x,shape1[index2].y,shape1[index2].z);
-					m_hairMesh->position(shape1[index1].x,shape1[index1].y,shape1[index1].z);
-				}
-				/*else if(node==body->m_nodes.size()-2)
-				{
-					m_hairMesh->position(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z());
-					m_hairMesh->position(shape2[index1].x,shape2[index1].y,shape2[index1].z);
-					m_hairMesh->position(shape2[index2].x,shape2[index2].y,shape2[index2].z);
-				}*/
 			}
-
-			//swap the shapes to avoid re-calculating shape 2
-			delete [] shape1;
-			shape1 = shape2;
-			shape2 = new Ogre::Vector3[m_hairShape.size()];
 		}
 
-		//clean up
-		delete[] shape1;
-		delete[] shape2;
+		//in order to cap the top of the strand and taper the end - the last two vertices will be these points
+		Ogre::Vector3 start(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z());
+		Ogre::Vector3 end(body->m_nodes[body->m_nodes.size()-1].m_x.x(),body->m_nodes[body->m_nodes.size()-1].m_x.y(),body->m_nodes[body->m_nodes.size()-1].m_x.z());
 
+		////update existing geometry
+		//if(update)
+		//{
+		//	int index = (body->m_nodes.size()-1)*m_hairShape.size();
+		//	m_strandVertices[section][index] = start;
+		//	m_strandVertices[section][index+1] = end;
+		//}
+		////create new geometry
+		//else
+		//{
+		//	m_strandVertices[section].push_back(start);
+		//	m_strandVertices[section].push_back(end);
+		//}
+		
+		//generate manual object
+
+		//vertices + normals
+		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
+		{
+			m_hairMesh->colour(1.0,0,0);
+			m_hairMesh->position(m_strandVertices[section][vert]);
+			//m_hairMesh->normal(m_strandNormals[section][vert]);
+		}
+
+		//indices
+		if(!update)
+		{
+			//for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
+			//{
+			//	int layer1 = node*m_hairShape.size();
+			//	int layer2 = (node+1)*m_hairShape.size();
+
+			//	for(int i = 0 ; i < m_hairShape.size() ; i++)
+			//	{
+			//		//if we are at the edge
+			//		if(i == m_hairShape.size()-1)
+			//		{
+			//			m_hairMesh->triangle(layer2+i,layer1,layer1+i);
+			//			m_hairMesh->triangle(layer2+i,layer2,layer1);
+			//		}
+			//		else
+			//		{
+			//			m_hairMesh->triangle(layer2+i,layer1+(i+1),layer1+i);
+			//			m_hairMesh->triangle(layer2+i,layer2+(i+1),layer1+(i+1));
+			//		}
+			//	}
+			//}
+
+			//cap top
+
+			//taper end
+		}
+
+		
 		m_hairMesh->end();
 	}
 }
@@ -380,4 +365,10 @@ float HairModel::determineScale(float x)
 	float func = -13.9*x*x+4.9*x+6.4;
 
 	return Ogre::Math::Abs(func);
+}
+
+Ogre::Quaternion HairModel::determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1)
+{
+	Ogre::Vector3 dir = node1 - node0;
+	return up.getRotationTo(dir);
 }
