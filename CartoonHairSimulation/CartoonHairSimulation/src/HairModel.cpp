@@ -231,6 +231,67 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 void HairModel::createOrUpdateManualObject(bool update)
 {
+	//generate indices
+	if(!update)
+	{
+		int numNodes = m_strandSoftBodies[0]->m_nodes.size();
+		int numVerts = m_hairShape.size();
+
+		//for the normal sides of the strand
+		for(int nodes = 0 ; nodes < numNodes-2 ; nodes++)
+		{
+			for(int vert = 0 ; vert < numVerts ; vert++)
+			{
+				/*
+				Here is a rough idea of how the indices are laid out
+				1-2
+				|/|
+				3-4
+				*/
+				int index1 = (nodes*numVerts)+vert;
+				int index2 = index1 + 1;
+				////stop the the index from wrapping around
+				if(index2 == (nodes*numVerts)+numVerts)
+				{
+					index2 = (nodes*numVerts);
+				}
+				int index3 = index1+numVerts;
+				int index4 = index2+numVerts;
+
+				//trangle 1
+				m_strandIndices.push_back(index1);
+				m_strandIndices.push_back(index2);
+				m_strandIndices.push_back(index3);
+				//triangle 2
+				m_strandIndices.push_back(index4);
+				m_strandIndices.push_back(index3);
+				m_strandIndices.push_back(index2);
+			}
+		}
+
+		//for the top
+		int topIndex = (numNodes-1)*m_hairShape.size();
+		for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
+		{
+			int index1 = vert;
+			int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
+			m_strandIndices.push_back(topIndex);
+			m_strandIndices.push_back(index2);
+			m_strandIndices.push_back(index1);
+		}
+		//for the tip
+		int tipIndex = topIndex+1;
+		for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
+		{
+			int offset = (numNodes-2)*m_hairShape.size();
+			int index1 = vert;
+			int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
+			m_strandIndices.push_back(tipIndex);
+			m_strandIndices.push_back(index1+offset);
+			m_strandIndices.push_back(index2+offset);
+		}
+	}
+
 
 	//iterate through each section (one for each strand) of the hair mesh
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
@@ -246,8 +307,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 		else
 		{
-			m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_STRIP);
+			m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
+			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
 		}
 
 		btSoftBody* body = m_strandSoftBodies[section];
@@ -294,59 +356,71 @@ void HairModel::createOrUpdateManualObject(bool update)
 		Ogre::Vector3 start(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z());
 		Ogre::Vector3 end(body->m_nodes[body->m_nodes.size()-1].m_x.x(),body->m_nodes[body->m_nodes.size()-1].m_x.y(),body->m_nodes[body->m_nodes.size()-1].m_x.z());
 
-		////update existing geometry
-		//if(update)
-		//{
-		//	int index = (body->m_nodes.size()-1)*m_hairShape.size();
-		//	m_strandVertices[section][index] = start;
-		//	m_strandVertices[section][index+1] = end;
-		//}
-		////create new geometry
-		//else
-		//{
-		//	m_strandVertices[section].push_back(start);
-		//	m_strandVertices[section].push_back(end);
-		//}
+		if(update)
+		{
+			int index = (body->m_nodes.size()-1)*m_hairShape.size();
+			m_strandVertices[section][index] = start;
+			m_strandVertices[section][index+1] = end;
+		}
+		else
+		{
+			m_strandVertices[section].push_back(start);
+			m_strandVertices[section].push_back(end);
+		}
+
+		//reset normals
+		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
+		{
+			if(update)
+			{
+				m_strandNormals[section][vert] = Ogre::Vector3(0,0,0);
+			}
+			else
+			{
+				m_strandNormals[section].push_back(Ogre::Vector3(0,0,0));
+			}
+		}
+
+		//generate normals - http://assimp.svn.sourceforge.net/viewvc/assimp/trunk/code/GenVertexNormalsProcess.cpp?revision=661&view=markup
+		for(int face = 0 ; face < m_strandIndices.size() ; face+=3)
+		{
+			int v1Index = m_strandIndices[face];
+			int v2Index = m_strandIndices[face+1];
+			int v3Index = m_strandIndices[face+2];
+
+			Ogre::Vector3 v1 = m_strandVertices[section][v1Index];
+			Ogre::Vector3 v2 = m_strandVertices[section][v2Index];
+			Ogre::Vector3 v3 = m_strandVertices[section][v3Index];
+
+			Ogre::Vector3 normal = (v2-v1).crossProduct(v3-v1);
+			normal.normalise();
+
+			m_strandNormals[section][v1Index] += normal;
+			m_strandNormals[section][v2Index] += normal;
+			m_strandNormals[section][v3Index] += normal;
+		}
+
+		//normalise
+		for(int normals = 0 ; normals < m_strandNormals[section].size() ; normals++)
+		{
+			m_strandNormals[section][normals].normalise();
+		}
+
 		
 		//generate manual object
-
 		//vertices + normals
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
 			m_hairMesh->colour(1.0,0,0);
 			m_hairMesh->position(m_strandVertices[section][vert]);
-			//m_hairMesh->normal(m_strandNormals[section][vert]);
+			m_hairMesh->normal(m_strandNormals[section][vert]);
 		}
 
 		//indices
-		if(!update)
+		for(int index = 0 ; index < m_strandIndices.size() ; index++)
 		{
-			//for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
-			//{
-			//	int layer1 = node*m_hairShape.size();
-			//	int layer2 = (node+1)*m_hairShape.size();
-
-			//	for(int i = 0 ; i < m_hairShape.size() ; i++)
-			//	{
-			//		//if we are at the edge
-			//		if(i == m_hairShape.size()-1)
-			//		{
-			//			m_hairMesh->triangle(layer2+i,layer1,layer1+i);
-			//			m_hairMesh->triangle(layer2+i,layer2,layer1);
-			//		}
-			//		else
-			//		{
-			//			m_hairMesh->triangle(layer2+i,layer1+(i+1),layer1+i);
-			//			m_hairMesh->triangle(layer2+i,layer2+(i+1),layer1+(i+1));
-			//		}
-			//	}
-			//}
-
-			//cap top
-
-			//taper end
+			m_hairMesh->index(m_strandIndices[index]);
 		}
-
 		
 		m_hairMesh->end();
 	}

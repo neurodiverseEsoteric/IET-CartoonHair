@@ -31,6 +31,8 @@ private:
 	std::vector<Ogre::Vector3> m_hairShape;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
+	std::vector<int> m_strandIndices;
+
 	float m_simulationScale;
 	Ogre::ManualObject *m_hairMesh;
 };

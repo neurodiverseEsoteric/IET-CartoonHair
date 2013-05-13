@@ -617,8 +617,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding parameters for maxSubstep and fixedTimeStep
 
-	//mWorld->stepSimulation(timestep);
-	//m_hairModel->updateManualObject();
+	mWorld->stepSimulation(timestep);
+	m_hairModel->updateManualObject();
 
 	m_debugDrawer->begin();
 	mWorld->debugDrawWorld();
