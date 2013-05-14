@@ -7,12 +7,20 @@
 #define HAIR_GROUP 0x2
 #define GHOST_GROUP 0x4
 
-struct HairSegment
+//struct HairSegment
+//{
+//	btSoftBody::Node* node0;
+//	btSoftBody::Node* node1;
+//	btDbvtNode* leaf;
+//};
+
+struct BVHStrand
 {
-	btSoftBody::Node* node0;
-	btSoftBody::Node* node1;
-	btDbvtNode* leaf;
+	btSoftBody* strand;
+	btDbvtNode* node;
+	btDbvtAabbMm vol;
 };
+
 
 //http://www.fannieliu.com/hairsim/hairsim.html
 class HairModel
@@ -23,12 +31,14 @@ public:
 	~HairModel();
 	Ogre::ManualObject* getManualObject();
 	void updateManualObject();
-	void updateStictionSegments();
+	//void updateStictionSegments();
+	void updateStrandBVH();
 	float getSimulationScale();
 private:
 	//methods
-	btDbvtAabbMm calculateAABB(HairSegment *segment);
-	void addStictionSegment(btSoftBody* strand, int nodeIndex0, int nodeIndex1);
+	//btDbvtAabbMm calculateAABB(HairSegment *segment);
+	//void addStictionSegment(btSoftBody* strand, int nodeIndex0, int nodeIndex1);
+	void calculateAABB(BVHStrand *strand);
 	void generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	void generateHairMesh(Ogre::SceneManager *sceneMgr);
@@ -47,8 +57,10 @@ private:
 	std::vector<btSoftBody*> m_strandSoftBodies;
 	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
 	std::vector<Ogre::Vector3> m_hairShape;
-	btDbvt* m_segmentBVH;
-	btAlignedObjectArray<HairSegment*> m_hairSegments;
+	//btDbvt* m_segmentBVH;
+	//btAlignedObjectArray<HairSegment*> m_hairSegments;
+	btDbvt* m_strandBVH;
+	btAlignedObjectArray<BVHStrand*> m_BVHStrands;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh;

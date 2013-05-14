@@ -1,22 +1,20 @@
-﻿Build started 14/05/2013 15:21:13.
+﻿Build started 14/05/2013 19:15:07.
      1>Project "C:\Users\Timothy\IET-CartoonHair\CartoonHairSimulation\CartoonHairSimulation\CartoonHairSimulation.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "obj\Debug\CartoonHairSimulation.unsuccessfulbuild" because "AlwaysCreate" was specified.
        ClCompile:
          All outputs are up-to-date.
-         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Bullet\bullet-2.81-rev2613\src" /Iinclude /I"C:\OgreSDK_vc10_v1-8-1\include" /I"C:\OgreSDK_vc10_v1-8-1\include\OIS" /I"C:\OgreSDK_vc10_v1-8-1\include\OGRE" /I"C:\OgreSDK_vc10_v1-8-1\Samples\Common\include" /I"C:\Program Files (x86)\PCL 1.6.0\3rdParty\Boost\include\\" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Yu"stdafx.h" /Fp"obj\Debug\CartoonHairSimulation.pch" /Fo"obj\Debug\\" /Fd"obj\Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt src\CartoonHairSimulation.cpp src\HairModel.cpp /Zm258 
+         c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\Bullet\bullet-2.81-rev2613\src" /Iinclude /I"C:\OgreSDK_vc10_v1-8-1\include" /I"C:\OgreSDK_vc10_v1-8-1\include\OIS" /I"C:\OgreSDK_vc10_v1-8-1\include\OGRE" /I"C:\OgreSDK_vc10_v1-8-1\Samples\Common\include" /I"C:\Program Files (x86)\PCL 1.6.0\3rdParty\Boost\include\\" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Yu"stdafx.h" /Fp"obj\Debug\CartoonHairSimulation.pch" /Fo"obj\Debug\\" /Fd"obj\Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt src\HairModel.cpp /Zm258 
          HairModel.cpp
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(305): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(315): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(328): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(361): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(403): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(416): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(337): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(347): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(360): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(393): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(435): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(443): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(451): warning C4018: '<' : signed/unsigned mismatch
-         CartoonHairSimulation.cpp
-         Generating Code...
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(448): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(467): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(475): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(483): warning C4018: '<' : signed/unsigned mismatch
        ResourceCompile:
          All outputs are up-to-date.
        ManifestResourceCompile:
@@ -47,4 +45,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:02.77
+Time Elapsed 00:00:01.48
