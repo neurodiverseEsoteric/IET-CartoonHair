@@ -98,6 +98,7 @@ protected:
 	HairModel *m_hairModel;
 
 	bool m_cameraControl;
+	bool m_physicsEnabled;
 
 	//btSoftBody *body;
 	//Ogre::ManualObject *plane;

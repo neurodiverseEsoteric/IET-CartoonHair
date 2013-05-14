@@ -2,18 +2,70 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
-//Ogre::Vector3 Hexagon[6] = 
-//{
-//	Ogre::Vector3(-0.0866,0,-0.05),
-//	Ogre::Vector3(0,0,-0.1),
-//	Ogre::Vector3(0.0866,0,-0.05),
-//	Ogre::Vector3(0.0866,0,0.05),
-//	Ogre::Vector3(0,0,0.1),
-//	Ogre::Vector3(-0.0866,0,0.05)
-//};
-
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
+{
+	m_segmentBVH = new btDbvt();
+	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
+	generateHairMesh(sceneMgr);
+}
+
+HairModel::~HairModel()
+{
+	//TO DO
+}
+
+Ogre::ManualObject* HairModel::getManualObject()
+{
+	return m_hairMesh;
+}
+
+void HairModel::updateManualObject()
+{
+	createOrUpdateManualObject(true);
+}
+
+float HairModel::getSimulationScale()
+{
+	return m_simulationScale;
+}
+
+btDbvtAabbMm HairModel::calculateAABB(HairSegment *segment)
+{
+	btVector3 pts[2];
+	pts[0] = segment->node0->m_x;
+	pts[1] = segment->node1->m_x;
+	btDbvtAabbMm aabb;
+	aabb.FromPoints(pts,2);
+	return aabb;
+}
+
+void HairModel::addStictionSegment(btSoftBody* strand, int nodeIndex0, int nodeIndex1)
+{
+	//generate segment entry - store in the leaf data pointer
+	HairSegment *segment = new HairSegment();
+	segment->node0 = &(strand->m_nodes[nodeIndex0]);
+	segment->node1 = &(strand->m_nodes[nodeIndex1]);
+
+	//insert into BVH tree
+	segment->leaf = m_segmentBVH->insert(
+		calculateAABB(segment),
+		segment);
+
+	m_hairSegments.push_back(segment);
+}
+
+void HairModel::updateStictionSegments()
+{
+	for(int segment = 0 ; segment < m_hairSegments.size() ; segment++)
+	{
+		HairSegment *hairSegment = m_hairSegments[segment];
+		m_segmentBVH->update(hairSegment->leaf,calculateAABB(hairSegment));
+	}
+}
+
+void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	tinyxml2::XMLDocument doc;
 
@@ -61,7 +113,10 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 		particles.clear();
 		masses.clear();
 	}
+}
 
+void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
+{
 	//create hair shape
 	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,-0.05));
 	m_hairShape.push_back(Ogre::Vector3(0,0,-0.1));
@@ -70,37 +125,10 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 	m_hairShape.push_back(Ogre::Vector3(0,0,0.1));
 	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,0.05));
 
-	//Ogre::Vector3 vert(1,0,0);
-	//for(int step = 0 ; step < shapeRes ; step++)
-	//{
-	//	m_hairShape.push_back(vert);
-	//	vert = Ogre::Quaternion(Ogre::Degree(360.0f/shapeRes),Ogre::Vector3::UNIT_Y
-	//}
-
 	//create manual hair object
 	m_hairMesh = sceneMgr->createManualObject("hair");
 	m_hairMesh->setDynamic(true);
 	createOrUpdateManualObject(false);
-}
-
-HairModel::~HairModel()
-{
-	//TO DO
-}
-
-Ogre::ManualObject* HairModel::getManualObject()
-{
-	return m_hairMesh;
-}
-
-void HairModel::updateManualObject()
-{
-	createOrUpdateManualObject(true);
-}
-
-float HairModel::getSimulationScale()
-{
-	return m_simulationScale;
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
@@ -114,6 +142,9 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 	for(int node = 1 ; node < particles.size() ; node++)
 	{
 		strand->appendLink(node-1,node,edgeMaterial);
+
+		//generate stiction segment
+		addStictionSegment(strand,node-1,node);
 	}
 
 	//create bending springs

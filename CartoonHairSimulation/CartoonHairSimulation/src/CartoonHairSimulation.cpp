@@ -163,7 +163,8 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mInputManager(0),
     mMouse(0),
     mKeyboard(0),
-	m_cameraControl(true)
+	m_cameraControl(true),
+	m_physicsEnabled(true)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -444,26 +445,8 @@ void CartoonHairSimulation::createScene(void)
 		Ogre::Quaternion::IDENTITY,
 		Ogre::Vector3::UNIT_SCALE);
 
-	/*Ogre::ManualObject *headPoints = new Ogre::ManualObject("headpoints");
-	headPoints->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_POINT_LIST);
-
-	for(int i = 0 ; i < vertexCount ; i++)
-	{
-		headPoints->position(vertices[i]);
-	}
-
-	headPoints->end();
-
-	headNode->attachObject(headPoints);*/
-
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
 	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-
-	//btShapeHull* shapeHull = new btShapeHull(complexHull);
-	//shapeHull->buildHull(complexHull->getMargin());
-	//btConvexHullShape* headShape = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
-
-	//btSphereShape *sphereShape = new btSphereShape(0.26f);
 	
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
 		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
@@ -472,23 +455,6 @@ void CartoonHairSimulation::createScene(void)
 	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
 
 	mWorld->addRigidBody(headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
-
-	//clean up
-	/*delete complexHull;
-	delete shapeHull;*/
-
-	/*Ogre::ManualObject *headPoints = new Ogre::ManualObject("headpoints");
-	headPoints->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_POINT_LIST);
-
-	for(int i = 0 ; i < headHull->getNumPoints() ; i++)
-	{
-		btVector3 * vert = headHull->getUnscaledPoints();
-		headPoints->position(vert[i].x(),vert[i].y(),vert[i].z());
-	}
-
-	headPoints->end();
-
-	headNode->attachObject(headPoints);*/
 
 	//clean up
 	delete[] vertices;
@@ -519,68 +485,6 @@ void CartoonHairSimulation::createScene(void)
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(20,80,50);
-
-	////load hair
-	//tinyxml2::XMLDocument doc;
-	//doc.LoadFile("../hair/hairtest.xml");
-
-	////get the hair node
-	//tinyxml2::XMLElement *hair = doc.FirstChildElement();
-	//OutputDebugString(hair->Name());
-
-	////get the first strand
-	//tinyxml2::XMLElement *strand = hair->FirstChildElement();
-	//OutputDebugString(strand->Name());
-
-	////create manual hair object
-	//hairMesh = mSceneMgr->createManualObject("hair");
-	//hairMesh->setDynamic(true);
-
-	////iterate through the strands
-	//for(strand ; strand ; strand = strand->NextSiblingElement())
-	//{
-	//	
-	//	hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_STRIP);
-	//	//iterate through hair particles - first one is the root and should be fixed in position
-	//	tinyxml2::XMLElement *particle = strand->FirstChildElement();
-	//	for(particle ; particle ; particle = particle->NextSiblingElement())
-	//	{
-	//		hairMesh->colour(1.0,0,0);
-	//		hairMesh->position(
-	//			particle->FloatAttribute("x"),
-	//			particle->FloatAttribute("y"),
-	//			particle->FloatAttribute("z")
-	//		);
-	//	}
-	//	hairMesh->end();
-	//}
-
-
-	//headNode->attachObject(hairMesh);
-
-	//http://www.youtube.com/watch?v=d7_lJJ_j2NE
-	/*float s=4, h=20;
-	body = btSoftBodyHelpers::CreatePatch(mWorld->getWorldInfo(),
-		btVector3(-s,h,-s),btVector3(s,h,-s),btVector3(-s,h,s),btVector3(s,h,s),
-		50,50,4+8,true);
-	body->m_cfg.viterations = 10;
-	body->m_cfg.piterations = 10;
-	mWorld->addSoftBody(body);
-
-	plane = mSceneMgr->createManualObject("plane");
-	plane->setDynamic(true);
-	plane->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_TRIANGLE_LIST);
-	for(int i = 0 ; i < body->m_faces.size() ; i++)
-	{
-		for(int j = 0 ; j < 3 ; j++)
-		{
-			plane->position(body->m_faces[i].m_n[j]->m_x.x(),
-				body->m_faces[i].m_n[j]->m_x.y(),
-				body->m_faces[i].m_n[j]->m_x.z());
-		}
-	}
-	plane->end();
-	mSceneMgr->getRootSceneNode()->createChildSceneNode()->attachObject(plane);*/
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -612,29 +516,20 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
         }
     }
 
-	
 	float timestep = evt.timeSinceLastFrame;
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding parameters for maxSubstep and fixedTimeStep
 
-	mWorld->stepSimulation(timestep);
+	if(m_physicsEnabled)
+	{
+		mWorld->stepSimulation(timestep);
+	}
 	m_hairModel->updateManualObject();
+	m_hairModel->updateStictionSegments();
 
 	m_debugDrawer->begin();
 	mWorld->debugDrawWorld();
 	m_debugDrawer->end();
-
-	/*plane->beginUpdate(0);
-	for(int i = 0 ; i < body->m_faces.size() ; i++)
-	{
-		for(int j = 0 ; j < 3 ; j++)
-		{
-			plane->position(body->m_faces[i].m_n[j]->m_x.x(),
-				body->m_faces[i].m_n[j]->m_x.y(),
-				body->m_faces[i].m_n[j]->m_x.z());
-		}
-	}
-	plane->end();*/
 
 	//TO DO: add any methods you would like to be called
 
@@ -755,6 +650,10 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 			m_cameraControl = true;
 			mTrayMgr->hideCursor();
 		}
+	}
+	else if(arg.key == OIS::KC_L)
+	{
+		m_physicsEnabled = !m_physicsEnabled;
 	}
 
 	if(m_cameraControl)
