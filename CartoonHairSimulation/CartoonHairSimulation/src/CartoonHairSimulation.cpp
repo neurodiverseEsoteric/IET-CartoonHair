@@ -525,8 +525,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		mWorld->stepSimulation(timestep);
 	}
 	m_hairModel->updateManualObject();
-	//m_hairModel->updateStictionSegments();
-	m_hairModel->updateStrandBVH();
+	m_hairModel->updateStictionSegments();
+	//m_hairModel->updateStrandBVH();
 
 	m_debugDrawer->begin();
 	mWorld->debugDrawWorld();

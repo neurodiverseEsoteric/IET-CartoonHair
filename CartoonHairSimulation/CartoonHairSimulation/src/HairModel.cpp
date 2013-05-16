@@ -6,7 +6,7 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	//m_segmentBVH = new btDbvt();
-	m_strandBVH = new btDbvt();
+	//m_strandBVH = new btDbvt();
 	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
 	generateHairMesh(sceneMgr);
 }
@@ -31,60 +31,49 @@ float HairModel::getSimulationScale()
 	return m_simulationScale;
 }
 
-//btDbvtAabbMm HairModel::calculateAABB(HairSegment *segment)
-//{
-//	btVector3 pts[2];
-//	pts[0] = segment->node0->m_x;
-//	pts[1] = segment->node1->m_x;
-//	btDbvtAabbMm aabb;
-//	aabb.FromPoints(pts,2);
-//	return aabb;
-//}
-
-//void HairModel::addStictionSegment(btSoftBody* strand, int nodeIndex0, int nodeIndex1)
-//{
-//	//generate segment entry - store in the leaf data pointer
-//	HairSegment *segment = new HairSegment();
-//	segment->node0 = &(strand->m_nodes[nodeIndex0]);
-//	segment->node1 = &(strand->m_nodes[nodeIndex1]);
-//
-//	//insert into BVH tree
-//	segment->leaf = m_segmentBVH->insert(
-//		calculateAABB(segment),
-//		segment);
-//
-//	m_hairSegments.push_back(segment);
-//}
-
-//void HairModel::updateStictionSegments()
-//{
-//	for(int segment = 0 ; segment < m_hairSegments.size() ; segment++)
-//	{
-//		HairSegment *hairSegment = m_hairSegments[segment];
-//		m_segmentBVH->update(hairSegment->leaf,calculateAABB(hairSegment));
-//	}
-//}
-
-void HairModel::updateStrandBVH()
+void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1)
 {
-	for(int strand = 0 ; strand < m_BVHStrands.size() ; strand++)
-	{
-		BVHStrand *bv = m_BVHStrands[strand];
-		calculateAABB(bv);
-		m_strandBVH->update(bv->node,bv->vol);
-	}
+	HairSegment *segment = new HairSegment();
+
+	//determine the length of the hair
+	btVector3 node2Node = strand->m_nodes[nodeIndex1].m_x - strand->m_nodes[nodeIndex0].m_x;
+	btVector3 midPoint = (strand->m_nodes[nodeIndex1].m_x + strand->m_nodes[nodeIndex0].m_x)*0.5f;
+	float length = node2Node.length();
+	float halfExtent = length*0.5f;
+
+	btGhostObject *ghostObject = new btGhostObject();
+
+	//create collision shape - make it a box
+	//btBoxShape *boxShape = new btBoxShape(btVector3(halfExtent,halfExtent,halfExtent));
+	//ghostObject->setCollisionShape(boxShape);
+
+	btSphereShape *sphereShape = new btSphereShape(halfExtent);
+	ghostObject->setCollisionShape(sphereShape);
+
+	ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
+
+	world->addCollisionObject(ghostObject,SEGMENT_GROUP,SEGMENT_GROUP);
+
+	segment->ghostObject = ghostObject;
+	segment->strand = strand;
+	segment->node0Index = nodeIndex0;
+	segment->node1Index = nodeIndex1;
+
+	m_hairSegments.push_back(segment);
 }
 
-void HairModel::calculateAABB(BVHStrand *bv)
+void HairModel::updateStictionSegments()
 {
-	btSoftBody *strand = bv->strand;
-	btVector3 *pts = new btVector3[strand->m_nodes.size()];
-	int numNodes = strand->m_nodes.size();
-	for(int node = 0 ; node < numNodes ; node++)
+	for(int segment = 0 ; segment < m_hairSegments.size() ; segment++)
 	{
-		pts[node] = strand->m_nodes[node].m_x;
+		HairSegment *currentSegment = m_hairSegments[segment];
+		btSoftBody *strand = currentSegment->strand;
+
+		btVector3 node2Node = strand->m_nodes[currentSegment->node1Index].m_x - strand->m_nodes[currentSegment->node0Index].m_x;
+		btVector3 midPoint = (strand->m_nodes[currentSegment->node1Index].m_x + strand->m_nodes[currentSegment->node0Index].m_x)*0.5f;
+
+		currentSegment->ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 	}
-	bv->vol.FromPoints(pts,numNodes);
 }
 
 
@@ -124,7 +113,7 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 		}
 
 		//now to create the strand softbody and its ghost nodes
-		btSoftBody *hairStrand = createHairStrand(particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
+		btSoftBody *hairStrand = createHairStrand(world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
 		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
 
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
@@ -132,14 +121,6 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 
 		m_strandSoftBodies.push_back(hairStrand);
 		m_ghostStrandSoftBodies.push_back(ghostStrand);
-
-		//add to bvh
-		BVHStrand* bv = new BVHStrand();
-		bv->strand = hairStrand;
-		calculateAABB(bv);
-		bv->node = m_strandBVH->insert(bv->vol,bv);
-
-		m_BVHStrands.push_back(bv);
 
 		////clean up
 		particles.clear();
@@ -164,7 +145,7 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
-btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
+btSoftBody* HairModel::createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	//create softbody
@@ -176,7 +157,7 @@ btSoftBody* HairModel::createHairStrand(btAlignedObjectArray<btVector3> &particl
 		strand->appendLink(node-1,node,edgeMaterial);
 
 		//generate stiction segment
-		//addStictionSegment(strand,node-1,node);
+		addStictionSegment(world,strand,node-1,node);
 	}
 
 	//create bending springs
