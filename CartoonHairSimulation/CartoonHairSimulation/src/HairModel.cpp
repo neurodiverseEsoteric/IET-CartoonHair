@@ -83,11 +83,106 @@ void HairModel::updateStictionSegments()
 		{
 			btCollisionObject *object = ghost->getOverlappingObject(obj);
 			HairSegment *overlappingSegment = (HairSegment*)object->getUserPointer();
+
+			//see if hair is in the same strand - ignore if that is the case
+			if(overlappingSegment->strand != currentSegment->strand)
+			{
+				btVector3 point0, point1;
+
+				//determine closest points between segment
+				getClosestPoints(
+					currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
+					currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
+					overlappingSegment->strand->m_nodes[overlappingSegment->node0Index].m_x,
+					overlappingSegment->strand->m_nodes[overlappingSegment->node1Index].m_x,
+					point0,
+					point1
+					);
+
+				float length = (point1-point0).length();
+				//see if strands are withing the specified threshold of each other
+				if(length < TEMP_STICTION_THRESHOLD)
+				{
+					//generate spring force if near enough to each other
+					btVector3 force = (length-TEMP_STICTION_REST_LENGTH)*TEMP_STICTION_K*(point1-point0).normalize();
+
+					//just apply it to one side for the moment - as it is likely to be replicated later
+					overlappingSegment->strand->addForce(force,overlappingSegment->node0Index);
+					overlappingSegment->strand->addForce(force,overlappingSegment->node1Index);
+				}
+			}
 		}
 		
 	}
 }
 
+//based on calculations from http://www.fannieliu.com/hairsim/hairsim.html and http://physbam.stanford.edu/~fedkiw/papers/stanford2002-01.pdf
+void HairModel::getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1)
+{
+	glm::vec3 s0p0(strand0p0.x(),strand0p0.y(),strand0p0.z());
+	glm::vec3 s0p1(strand0p1.x(),strand0p1.y(),strand0p1.z());
+	glm::vec3 s1p0(strand1p0.x(),strand1p0.y(),strand1p0.z());
+	glm::vec3 s1p1(strand1p1.x(),strand1p1.y(),strand1p1.z());
+
+	glm::vec3 p0,p1;
+
+	glm::vec3 x21 = s0p1 - s0p0;
+	glm::vec3 x31 = s1p0 - s0p0;
+	glm::vec3 x43 = s1p1 - s1p0;
+
+	float a = 0.0f, b = 0.0f;
+	if(glm::length(glm::cross(x21,x43))>TOLERANCE)
+	{
+		float dx21x21 = glm::dot(x21,x21);
+		float dmx21x43 = glm::dot(-x21,x43);
+		float dx43x43 = glm::dot(x43,x43);
+		float dx21x31 = glm::dot(x21,x31);
+		float dmx43x31 = glm::dot(-x43,x31);
+
+		//http://en.wikipedia.org/wiki/Linear_least_squares_(mathematics)
+		//we are trying to solve the linear least squares problem X*beta = y
+		glm::mat2x2 X( 
+			dx21x21,dmx21x43,
+			dmx21x43,dx43x43
+			);
+
+		glm::vec2 y(
+			dx21x31,
+			dmx43x31
+			);
+
+		glm::mat2x2 Xt = glm::transpose(X);
+
+		glm::vec2 beta = glm::inverse(Xt*X)*Xt*y;
+		
+		a = beta.x;
+		b = beta.y;
+
+		//clamp
+		if(a>1)
+		{
+			a = 1;
+		}
+		else if(a<0)
+		{
+			a = 0;
+		}
+		if(b>1)
+		{
+			b = 1;
+		}
+		else if(b<0)
+		{
+			b = 0;
+		}
+	}
+
+	p0 = s0p0 + a*x21;
+	p1 = s1p0 + b*x43;
+
+	point0.setValue(p0.x,p0.y,p0.z);
+	point1.setValue(p1.x,p1.y,p1.z);
+}
 
 void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
@@ -211,10 +306,10 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 		btVector3 direction = segment.normalize();
 
 		//find the mid point
-		btVector3 midPoint = strand->m_nodes[node].m_x + direction*(length/2.0f);
+		btVector3 midPoint = (strand->m_nodes[node+1].m_x + strand->m_nodes[node].m_x)*0.5f;
 
 		//find the required distance of the ghost particle to the mid-point - it should form the tip of an equilateral triangle
-		float dist = tan60*(length/2.0f);
+		float dist = tan60*(length*0.5f);
 
 		//find rotation to direction
 		Ogre::Vector3 xAxis(1,0,0);

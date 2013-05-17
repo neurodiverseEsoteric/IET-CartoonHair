@@ -34,6 +34,11 @@
 #include <BulletSoftBody\btSoftBodyHelpers.h>
 #include <BulletSoftBody\btSoftBodyRigidBodyCollisionConfiguration.h>
 
+#include <glm\glm.hpp>
+#include <glm\gtc\matrix_transform.hpp>
+#include <glm\gtx\rotate_vector.hpp>
+#include <glm\gtc\type_ptr.hpp>
+
 #include <vector>
 
 //https://github.com/atduskgreg/pcl-marching-squares-example/blob/master/marching_cubes.cpp
