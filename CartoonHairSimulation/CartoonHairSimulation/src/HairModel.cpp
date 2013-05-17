@@ -33,8 +33,6 @@ float HairModel::getSimulationScale()
 
 void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1)
 {
-	HairSegment *segment = new HairSegment();
-
 	//determine the length of the hair
 	btVector3 node2Node = strand->m_nodes[nodeIndex1].m_x - strand->m_nodes[nodeIndex0].m_x;
 	btVector3 midPoint = (strand->m_nodes[nodeIndex1].m_x + strand->m_nodes[nodeIndex0].m_x)*0.5f;
@@ -44,20 +42,25 @@ void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* 
 	btGhostObject *ghostObject = new btGhostObject();
 
 	//create collision shape - make it a box
-	//btBoxShape *boxShape = new btBoxShape(btVector3(halfExtent,halfExtent,halfExtent));
-	//ghostObject->setCollisionShape(boxShape);
+	btBoxShape *boxShape = new btBoxShape(btVector3(halfExtent,halfExtent,halfExtent));
+	ghostObject->setCollisionShape(boxShape);
 
-	btSphereShape *sphereShape = new btSphereShape(halfExtent);
-	ghostObject->setCollisionShape(sphereShape);
+	/*btSphereShape *sphereShape = new btSphereShape(halfExtent);
+	ghostObject->setCollisionShape(sphereShape);*/
 
 	ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 
 	world->addCollisionObject(ghostObject,SEGMENT_GROUP,SEGMENT_GROUP);
 
+	HairSegment *segment = new HairSegment();
+
 	segment->ghostObject = ghostObject;
 	segment->strand = strand;
 	segment->node0Index = nodeIndex0;
 	segment->node1Index = nodeIndex1;
+
+	//have the ghost object point to the hair segment so we can later determine what segment is colliding
+	ghostObject->setUserPointer(segment);
 
 	m_hairSegments.push_back(segment);
 }
@@ -72,7 +75,16 @@ void HairModel::updateStictionSegments()
 		btVector3 node2Node = strand->m_nodes[currentSegment->node1Index].m_x - strand->m_nodes[currentSegment->node0Index].m_x;
 		btVector3 midPoint = (strand->m_nodes[currentSegment->node1Index].m_x + strand->m_nodes[currentSegment->node0Index].m_x)*0.5f;
 
-		currentSegment->ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
+		btGhostObject *ghost = currentSegment->ghostObject;
+		ghost->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
+
+		//go through overlapping objects
+		for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
+		{
+			btCollisionObject *object = ghost->getOverlappingObject(obj);
+			HairSegment *overlappingSegment = (HairSegment*)object->getUserPointer();
+		}
+		
 	}
 }
 

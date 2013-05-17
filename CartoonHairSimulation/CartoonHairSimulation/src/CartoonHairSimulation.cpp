@@ -384,6 +384,7 @@ bool CartoonHairSimulation::setup(void)
 	mConstraintSolver = new btSequentialImpulseConstraintSolver();
 	mSoftBodySolver = new btDefaultSoftBodySolver();
 	mWorld = new btSoftRigidDynamicsWorld(mDispatcher,mBroadphase,mConstraintSolver,mCollisionConfig,mSoftBodySolver);
+	mWorld->getPairCache()->setInternalGhostPairCallback(new btGhostPairCallback());
 
     mRoot = new Ogre::Root(mPluginsCfg);
 
