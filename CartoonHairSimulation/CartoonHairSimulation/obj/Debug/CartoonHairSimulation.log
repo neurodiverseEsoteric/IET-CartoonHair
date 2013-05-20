@@ -1,4 +1,4 @@
-﻿Build started 17/05/2013 18:17:33.
+﻿Build started 20/05/2013 15:26:08.
      1>Project "C:\Users\Timothy\IET-CartoonHair\CartoonHairSimulation\CartoonHairSimulation\CartoonHairSimulation.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "obj\Debug\CartoonHairSimulation.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -3401,15 +3401,15 @@
          c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /IC:\glm\ /I"C:\Bullet\bullet-2.81-rev2613\src" /Iinclude /I"C:\OgreSDK_vc10_v1-8-1\include" /I"C:\OgreSDK_vc10_v1-8-1\include\OIS" /I"C:\OgreSDK_vc10_v1-8-1\include\OGRE" /I"C:\OgreSDK_vc10_v1-8-1\Samples\Common\include" /I"C:\Program Files (x86)\PCL 1.6.0\3rdParty\Boost\include\\" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Yu"stdafx.h" /Fp"obj\Debug\CartoonHairSimulation.pch" /Fo"obj\Debug\\" /Fd"obj\Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt src\CartoonHairSimulation.cpp src\DebugDrawer.cpp src\HairModel.cpp src\tinyxml2.cpp /Zm258 
          tinyxml2.cpp
          HairModel.cpp
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(419): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(429): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(442): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(475): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(517): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(530): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(549): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(557): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(565): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(425): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(435): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(448): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(481): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(523): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(536): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(555): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(563): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(571): warning C4018: '<' : signed/unsigned mismatch
          DebugDrawer.cpp
          CartoonHairSimulation.cpp
          Generating Code...
@@ -3443,4 +3443,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:40.85
+Time Elapsed 00:00:27.61

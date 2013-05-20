@@ -445,10 +445,13 @@ void CartoonHairSimulation::createScene(void)
 		Ogre::Vector3::ZERO,
 		Ogre::Quaternion::IDENTITY,
 		Ogre::Vector3::UNIT_SCALE);
-
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
 	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-	
+	/*btShapeHull* shapeHull = new btShapeHull(complexHull);
+	shapeHull->buildHull(complexHull->getMargin());
+	btConvexHullShape* simpleHull = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
+	*/
+
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
 		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
 	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));

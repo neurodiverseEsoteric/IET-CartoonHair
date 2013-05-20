@@ -78,40 +78,40 @@ void HairModel::updateStictionSegments()
 		btGhostObject *ghost = currentSegment->ghostObject;
 		ghost->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 
-		//go through overlapping objects
-		for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
-		{
-			btCollisionObject *object = ghost->getOverlappingObject(obj);
-			HairSegment *overlappingSegment = (HairSegment*)object->getUserPointer();
+		////go through overlapping objects
+		//for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
+		//{
+		//	btCollisionObject *object = ghost->getOverlappingObject(obj);
+		//	HairSegment *overlappingSegment = (HairSegment*)object->getUserPointer();
 
-			//see if hair is in the same strand - ignore if that is the case
-			if(overlappingSegment->strand != currentSegment->strand)
-			{
-				btVector3 point0, point1;
+		//	//see if hair is in the same strand - ignore if that is the case
+		//	if(overlappingSegment->strand != currentSegment->strand)
+		//	{
+		//		btVector3 point0, point1;
 
-				//determine closest points between segment
-				getClosestPoints(
-					currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
-					currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
-					overlappingSegment->strand->m_nodes[overlappingSegment->node0Index].m_x,
-					overlappingSegment->strand->m_nodes[overlappingSegment->node1Index].m_x,
-					point0,
-					point1
-					);
+		//		//determine closest points between segment
+		//		getClosestPoints(
+		//			currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
+		//			currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
+		//			overlappingSegment->strand->m_nodes[overlappingSegment->node0Index].m_x,
+		//			overlappingSegment->strand->m_nodes[overlappingSegment->node1Index].m_x,
+		//			point0,
+		//			point1
+		//			);
 
-				float length = (point1-point0).length();
-				//see if strands are withing the specified threshold of each other
-				if(length < TEMP_STICTION_THRESHOLD)
-				{
-					//generate spring force if near enough to each other
-					btVector3 force = (length-TEMP_STICTION_REST_LENGTH)*TEMP_STICTION_K*(point1-point0).normalize();
+		//		float length = (point1-point0).length();
+		//		//see if strands are withing the specified threshold of each other
+		//		if(length < TEMP_STICTION_THRESHOLD)
+		//		{
+		//			//generate spring force if near enough to each other
+		//			btVector3 force = (length-TEMP_STICTION_REST_LENGTH)*TEMP_STICTION_K*(point1-point0).normalize();
 
-					//just apply it to one side for the moment - as it is likely to be replicated later
-					overlappingSegment->strand->addForce(force,overlappingSegment->node0Index);
-					overlappingSegment->strand->addForce(force,overlappingSegment->node1Index);
-				}
-			}
-		}
+		//			//just apply it to one side for the moment - as it is likely to be replicated later
+		//			overlappingSegment->strand->addForce(force,overlappingSegment->node0Index);
+		//			overlappingSegment->strand->addForce(force,overlappingSegment->node1Index);
+		//		}
+		//	}
+		//}
 		
 	}
 }
