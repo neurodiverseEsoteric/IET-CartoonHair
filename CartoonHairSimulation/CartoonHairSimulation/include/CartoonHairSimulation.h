@@ -68,6 +68,10 @@ protected:
     Ogre::String mResourcesCfg;
     Ogre::String mPluginsCfg;
 
+	CEGUI::OgreRenderer* m_renderer;
+	CEGUI::Window *m_guiRoot;
+	CEGUI::Slider *m_edgeSlider, *m_bendingSlider, *m_torsionSlider, *m_stictionSlider;
+
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;
     OgreBites::SdkCameraMan* mCameraMan;     // basic camera controller
@@ -99,10 +103,6 @@ protected:
 
 	bool m_cameraControl;
 	bool m_physicsEnabled;
-
-	//btSoftBody *body;
-	//Ogre::ManualObject *plane;
-	//Ogre::ManualObject *hairMesh;
 };
 
 #endif // #ifndef __CartoonHairSimulation_h_

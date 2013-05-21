@@ -147,6 +147,25 @@ void getMeshInformation(const Ogre::MeshPtr mesh,
     }
 }
 
+//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
+CEGUI::MouseButton convertButton(OIS::MouseButtonID buttonID)
+{
+    switch (buttonID)
+    {
+    case OIS::MB_Left:
+        return CEGUI::LeftButton;
+ 
+    case OIS::MB_Right:
+        return CEGUI::RightButton;
+ 
+    case OIS::MB_Middle:
+        return CEGUI::MiddleButton;
+ 
+    default:
+        return CEGUI::LeftButton;
+    }
+}
+
 
 CartoonHairSimulation::CartoonHairSimulation(void)
     : mRoot(0),
@@ -415,6 +434,28 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
+	//setup the gui
+	//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
+	m_renderer = &CEGUI::OgreRenderer::bootstrapSystem();
+	CEGUI::Imageset::setDefaultResourceGroup("Imagesets");
+	CEGUI::Font::setDefaultResourceGroup("Fonts");
+	CEGUI::Scheme::setDefaultResourceGroup("Schemes");
+	CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
+	CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
+
+	CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
+	CEGUI::System::getSingleton().setDefaultMouseCursor("TaharezLook","MouseArrow");
+
+	m_guiRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout("cartoonhair.layout"); 
+	CEGUI::System::getSingleton().setGUISheet(m_guiRoot);
+
+	//link up sliders
+	m_edgeSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/edgeSlider");
+	m_bendingSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/bendingSlider");
+	m_torsionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/torsionSlider");
+	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");
+
+	//setup the scene and hair
 	if(mWindow->getNumViewports())
 	{
 		mWindow->getViewport(0)->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));
@@ -470,9 +511,13 @@ void CartoonHairSimulation::createScene(void)
 	m_bendingMaterial = new btSoftBody::Material();
 	m_torsionMaterial = new btSoftBody::Material();
 
-	m_edgeMaterial->m_kLST = 1;
-	m_bendingMaterial->m_kLST = 0.05;
-	m_torsionMaterial->m_kLST = 0.05;
+	m_edgeMaterial->m_kLST = 1.0;
+	m_bendingMaterial->m_kLST = 0.01;
+	m_torsionMaterial->m_kLST = 0.01;
+
+	m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
+	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
+	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);
 
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
@@ -504,6 +549,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
     mKeyboard->capture();
     mMouse->capture();
 
+	CEGUI::System::getSingleton().injectTimePulse(evt.timeSinceLastFrame);
+
     mTrayMgr->frameRenderingQueued(evt);
 
     if (!mTrayMgr->isDialogVisible())
@@ -528,10 +575,14 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	if(m_physicsEnabled)
 	{
 		mWorld->stepSimulation(timestep);
+		m_hairModel->updateManualObject();
+		m_hairModel->updateStictionSegments();
 	}
-	//m_hairModel->updateManualObject();
-	//m_hairModel->updateStictionSegments();
-	//m_hairModel->updateStrandBVH();
+
+	m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
+	m_bendingMaterial->m_kLST = m_bendingSlider->getCurrentValue();
+	m_torsionMaterial->m_kLST = m_torsionSlider->getCurrentValue();
+	
 
 	m_debugDrawer->begin();
 	mWorld->debugDrawWorld();
@@ -546,6 +597,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 {
+
     if (mTrayMgr->isDialogVisible()) return true;   // don't process any more keys if dialog is up
 
     if (arg.key == OIS::KC_F)   // toggle visibility of advanced frame stats
@@ -649,12 +701,12 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 		if(m_cameraControl)
 		{
 			m_cameraControl = false;
-			mTrayMgr->showCursor();
+			//mTrayMgr->showCursor();
 		}
 		else
 		{
 			m_cameraControl = true;
-			mTrayMgr->hideCursor();
+			//mTrayMgr->hideCursor();
 		}
 	}
 	else if(arg.key == OIS::KC_L)
@@ -666,6 +718,13 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 	{
 		mCameraMan->injectKeyDown(arg);
 	}
+	else
+	{
+		CEGUI::System &sys = CEGUI::System::getSingleton();
+		sys.injectKeyDown(arg.key);
+		sys.injectChar(arg.text);
+	}
+
     return true;
 }
 
@@ -675,36 +734,62 @@ bool CartoonHairSimulation::keyReleased( const OIS::KeyEvent &arg )
 	{
 		mCameraMan->injectKeyUp(arg);
 	}
+	else
+	{
+		CEGUI::System::getSingleton().injectKeyUp(arg.key);
+	}
+
     return true;
 }
 
 bool CartoonHairSimulation::mouseMoved( const OIS::MouseEvent &arg )
 {
-    mTrayMgr->injectMouseMove(arg);
+    //mTrayMgr->injectMouseMove(arg);
 	if(m_cameraControl)
 	{
 		mCameraMan->injectMouseMove(arg);
+	}
+	else
+	{
+		CEGUI::System &sys = CEGUI::System::getSingleton();
+		sys.injectMouseMove(arg.state.X.rel,arg.state.Y.rel);
+		if(arg.state.Z.rel)
+		{
+			sys.injectMouseWheelChange(arg.state.Z.rel / 120.0f);
+		}
 	}
     return true;
 }
 
 bool CartoonHairSimulation::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
-    mTrayMgr->injectMouseDown(arg, id);
+    //mTrayMgr->injectMouseDown(arg, id);
+
 	if(m_cameraControl)
 	{
 		mCameraMan->injectMouseDown(arg, id);
 	}
+	else
+	{
+		CEGUI::System::getSingleton().injectMouseButtonDown(convertButton(id));
+	}
+
     return true;
 }
 
 bool CartoonHairSimulation::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
-    mTrayMgr->injectMouseUp(arg, id);
+    //mTrayMgr->injectMouseUp(arg, id);
+
 	if(m_cameraControl)
 	{
 		mCameraMan->injectMouseUp(arg, id);
 	}
+	else
+	{
+		CEGUI::System::getSingleton().injectMouseButtonUp(convertButton(id));
+	}
+
     return true;
 }
 

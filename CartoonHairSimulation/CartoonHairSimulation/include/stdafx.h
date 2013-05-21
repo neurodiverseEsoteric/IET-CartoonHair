@@ -24,6 +24,9 @@
 #include <SdkTrays.h>
 #include <SdkCameraMan.h>
 
+#include <CEGUI.h>
+#include <RendererModules\Ogre\CEGUIOgreRenderer.h>
+
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision\CollisionShapes\btShapeHull.h>
@@ -41,11 +44,6 @@
 #include <glm\gtc\type_ptr.hpp>
 
 #include <vector>
-
-//https://github.com/atduskgreg/pcl-marching-squares-example/blob/master/marching_cubes.cpp
-
-//#include <pcl/point_types.h>
-//#include <pcl/surface/marching_cubes_rbf.h>
 
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
