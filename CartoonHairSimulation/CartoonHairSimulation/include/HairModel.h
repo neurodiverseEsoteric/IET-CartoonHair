@@ -27,7 +27,8 @@ public:
 	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	~HairModel();
-	Ogre::ManualObject* getManualObject();
+	Ogre::ManualObject* getHairManualObject();
+	Ogre::ManualObject* getNormalsManualObject();
 	void updateManualObject();
 	void updateStictionSegments();
 	float getSimulationScale();
@@ -56,7 +57,7 @@ private:
 	btAlignedObjectArray<HairSegment*> m_hairSegments;
 	
 	//rendering variables
-	Ogre::ManualObject *m_hairMesh;
+	Ogre::ManualObject *m_hairMesh, *m_normalMesh;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;

@@ -1,0 +1,39 @@
+vertex_program IETCartoonHair/ToonVertexShader glsl
+{
+	source toon.vert
+}
+
+fragment_program IETCartoonHair/ToonFragmentShader glsl
+{
+	source toon.frag
+}
+
+material IETCartoonHair/HairMaterial
+{
+    technique
+    {
+
+		pass
+		{
+			diffuse 1 0 0 0
+			vertex_program_ref IETCartoonHair/ToonVertexShader
+			{
+				param_named_auto MVP worldviewproj_matrix
+				param_named_auto MV world_matrix
+				param_named_auto lightPos lightPosition 0
+			}
+			
+			fragment_program_ref IETCartoonHair/ToonFragmentShader
+			{
+				param_named cartoonTexture int 0
+				param_named_auto hairColour surface_diffuse_colour
+			}
+			
+			texture_unit
+			{
+				texture cartoon.png 1d
+				filtering none
+			}
+		}
+	}
+}

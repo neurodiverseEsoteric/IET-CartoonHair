@@ -164,7 +164,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mMouse(0),
     mKeyboard(0),
 	m_cameraControl(true),
-	m_physicsEnabled(true)
+	m_physicsEnabled(false)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -477,7 +477,8 @@ void CartoonHairSimulation::createScene(void)
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
 		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial);
-	headNode->attachObject(m_hairModel->getManualObject());
+	headNode->attachObject(m_hairModel->getHairManualObject());
+	headNode->attachObject(m_hairModel->getNormalsManualObject());
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
@@ -528,8 +529,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	{
 		mWorld->stepSimulation(timestep);
 	}
-	m_hairModel->updateManualObject();
-	m_hairModel->updateStictionSegments();
+	//m_hairModel->updateManualObject();
+	//m_hairModel->updateStictionSegments();
 	//m_hairModel->updateStrandBVH();
 
 	m_debugDrawer->begin();

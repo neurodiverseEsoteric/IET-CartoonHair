@@ -16,9 +16,14 @@ HairModel::~HairModel()
 	//TO DO
 }
 
-Ogre::ManualObject* HairModel::getManualObject()
+Ogre::ManualObject* HairModel::getHairManualObject()
 {
 	return m_hairMesh;
+}
+
+Ogre::ManualObject* HairModel::getNormalsManualObject()
+{
+	return m_normalMesh;
 }
 
 void HairModel::updateManualObject()
@@ -248,6 +253,10 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 	//create manual hair object
 	m_hairMesh = sceneMgr->createManualObject("hair");
 	m_hairMesh->setDynamic(true);
+
+	m_normalMesh = sceneMgr->createManualObject("normals");
+	m_normalMesh->setDynamic(true);
+
 	createOrUpdateManualObject(false);
 }
 
@@ -455,10 +464,13 @@ void HairModel::createOrUpdateManualObject(bool update)
 		if(update)
 		{
 			m_hairMesh->beginUpdate(section);
+			m_normalMesh->beginUpdate(section);
 		}
 		else
 		{
-			m_hairMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			m_hairMesh->begin("IETCartoonHair/HairMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			m_normalMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
+
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
 		}
@@ -543,7 +555,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 			Ogre::Vector3 v2 = m_strandVertices[section][v2Index];
 			Ogre::Vector3 v3 = m_strandVertices[section][v3Index];
 
-			Ogre::Vector3 normal = (v2-v1).crossProduct(v3-v1);
+			Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
 			normal.normalise();
 
 			m_strandNormals[section][v1Index] += normal;
@@ -565,6 +577,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 			m_hairMesh->colour(1.0,0,0);
 			m_hairMesh->position(m_strandVertices[section][vert]);
 			m_hairMesh->normal(m_strandNormals[section][vert]);
+
+			m_normalMesh->position(m_strandVertices[section][vert]);
+			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);
 		}
 
 		//indices
@@ -574,6 +589,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 		
 		m_hairMesh->end();
+		m_normalMesh->end();
 	}
 }
 
