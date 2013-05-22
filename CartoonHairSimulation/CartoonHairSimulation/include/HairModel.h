@@ -55,6 +55,7 @@ private:
 	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
 	std::vector<Ogre::Vector3> m_hairShape;
 	btAlignedObjectArray<HairSegment*> m_hairSegments;
+	btSoftRigidDynamicsWorld *m_world;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh, *m_normalMesh;

@@ -92,6 +92,8 @@ protected:
 	btSequentialImpulseConstraintSolver *mConstraintSolver;
 	btSoftBodySolver *mSoftBodySolver;
 
+	btRigidBody *m_headRigidBody;
+
 	//spring materials
 	btSoftBody::Material *m_edgeMaterial;
 	btSoftBody::Material *m_bendingMaterial;

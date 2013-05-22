@@ -5,15 +5,43 @@
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
-	//m_segmentBVH = new btDbvt();
-	//m_strandBVH = new btDbvt();
+	m_world = world;
 	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
 	generateHairMesh(sceneMgr);
 }
 
 HairModel::~HairModel()
 {
-	//TO DO
+	m_hairShape.clear();
+	m_strandVertices.clear();
+	m_strandNormals.clear();
+	m_strandIndices.clear();
+
+	for(int i = 0 ; i < m_hairSegments.size() ; i++)
+	{
+		btGhostObject* ghost = m_hairSegments[i]->ghostObject;
+		m_world->removeCollisionObject(ghost);
+		delete ghost->getCollisionShape();
+		delete ghost;
+		delete m_hairSegments[i];
+	}
+
+	for(int i = 0 ; i < m_ghostStrandSoftBodies.size() ; i++)
+	{
+		btSoftBody* strand = m_ghostStrandSoftBodies[i];
+		m_world->removeSoftBody(strand);
+		delete strand;
+	}
+	m_ghostStrandSoftBodies.clear();
+
+	for(int i = 0 ; i < m_strandSoftBodies.size() ; i++)
+	{
+		btSoftBody* strand = m_strandSoftBodies[i];
+		m_world->removeSoftBody(strand);
+		delete strand;
+	}
+	m_strandSoftBodies.clear();
+
 }
 
 Ogre::ManualObject* HairModel::getHairManualObject()

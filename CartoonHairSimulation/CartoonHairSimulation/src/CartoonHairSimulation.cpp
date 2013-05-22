@@ -192,11 +192,21 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	mDispatcher = NULL;
 	mCollisionConfig = NULL;
 	m_hairModel = NULL;
+	m_renderer = NULL;
+	m_headRigidBody = NULL;
+	m_edgeMaterial = NULL;
+	m_bendingMaterial = NULL;
+	m_torsionMaterial = NULL;
 }
 
 //-------------------------------------------------------------------------------------
 CartoonHairSimulation::~CartoonHairSimulation(void)
 {
+	if(m_renderer)
+	{
+		CEGUI::OgreRenderer::destroySystem();
+	}
+
     if (mTrayMgr) delete mTrayMgr;
     if (mCameraMan) delete mCameraMan;
 
@@ -214,6 +224,21 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 	//clean up physics
 	if(mWorld)
 	{
+		if(m_headRigidBody)
+		{
+			mWorld->removeRigidBody(m_headRigidBody);
+			delete m_headRigidBody->getCollisionShape();
+			delete m_headRigidBody->getMotionState();
+			delete m_headRigidBody;
+		}
+
+		if(m_edgeMaterial)
+		{
+			delete m_edgeMaterial;
+			delete m_bendingMaterial;
+			delete m_torsionMaterial;
+		}
+
 		delete mWorld;
 		delete mSoftBodySolver;
 		delete mConstraintSolver;
@@ -434,6 +459,10 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
+	//setup debug drawer
+	m_debugDrawer = new DebugDrawer(mSceneMgr);
+	mWorld->setDebugDrawer(m_debugDrawer);
+
 	//setup the gui
 	//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
 	m_renderer = &CEGUI::OgreRenderer::bootstrapSystem();
@@ -455,23 +484,29 @@ void CartoonHairSimulation::createScene(void)
 	m_torsionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/torsionSlider");
 	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");
 
-	//setup the scene and hair
+	//setup spring materials
+	m_edgeMaterial = new btSoftBody::Material();
+	m_bendingMaterial = new btSoftBody::Material();
+	m_torsionMaterial = new btSoftBody::Material();
+
+	m_edgeMaterial->m_kLST = 1.0;
+	m_bendingMaterial->m_kLST = 0.01;
+	m_torsionMaterial->m_kLST = 0.01;
+
+	m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
+	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
+	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);
+
+	//setup background colour
 	if(mWindow->getNumViewports())
 	{
 		mWindow->getViewport(0)->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));
 	}
 
+	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
-
-	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	headNode->attachObject(head);
-
-	//setup debug drawer
-	m_debugDrawer = new DebugDrawer(mSceneMgr);
-	mWorld->setDebugDrawer(m_debugDrawer);
-
-	headNode->attachObject(m_debugDrawer->getLinesManualObject());
 
 	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
 	size_t vertexCount, indexCount;
@@ -486,44 +521,26 @@ void CartoonHairSimulation::createScene(void)
 		Ogre::Vector3::ZERO,
 		Ogre::Quaternion::IDENTITY,
 		Ogre::Vector3::UNIT_SCALE);
+
 	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
 	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-	/*btShapeHull* shapeHull = new btShapeHull(complexHull);
-	shapeHull->buildHull(complexHull->getMargin());
-	btConvexHullShape* simpleHull = new btConvexHullShape((btScalar*)shapeHull->getVertexPointer(),shapeHull->numVertices(),sizeof(Ogre::Vector3));
-	*/
 
 	btDefaultMotionState *headMotionState = new btDefaultMotionState(
 		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
 	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));
 
-	btRigidBody* headRigidBody = new btRigidBody(headConstructionInfo);
+	m_headRigidBody = new btRigidBody(headConstructionInfo);
 
-	mWorld->addRigidBody(headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
+	mWorld->addRigidBody(m_headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
 
 	//clean up
 	delete[] vertices;
 	delete[] indices;
 
-
-	//setup spring materials
-	m_edgeMaterial = new btSoftBody::Material();
-	m_bendingMaterial = new btSoftBody::Material();
-	m_torsionMaterial = new btSoftBody::Material();
-
-	m_edgeMaterial->m_kLST = 1.0;
-	m_bendingMaterial->m_kLST = 0.01;
-	m_torsionMaterial->m_kLST = 0.01;
-
-	m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
-	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
-	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);
-
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
 		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial);
-	headNode->attachObject(m_hairModel->getHairManualObject());
-	headNode->attachObject(m_hairModel->getNormalsManualObject());
+	
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
@@ -535,6 +552,12 @@ void CartoonHairSimulation::createScene(void)
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(20,80,50);
+
+	//line everything to the head node
+	headNode->attachObject(head);
+	headNode->attachObject(m_debugDrawer->getLinesManualObject());
+	headNode->attachObject(m_hairModel->getHairManualObject());
+	headNode->attachObject(m_hairModel->getNormalsManualObject());
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
