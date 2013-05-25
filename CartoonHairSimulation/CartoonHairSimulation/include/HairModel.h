@@ -20,6 +20,63 @@ struct HairSegment
 	int node1Index;
 };
 
+enum EdgeType
+{
+	NOTHING, BORDER, CREASE, SILHOUETTE
+};
+
+//http://www.cplusplus.com/reference/map/map/map/
+//struct KeyCompare
+//{
+//	bool operator() (const std::pair<int,int>& lhs, const std::pair<int,int>& rhs) const
+//	{
+//		//if they are the same
+//		if(
+//			(lhs.first == rhs.first && lhs.second == rhs.second)||
+//			(lhs.first == rhs.second && lhs.second == rhs.first)
+//			)
+//		{
+//			return false;
+//		}
+//	}
+//};
+
+
+//http://stackoverflow.com/questions/2099540/defining-custom-hash-function-and-equality-function-for-unordered-map
+struct HashFunction
+{
+	bool operator() (const std::pair<int,int>& key) const
+	{
+		return key.first + key.second;
+	}
+};
+
+struct EqualFunction
+{
+	bool operator() (const std::pair<int,int>& lhs,const std::pair<int,int>& rhs) const
+	{
+		if((lhs.first == rhs.first && lhs.second == rhs.second)||
+			(lhs.first == rhs.second && lhs.second == rhs.first))
+		{
+			return true;
+		}
+		else return false;
+	}
+};
+
+struct Edge
+{
+	Edge()
+	{
+		flag = EdgeType::NOTHING;
+		edgeCount = 0;
+	}
+	EdgeType flag;
+	int edgeCount;
+	int triangle1Indices[3];
+	int triangle2Indices[3];
+};
+
 //http://www.fannieliu.com/hairsim/hairsim.html
 class HairModel
 {
@@ -47,6 +104,13 @@ private:
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 
+	void generateIndices();
+	void generateEdgeMap();
+	void generateVertices(bool update, int section);
+	void generateNormals(bool update, int section);
+
+	void addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
+
 	//variables
 
 	//physics variables
@@ -62,4 +126,9 @@ private:
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;
+
+	//edge rendering variables - npar2000_lake_et_al.pdf
+	//std::map<std::pair<int,int>,Edge,KeyCompare> m_edgeMap;
+	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;
+
 };

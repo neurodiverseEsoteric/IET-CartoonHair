@@ -16,6 +16,7 @@ HairModel::~HairModel()
 	m_strandVertices.clear();
 	m_strandNormals.clear();
 	m_strandIndices.clear();
+	m_edgeMap.clear();
 
 	for(int i = 0 ; i < m_hairSegments.size() ; i++)
 	{
@@ -77,9 +78,6 @@ void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* 
 	//create collision shape - make it a box
 	btBoxShape *boxShape = new btBoxShape(btVector3(halfExtent,halfExtent,halfExtent));
 	ghostObject->setCollisionShape(boxShape);
-
-	/*btSphereShape *sphereShape = new btSphereShape(halfExtent);
-	ghostObject->setCollisionShape(sphereShape);*/
 
 	ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 
@@ -360,28 +358,6 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 		norm.setY(normal.y);
 		norm.setZ(normal.z);
 
-		//create arbitrary normal
-		//Find the smallest axis - so that we are not just rotating on the spot
-		//btVector3 axis(0,0,0);
-		//switch(direction.minAxis())
-		//{
-		////x
-		//case 0:
-		//	axis.setX(1);
-		//	break;
-		////y
-		//case 1:
-		//	axis.setY(1);
-		//	break;
-		////z
-		//case 3:
-		//	axis.setZ(1);
-		//	break;
-		//}
-
-		//and rotate the direction vector 90 degrees on that axis
-		/*direction = direction.rotate(axis,halfPI);*/
-
 		particles.push_back(midPoint+(norm*dist));
 		masses.push_back(1);
 	}
@@ -417,78 +393,236 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 	return ghostStrand;
 }
 
+void HairModel::generateIndices()
+{
+	int numNodes = m_strandSoftBodies[0]->m_nodes.size();
+	int numVerts = m_hairShape.size();
+
+	//for the normal sides of the strand
+	for(int nodes = 0 ; nodes < numNodes-2 ; nodes++)
+	{
+		for(int vert = 0 ; vert < numVerts ; vert++)
+		{
+			/*
+			Here is a rough idea of how the indices are laid out
+			1-2
+			|/|
+			3-4
+			*/
+			int index1 = (nodes*numVerts)+vert;
+			int index2 = index1 + 1;
+			////stop the the index from wrapping around
+			if(index2 == (nodes*numVerts)+numVerts)
+			{
+				index2 = (nodes*numVerts);
+			}
+			int index3 = index1+numVerts;
+			int index4 = index2+numVerts;
+		
+			//trangle 1
+			m_strandIndices.push_back(index1);
+			m_strandIndices.push_back(index2);
+			m_strandIndices.push_back(index3);
+			//triangle 2
+			m_strandIndices.push_back(index4);
+			m_strandIndices.push_back(index3);
+			m_strandIndices.push_back(index2);
+		}
+	}
+
+	//for the top
+	int topIndex = (numNodes-1)*m_hairShape.size();
+	for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
+	{
+		int index1 = vert;
+		int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
+		m_strandIndices.push_back(topIndex);
+		m_strandIndices.push_back(index2);
+		m_strandIndices.push_back(index1);
+	}
+	//for the tip
+	int tipIndex = topIndex+1;
+	for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
+	{
+		int offset = (numNodes-2)*m_hairShape.size();
+		int index1 = vert;
+		int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
+		m_strandIndices.push_back(tipIndex);
+		m_strandIndices.push_back(index1+offset);
+		m_strandIndices.push_back(index2+offset);
+	}
+}
+
+void HairModel::generateVertices(bool update, int section)
+{
+	btSoftBody* body = m_strandSoftBodies[section];
+
+	//variables used to create geometry
+	Ogre::Vector3 shapeDir(0,-1,0);
+	Ogre::Quaternion rot;
+	float scale;
+
+	for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
+	{
+		float pos = (float)(node)/(body->m_nodes.size());
+		scale = determineScale(pos);
+
+		rot = determineRotation(shapeDir,
+		Ogre::Vector3(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z()),
+		Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z())
+			);
+
+		//generate shape
+		//if usual section of hair
+		for(int i = 0 ; i < m_hairShape.size() ; i++)
+		{
+			Ogre::Vector3 vert = rot*m_hairShape[i];
+			vert = vert*scale;
+
+			vert = Ogre::Vector3(
+				body->m_nodes[node].m_x.x()+vert.x,
+				body->m_nodes[node].m_x.y()+vert.y,
+				body->m_nodes[node].m_x.z()+vert.z
+				);
+
+			//update existing geometry
+			if(update)
+			{
+				int index = (node*m_hairShape.size())+i;
+				m_strandVertices[section][index] = vert;
+			}
+			//creating new geometry
+			else
+			{
+				m_strandVertices[section].push_back(vert);
+			}
+		}
+	}
+
+	//in order to cap the top of the strand and taper the end - the last two vertices will be these points
+	Ogre::Vector3 start(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z());
+	Ogre::Vector3 end(body->m_nodes[body->m_nodes.size()-1].m_x.x(),body->m_nodes[body->m_nodes.size()-1].m_x.y(),body->m_nodes[body->m_nodes.size()-1].m_x.z());
+
+	if(update)
+	{
+		int index = (body->m_nodes.size()-1)*m_hairShape.size();
+		m_strandVertices[section][index] = start;
+		m_strandVertices[section][index+1] = end;
+	}
+	else
+	{
+		m_strandVertices[section].push_back(start);
+		m_strandVertices[section].push_back(end);
+	}
+}
+
+void HairModel::generateNormals(bool update, int section)
+{
+	//reset normals
+	for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
+	{
+		if(update)
+		{
+			m_strandNormals[section][vert] = Ogre::Vector3(0,0,0);
+		}
+		else
+		{
+			m_strandNormals[section].push_back(Ogre::Vector3(0,0,0));
+		}
+	}
+
+	//generate normals - http://assimp.svn.sourceforge.net/viewvc/assimp/trunk/code/GenVertexNormalsProcess.cpp?revision=661&view=markup
+	for(int face = 0 ; face < m_strandIndices.size() ; face+=3)
+	{
+		int v1Index = m_strandIndices[face];
+		int v2Index = m_strandIndices[face+1];
+		int v3Index = m_strandIndices[face+2];
+
+		Ogre::Vector3 v1 = m_strandVertices[section][v1Index];
+		Ogre::Vector3 v2 = m_strandVertices[section][v2Index];
+		Ogre::Vector3 v3 = m_strandVertices[section][v3Index];
+
+		Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
+		normal.normalise();
+
+		m_strandNormals[section][v1Index] += normal;
+		m_strandNormals[section][v2Index] += normal;
+		m_strandNormals[section][v3Index] += normal;
+	}
+
+	//normalise
+	for(int normals = 0 ; normals < m_strandNormals[section].size() ; normals++)
+	{
+		m_strandNormals[section][normals].normalise();
+	}
+}
+
+void HairModel::addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3)
+{
+	Edge edge = m_edgeMap[key];
+	if(edge.edgeCount == 0)
+	{
+		edge.triangle1Indices[0] = index1;
+		edge.triangle1Indices[1] = index2;
+		edge.triangle1Indices[2] = index3;
+	}
+	else if (edge.edgeCount == 1)
+	{
+		edge.triangle2Indices[0] = index1;
+		edge.triangle2Indices[1] = index2;
+		edge.triangle2Indices[2] = index3;
+	}
+	else
+	{
+		assert(edge.edgeCount < 2);
+	}
+	edge.edgeCount++;
+	m_edgeMap[key] = edge;
+}
+
+void HairModel::generateEdgeMap()
+{
+	//go through every triangle
+	for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
+	{
+		int i1 = m_strandIndices[index];
+		int i2 = m_strandIndices[index+1];
+		int i3 = m_strandIndices[index+2];
+
+		std::pair<int,int> key;
+
+		//edge 1
+		key.first = i1;
+		key.second = i2;
+
+		addToEdgeMap(key,i1,i2,i3);
+
+		//edge 2
+		key.first = i1;
+		key.second = i3;
+
+		addToEdgeMap(key,i1,i2,i3);
+
+		//edge 3
+		key.first = i2;
+		key.second = i3;
+
+		addToEdgeMap(key,i1,i2,i3);
+	}
+}
+
 void HairModel::createOrUpdateManualObject(bool update)
 {
 	//generate indices
 	if(!update)
 	{
-		int numNodes = m_strandSoftBodies[0]->m_nodes.size();
-		int numVerts = m_hairShape.size();
-
-		//for the normal sides of the strand
-		for(int nodes = 0 ; nodes < numNodes-2 ; nodes++)
-		{
-			for(int vert = 0 ; vert < numVerts ; vert++)
-			{
-				/*
-				Here is a rough idea of how the indices are laid out
-				1-2
-				|/|
-				3-4
-				*/
-				int index1 = (nodes*numVerts)+vert;
-				int index2 = index1 + 1;
-				////stop the the index from wrapping around
-				if(index2 == (nodes*numVerts)+numVerts)
-				{
-					index2 = (nodes*numVerts);
-				}
-				int index3 = index1+numVerts;
-				int index4 = index2+numVerts;
-
-				//trangle 1
-				m_strandIndices.push_back(index1);
-				m_strandIndices.push_back(index2);
-				m_strandIndices.push_back(index3);
-				//triangle 2
-				m_strandIndices.push_back(index4);
-				m_strandIndices.push_back(index3);
-				m_strandIndices.push_back(index2);
-			}
-		}
-
-		//for the top
-		int topIndex = (numNodes-1)*m_hairShape.size();
-		for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
-		{
-			int index1 = vert;
-			int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
-			m_strandIndices.push_back(topIndex);
-			m_strandIndices.push_back(index2);
-			m_strandIndices.push_back(index1);
-		}
-		//for the tip
-		int tipIndex = topIndex+1;
-		for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
-		{
-			int offset = (numNodes-2)*m_hairShape.size();
-			int index1 = vert;
-			int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
-			m_strandIndices.push_back(tipIndex);
-			m_strandIndices.push_back(index1+offset);
-			m_strandIndices.push_back(index2+offset);
-		}
+		generateIndices();
+		generateEdgeMap();
 	}
-
 
 	//iterate through each section (one for each strand) of the hair mesh
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
-		//variables used to create geometry
-		Ogre::Vector3 shapeDir(0,-1,0);
-		Ogre::Quaternion rot;
-		float scale;
-
 		if(update)
 		{
 			m_hairMesh->beginUpdate(section);
@@ -503,99 +637,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
 		}
 
-		btSoftBody* body = m_strandSoftBodies[section];
-
 		//generate geometry
-		for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
-		{
-			float pos = (float)(node)/(body->m_nodes.size());
-			scale = determineScale(pos);
-
-			rot = determineRotation(shapeDir,
-				Ogre::Vector3(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z()),
-				Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z())
-				);
-
-			//generate shape
-			//if usual section of hair
-			for(int i = 0 ; i < m_hairShape.size() ; i++)
-			{
-				Ogre::Vector3 vert = rot*m_hairShape[i];
-				vert = vert*scale;
-
-				vert = Ogre::Vector3(
-					body->m_nodes[node].m_x.x()+vert.x,
-					body->m_nodes[node].m_x.y()+vert.y,
-					body->m_nodes[node].m_x.z()+vert.z
-					);
-
-				//update existing geometry
-				if(update)
-				{
-					int index = (node*m_hairShape.size())+i;
-					m_strandVertices[section][index] = vert;
-				}
-				//creating new geometry
-				else
-				{
-					m_strandVertices[section].push_back(vert);
-				}
-			}
-		}
-
-		//in order to cap the top of the strand and taper the end - the last two vertices will be these points
-		Ogre::Vector3 start(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z());
-		Ogre::Vector3 end(body->m_nodes[body->m_nodes.size()-1].m_x.x(),body->m_nodes[body->m_nodes.size()-1].m_x.y(),body->m_nodes[body->m_nodes.size()-1].m_x.z());
-
-		if(update)
-		{
-			int index = (body->m_nodes.size()-1)*m_hairShape.size();
-			m_strandVertices[section][index] = start;
-			m_strandVertices[section][index+1] = end;
-		}
-		else
-		{
-			m_strandVertices[section].push_back(start);
-			m_strandVertices[section].push_back(end);
-		}
-
-		//reset normals
-		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
-		{
-			if(update)
-			{
-				m_strandNormals[section][vert] = Ogre::Vector3(0,0,0);
-			}
-			else
-			{
-				m_strandNormals[section].push_back(Ogre::Vector3(0,0,0));
-			}
-		}
-
-		//generate normals - http://assimp.svn.sourceforge.net/viewvc/assimp/trunk/code/GenVertexNormalsProcess.cpp?revision=661&view=markup
-		for(int face = 0 ; face < m_strandIndices.size() ; face+=3)
-		{
-			int v1Index = m_strandIndices[face];
-			int v2Index = m_strandIndices[face+1];
-			int v3Index = m_strandIndices[face+2];
-
-			Ogre::Vector3 v1 = m_strandVertices[section][v1Index];
-			Ogre::Vector3 v2 = m_strandVertices[section][v2Index];
-			Ogre::Vector3 v3 = m_strandVertices[section][v3Index];
-
-			Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
-			normal.normalise();
-
-			m_strandNormals[section][v1Index] += normal;
-			m_strandNormals[section][v2Index] += normal;
-			m_strandNormals[section][v3Index] += normal;
-		}
-
-		//normalise
-		for(int normals = 0 ; normals < m_strandNormals[section].size() ; normals++)
-		{
-			m_strandNormals[section][normals].normalise();
-		}
+		generateVertices(update,section);
+		generateNormals(update,section);
 
 		
 		//generate manual object
