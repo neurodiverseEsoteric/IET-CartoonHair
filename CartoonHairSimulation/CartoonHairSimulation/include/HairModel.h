@@ -25,23 +25,6 @@ enum EdgeType
 	NOTHING, BORDER, CREASE, SILHOUETTE
 };
 
-//http://www.cplusplus.com/reference/map/map/map/
-//struct KeyCompare
-//{
-//	bool operator() (const std::pair<int,int>& lhs, const std::pair<int,int>& rhs) const
-//	{
-//		//if they are the same
-//		if(
-//			(lhs.first == rhs.first && lhs.second == rhs.second)||
-//			(lhs.first == rhs.second && lhs.second == rhs.first)
-//			)
-//		{
-//			return false;
-//		}
-//	}
-//};
-
-
 //http://stackoverflow.com/questions/2099540/defining-custom-hash-function-and-equality-function-for-unordered-map
 struct HashFunction
 {
@@ -82,11 +65,13 @@ class HairModel
 {
 public:
 	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
+		Ogre::Vector3 eyeVector);
 	~HairModel();
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
-	void updateManualObject();
+	Ogre::ManualObject* getEdgeManualObject();
+	void updateManualObject(Ogre::Vector3 eyeVector);
 	void updateStictionSegments();
 	float getSimulationScale();
 private:
@@ -95,7 +80,7 @@ private:
 	void addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1);
 	void generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
-	void generateHairMesh(Ogre::SceneManager *sceneMgr);
+	void generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeVector);
 	float determineScale(float x);
 	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
@@ -108,8 +93,11 @@ private:
 	void generateEdgeMap();
 	void generateVertices(bool update, int section);
 	void generateNormals(bool update, int section);
-
 	void addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
+
+	void generateEdges(bool update,Ogre::Vector3 eyeVector);
+	
+	Ogre::Vector3 calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3);
 
 	//variables
 
@@ -122,13 +110,12 @@ private:
 	btSoftRigidDynamicsWorld *m_world;
 	
 	//rendering variables
-	Ogre::ManualObject *m_hairMesh, *m_normalMesh;
+	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;
 
 	//edge rendering variables - npar2000_lake_et_al.pdf
-	//std::map<std::pair<int,int>,Edge,KeyCompare> m_edgeMap;
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;
 
 };

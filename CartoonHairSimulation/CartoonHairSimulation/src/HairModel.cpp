@@ -3,11 +3,12 @@
 #include "tinyxml2.h"
 
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
-	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
+	Ogre::Vector3 eyeVector)
 {
 	m_world = world;
 	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
-	generateHairMesh(sceneMgr);
+	generateHairMesh(sceneMgr,eyeVector);
 }
 
 HairModel::~HairModel()
@@ -55,9 +56,15 @@ Ogre::ManualObject* HairModel::getNormalsManualObject()
 	return m_normalMesh;
 }
 
-void HairModel::updateManualObject()
+Ogre::ManualObject* HairModel::getEdgeManualObject()
+{
+	return m_edgeMesh;
+}
+
+void HairModel::updateManualObject(Ogre::Vector3 eyeVector)
 {
 	createOrUpdateManualObject(true);
+	generateEdges(true,eyeVector);
 }
 
 float HairModel::getSimulationScale()
@@ -266,7 +273,7 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 	}
 }
 
-void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
+void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeVector)
 {
 	//create hair shape
 	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,-0.05));
@@ -283,7 +290,11 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 	m_normalMesh = sceneMgr->createManualObject("normals");
 	m_normalMesh->setDynamic(true);
 
+	m_edgeMesh = sceneMgr->createManualObject("edges");
+	m_edgeMesh->setDynamic(true);
+
 	createOrUpdateManualObject(false);
+	generateEdges(false,eyeVector);
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
@@ -542,8 +553,7 @@ void HairModel::generateNormals(bool update, int section)
 		Ogre::Vector3 v2 = m_strandVertices[section][v2Index];
 		Ogre::Vector3 v3 = m_strandVertices[section][v3Index];
 
-		Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
-		normal.normalise();
+		Ogre::Vector3 normal = calculateNormal(v1,v2,v3);
 
 		m_strandNormals[section][v1Index] += normal;
 		m_strandNormals[section][v2Index] += normal;
@@ -609,6 +619,74 @@ void HairModel::generateEdgeMap()
 
 		addToEdgeMap(key,i1,i2,i3);
 	}
+}
+
+void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
+{
+	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
+	{
+		if(update)
+		{
+			m_edgeMesh->beginUpdate(section);
+		}
+		else
+		{
+			m_edgeMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
+		}
+
+		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
+		for(it = m_edgeMap.begin() ; it != m_edgeMap.end() ; it++)
+		{
+			Edge *edge = &(it->second);
+			assert(edge->edgeCount>0 && edge->edgeCount <3);
+
+			if(edge->edgeCount == 1)
+			{
+				edge->flag = EdgeType::BORDER;
+			}
+			else
+			{
+				//calculate normals
+				//triangle 1
+				Ogre::Vector3 v1 = m_strandVertices[section][edge->triangle1Indices[0]];
+				Ogre::Vector3 v2 = m_strandVertices[section][edge->triangle1Indices[1]];
+				Ogre::Vector3 v3 = m_strandVertices[section][edge->triangle1Indices[2]];
+				Ogre::Vector3 normal1 = calculateNormal(v1,v2,v3);
+
+				//triangle 2
+				v1 = m_strandVertices[section][edge->triangle2Indices[0]];
+				v2 = m_strandVertices[section][edge->triangle2Indices[1]];
+				v3 = m_strandVertices[section][edge->triangle2Indices[2]];
+				Ogre::Vector3 normal2 = calculateNormal(v1,v2,v3);
+
+				//npar2000_lake_et_al.pdf
+				if(normal1.dotProduct(eyeVector)*normal2.dotProduct(eyeVector)<=0)
+				{
+					edge->flag = EdgeType::SILHOUETTE;
+				}
+				else
+				{
+					edge->flag = EdgeType::NOTHING;
+				}
+			}
+
+			if(edge->flag == EdgeType::BORDER || edge->flag == EdgeType::SILHOUETTE)
+			{
+				m_edgeMesh->colour(0,0,0);
+				m_edgeMesh->position(m_strandVertices[section][it->first.first]);
+				m_edgeMesh->position(m_strandVertices[section][it->first.second]);
+			}
+		}
+
+		m_edgeMesh->end();
+	}
+}
+
+Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3)
+{
+	Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
+	normal.normalise();
+	return normal;
 }
 
 void HairModel::createOrUpdateManualObject(bool update)

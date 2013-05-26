@@ -539,7 +539,7 @@ void CartoonHairSimulation::createScene(void)
 
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
-		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial);
+		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,mCamera->getDirection());
 	
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
@@ -558,6 +558,7 @@ void CartoonHairSimulation::createScene(void)
 	headNode->attachObject(m_debugDrawer->getLinesManualObject());
 	headNode->attachObject(m_hairModel->getHairManualObject());
 	headNode->attachObject(m_hairModel->getNormalsManualObject());
+	headNode->attachObject(m_hairModel->getEdgeManualObject());
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -598,7 +599,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	if(m_physicsEnabled)
 	{
 		mWorld->stepSimulation(timestep);
-		m_hairModel->updateManualObject();
+		m_hairModel->updateManualObject(mCamera->getDirection());
 		m_hairModel->updateStictionSegments();
 	}
 
