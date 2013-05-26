@@ -4,8 +4,11 @@
 
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-	Ogre::Vector3 eyeVector)
+	Ogre::Vector3 eyeVector, float a, float b, float c)
 {
+	m_a = a;
+	m_b = b;
+	m_c = c;
 	m_world = world;
 	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
 	generateHairMesh(sceneMgr,eyeVector);
@@ -743,6 +746,13 @@ void HairModel::createOrUpdateManualObject(bool update)
 	}
 }
 
+void HairModel::setCurveValues(float a, float b, float c)
+{
+	m_a = a;
+	m_b = b;
+	m_c = c;
+}
+
 float HairModel::determineScale(float x)
 {
 	//this uses the technique from A Stylized Cartoon Hair Renderer (a64-shin.pdf)
@@ -753,7 +763,8 @@ float HairModel::determineScale(float x)
 	//float func = -1.4*x*x + 0.2*x + 1.1;
 	//float func = -4.6*x*x + 2.6*x + 1.1;
 	//float func = -5.8*x*x + 3*x + 2.7;
-	float func = -13.9*x*x+4.9*x+6.4;
+	//float func = -13.9*x*x+4.9*x+6.4;
+	float func = m_a*x*x + m_b*x + m_c;
 
 	return Ogre::Math::Abs(func);
 }

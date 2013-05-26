@@ -484,6 +484,10 @@ void CartoonHairSimulation::createScene(void)
 	m_torsionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/torsionSlider");
 	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");
 
+	m_aSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/aValue");
+	m_bSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/bValue");
+	m_cSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/cValue");
+
 	//setup spring materials
 	m_edgeMaterial = new btSoftBody::Material();
 	m_bendingMaterial = new btSoftBody::Material();
@@ -496,6 +500,10 @@ void CartoonHairSimulation::createScene(void)
 	m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
 	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
 	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);
+
+	m_aSlider->setCurrentValue(-13.9+m_aSlider->getMaxValue()/2);
+	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
+	m_cSlider->setCurrentValue(6.4+m_cSlider->getMaxValue()/2);
 
 	//setup background colour
 	if(mWindow->getNumViewports())
@@ -537,9 +545,13 @@ void CartoonHairSimulation::createScene(void)
 	delete[] vertices;
 	delete[] indices;
 
+	float a = m_aSlider->getCurrentValue()-(m_aSlider->getMaxValue()/2);
+	float b = m_bSlider->getCurrentValue()-(m_bSlider->getMaxValue()/2);
+	float c = m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2);
+
 	//setup dynamic hair
 	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
-		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,mCamera->getDirection());
+		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,mCamera->getDirection(),a,b,c);
 	
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
@@ -606,6 +618,12 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
 	m_bendingMaterial->m_kLST = m_bendingSlider->getCurrentValue();
 	m_torsionMaterial->m_kLST = m_torsionSlider->getCurrentValue();
+
+	m_hairModel->setCurveValues(
+		m_aSlider->getCurrentValue()-(m_aSlider->getMaxValue()/2),
+		m_bSlider->getCurrentValue()-(m_bSlider->getMaxValue()/2),
+		m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2)
+		);
 	
 
 	m_debugDrawer->begin();

@@ -28,7 +28,7 @@ enum EdgeType
 //http://stackoverflow.com/questions/2099540/defining-custom-hash-function-and-equality-function-for-unordered-map
 struct HashFunction
 {
-	bool operator() (const std::pair<int,int>& key) const
+	std::size_t operator() (const std::pair<int,int>& key) const
 	{
 		return key.first + key.second;
 	}
@@ -66,7 +66,7 @@ class HairModel
 public:
 	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-		Ogre::Vector3 eyeVector);
+		Ogre::Vector3 eyeVector, float a, float b, float c);
 	~HairModel();
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
@@ -74,6 +74,7 @@ public:
 	void updateManualObject(Ogre::Vector3 eyeVector);
 	void updateStictionSegments();
 	float getSimulationScale();
+	void setCurveValues(float a, float b, float c);
 private:
 	//methods
 	void getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1);
@@ -114,6 +115,7 @@ private:
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;
+	float m_a,m_b,m_c;
 
 	//edge rendering variables - npar2000_lake_et_al.pdf
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;

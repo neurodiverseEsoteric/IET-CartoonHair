@@ -71,6 +71,7 @@ protected:
 	CEGUI::OgreRenderer* m_renderer;
 	CEGUI::Window *m_guiRoot;
 	CEGUI::Slider *m_edgeSlider, *m_bendingSlider, *m_torsionSlider, *m_stictionSlider;
+	CEGUI::Slider *m_aSlider, *m_bSlider, *m_cSlider;
 
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;
