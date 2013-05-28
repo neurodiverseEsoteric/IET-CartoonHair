@@ -571,6 +571,7 @@ void CartoonHairSimulation::createScene(void)
 	headNode->attachObject(m_hairModel->getHairManualObject());
 	headNode->attachObject(m_hairModel->getNormalsManualObject());
 	headNode->attachObject(m_hairModel->getEdgeManualObject());
+	//headNode->attachObject(m_hairModel->getEdgeBillboardSet());
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)

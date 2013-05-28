@@ -71,6 +71,7 @@ public:
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
+	//Ogre::BillboardSet* getEdgeBillboardSet();
 	void updateManualObject(Ogre::Vector3 eyeVector);
 	void updateStictionSegments();
 	float getSimulationScale();
@@ -112,6 +113,7 @@ private:
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
+	//Ogre::BillboardSet *m_edgeSet;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;

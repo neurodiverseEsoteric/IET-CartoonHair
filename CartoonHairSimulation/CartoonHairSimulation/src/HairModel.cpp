@@ -64,6 +64,11 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 	return m_edgeMesh;
 }
 
+//Ogre::BillboardSet* HairModel::getEdgeBillboardSet()
+//{
+//	return m_edgeSet;
+//}
+
 void HairModel::updateManualObject(Ogre::Vector3 eyeVector)
 {
 	createOrUpdateManualObject(true);
@@ -295,6 +300,8 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeV
 
 	m_edgeMesh = sceneMgr->createManualObject("edges");
 	m_edgeMesh->setDynamic(true);
+
+	//m_edgeSet = sceneMgr->createBillboardSet("edges");
 
 	createOrUpdateManualObject(false);
 	generateEdges(false,eyeVector);
@@ -626,6 +633,10 @@ void HairModel::generateEdgeMap()
 
 void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
 {
+	Ogre::Vector3 up(0,1,0);
+	Ogre::Vector3 right(1,0,0);
+	Ogre::Vector3 lookAt(0,0,1);
+
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
 		if(update)
@@ -634,8 +645,10 @@ void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
 		}
 		else
 		{
-			m_edgeMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
+			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		}
+
+		//m_edgeSet->clear();
 
 		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
 		for(it = m_edgeMap.begin() ; it != m_edgeMap.end() ; it++)
@@ -673,11 +686,51 @@ void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
 				}
 			}
 
+			//billboard particles for edges - inspired by a64-shin.pdf
+			//and http://www.lighthouse3d.com/opengl/billboarding/index.php?billCyl
 			if(edge->flag == EdgeType::BORDER || edge->flag == EdgeType::SILHOUETTE)
 			{
+				//get view vectors
+				Ogre::Vector3 edgeUp = m_strandVertices[section][it->first.second]-m_strandVertices[section][it->first.first];
+				edgeUp.normalise();
+				Ogre::Quaternion rot = up.getRotationTo(edgeUp);
+				Ogre::Vector3 edgeRight = rot*right;
+				Ogre::Vector3 edgeLookAt = rot*lookAt;
+
+				Ogre::Quaternion rotToView = edgeLookAt.getRotationTo(eyeVector);
+
+				Ogre::Vector3 offset = right*0.1f;
+				offset = rotToView*offset;
+
+				//create triagnles
 				m_edgeMesh->colour(0,0,0);
-				m_edgeMesh->position(m_strandVertices[section][it->first.first]);
-				m_edgeMesh->position(m_strandVertices[section][it->first.second]);
+				Ogre::Vector3 node0 = m_strandVertices[section][it->first.first];
+				Ogre::Vector3 node1 = m_strandVertices[section][it->first.second];
+
+				Ogre::Vector3 point0 = node0-offset;
+				Ogre::Vector3 point1 = node0+offset;
+				Ogre::Vector3 point2 = node1-offset;
+				Ogre::Vector3 point3 = node1+offset;
+
+				/*m_edgeMesh->position(m_strandVertices[section][it->first.first]);
+				m_edgeMesh->position(m_strandVertices[section][it->first.second]);*/
+				m_edgeMesh->textureCoord(0,1);
+				m_edgeMesh->position(point0);
+
+				m_edgeMesh->textureCoord(0,0);
+				m_edgeMesh->position(point2);
+
+				m_edgeMesh->textureCoord(1,1);
+				m_edgeMesh->position(point1);
+
+				m_edgeMesh->textureCoord(1,1);
+				m_edgeMesh->position(point1);
+
+				m_edgeMesh->textureCoord(0,0);
+				m_edgeMesh->position(point2);
+
+				m_edgeMesh->textureCoord(1,0);
+				m_edgeMesh->position(point3);
 			}
 		}
 
