@@ -4,14 +4,15 @@
 
 HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-	Ogre::Vector3 eyeVector, float a, float b, float c)
+	Ogre::Camera *camera, float a, float b, float c)
 {
+	m_camera = camera;
 	m_a = a;
 	m_b = b;
 	m_c = c;
 	m_world = world;
 	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
-	generateHairMesh(sceneMgr,eyeVector);
+	generateHairMesh(sceneMgr);
 }
 
 HairModel::~HairModel()
@@ -69,10 +70,10 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 //	return m_edgeSet;
 //}
 
-void HairModel::updateManualObject(Ogre::Vector3 eyeVector)
+void HairModel::updateManualObject()
 {
 	createOrUpdateManualObject(true);
-	generateEdges(true,eyeVector);
+	generateEdges(true);
 }
 
 float HairModel::getSimulationScale()
@@ -281,7 +282,7 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 	}
 }
 
-void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeVector)
+void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 {
 	//create hair shape
 	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,-0.05));
@@ -304,7 +305,7 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeV
 	//m_edgeSet = sceneMgr->createBillboardSet("edges");
 
 	createOrUpdateManualObject(false);
-	generateEdges(false,eyeVector);
+	generateEdges(false);
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
@@ -631,11 +632,10 @@ void HairModel::generateEdgeMap()
 	}
 }
 
-void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
+void HairModel::generateEdges(bool update)
 {
-	Ogre::Vector3 up(0,1,0);
-	Ogre::Vector3 right(1,0,0);
-	Ogre::Vector3 lookAt(0,0,1);
+
+	Ogre::Vector3 eyeVector = m_camera->getDirection();
 
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
@@ -647,8 +647,6 @@ void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
 		{
 			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		}
-
-		//m_edgeSet->clear();
 
 		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
 		for(it = m_edgeMap.begin() ; it != m_edgeMap.end() ; it++)
@@ -688,49 +686,53 @@ void HairModel::generateEdges(bool update,Ogre::Vector3 eyeVector)
 
 			//billboard particles for edges - inspired by a64-shin.pdf
 			//and http://www.lighthouse3d.com/opengl/billboarding/index.php?billCyl
-			if(edge->flag == EdgeType::BORDER || edge->flag == EdgeType::SILHOUETTE)
+			if(edge->flag == EdgeType::SILHOUETTE || edge->flag == EdgeType::BORDER || edge->flag == EdgeType::CREASE)
 			{
-				//get view vectors
-				Ogre::Vector3 edgeUp = m_strandVertices[section][it->first.second]-m_strandVertices[section][it->first.first];
-				edgeUp.normalise();
-				Ogre::Quaternion rot = up.getRotationTo(edgeUp);
-				Ogre::Vector3 edgeRight = rot*right;
-				Ogre::Vector3 edgeLookAt = rot*lookAt;
+				//default vectors
+				Ogre::Vector3 right(1,0,0);
+				Ogre::Vector3 up(0,1,0);
+				Ogre::Vector3 lookAt(0,0,1);
+				
+				//get rotation for the default vectors to be in line with the orientation of the edge
+				Ogre::Vector3 direction = m_strandVertices[section][it->first.second]-m_strandVertices[section][it->first.first];
+				float length = direction.length();
+				direction.normalise();
+				Ogre::Quaternion rot = right.getRotationTo(direction);
 
-				Ogre::Quaternion rotToView = edgeLookAt.getRotationTo(eyeVector);
+				//apply rotation
+				right = rot*right;
+				up = rot*up;
+				lookAt = rot*lookAt;
 
+				//determine orientation to face camera
+				Ogre::Vector3 objPos = m_strandVertices[section][it->first.first]+direction*length*0.5f;
+				Ogre::Vector3 objToCam = m_camera->getPosition()-objPos;
+				Ogre::Vector3 objToCamProj = objToCam;
+				objToCamProj.y = 0.0f;
+
+				objToCamProj.normalise();
+				rot = lookAt.getRotationTo(objToCamProj);
+
+				//create billboard particles
 				Ogre::Vector3 offset = right*0.1f;
-				offset = rotToView*offset;
+				offset = rot*offset;
 
-				//create triagnles
-				m_edgeMesh->colour(0,0,0);
 				Ogre::Vector3 node0 = m_strandVertices[section][it->first.first];
 				Ogre::Vector3 node1 = m_strandVertices[section][it->first.second];
+				Ogre::Vector3 p0,p1,p2,p3;
+				p0 = node0-offset;
+				p1 = node0+offset;
+				p2 = node1-offset;
+				p3 = node1+offset;
 
-				Ogre::Vector3 point0 = node0-offset;
-				Ogre::Vector3 point1 = node0+offset;
-				Ogre::Vector3 point2 = node1-offset;
-				Ogre::Vector3 point3 = node1+offset;
+				m_edgeMesh->position(p0);
+				m_edgeMesh->position(p2);
+				m_edgeMesh->position(p1);
 
-				/*m_edgeMesh->position(m_strandVertices[section][it->first.first]);
-				m_edgeMesh->position(m_strandVertices[section][it->first.second]);*/
-				m_edgeMesh->textureCoord(0,1);
-				m_edgeMesh->position(point0);
+				m_edgeMesh->position(p1);
+				m_edgeMesh->position(p2);
+				m_edgeMesh->position(p3);
 
-				m_edgeMesh->textureCoord(0,0);
-				m_edgeMesh->position(point2);
-
-				m_edgeMesh->textureCoord(1,1);
-				m_edgeMesh->position(point1);
-
-				m_edgeMesh->textureCoord(1,1);
-				m_edgeMesh->position(point1);
-
-				m_edgeMesh->textureCoord(0,0);
-				m_edgeMesh->position(point2);
-
-				m_edgeMesh->textureCoord(1,0);
-				m_edgeMesh->position(point3);
 			}
 		}
 

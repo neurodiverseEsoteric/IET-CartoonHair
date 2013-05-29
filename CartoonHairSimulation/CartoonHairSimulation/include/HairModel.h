@@ -66,13 +66,14 @@ class HairModel
 public:
 	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-		Ogre::Vector3 eyeVector, float a, float b, float c);
+		Ogre::Camera *camera,
+		float a, float b, float c);
 	~HairModel();
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
 	//Ogre::BillboardSet* getEdgeBillboardSet();
-	void updateManualObject(Ogre::Vector3 eyeVector);
+	void updateManualObject();
 	void updateStictionSegments();
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
@@ -82,7 +83,7 @@ private:
 	void addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1);
 	void generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
-	void generateHairMesh(Ogre::SceneManager *sceneMgr,Ogre::Vector3 eyeVector);
+	void generateHairMesh(Ogre::SceneManager *sceneMgr);
 	float determineScale(float x);
 	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
@@ -97,7 +98,7 @@ private:
 	void generateNormals(bool update, int section);
 	void addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
 
-	void generateEdges(bool update,Ogre::Vector3 eyeVector);
+	void generateEdges(bool update);
 	
 	Ogre::Vector3 calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3);
 
@@ -118,6 +119,8 @@ private:
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<int> m_strandIndices;
 	float m_a,m_b,m_c;
+
+	Ogre::Camera *m_camera;
 
 	//edge rendering variables - npar2000_lake_et_al.pdf
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;
