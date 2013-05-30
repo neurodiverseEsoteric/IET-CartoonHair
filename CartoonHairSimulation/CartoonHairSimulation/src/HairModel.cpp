@@ -2,7 +2,7 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
-HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
+HairModel::HairModel(std::string directory, std::string animation, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
 	Ogre::Camera *camera, float a, float b, float c)
 {
@@ -11,7 +11,9 @@ HairModel::HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftR
 	m_b = b;
 	m_c = c;
 	m_world = world;
-	generateHairStrands(filename,world,edgeMaterial,bendingMaterial,torsionMaterial);
+
+	std::string hairFrame = loadAnchorPoints(directory,animation);
+	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
 	generateHairMesh(sceneMgr);
 }
 
@@ -64,11 +66,6 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 {
 	return m_edgeMesh;
 }
-
-//Ogre::BillboardSet* HairModel::getEdgeBillboardSet()
-//{
-//	return m_edgeSet;
-//}
 
 void HairModel::updateManualObject()
 {
@@ -231,13 +228,69 @@ void HairModel::getClosestPoints(const btVector3 &strand0p0,const btVector3 &str
 	point1.setValue(p1.x,p1.y,p1.z);
 }
 
-void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
+//loads all of the specified hair frames into a vector of vectors for anchor animation and returns the first frame's location
+std::string HairModel::loadAnchorPoints(std::string directory, std::string filename)
+{
+	tinyxml2::XMLDocument doc;
+
+	doc.LoadFile((directory+filename).c_str());
+
+	//get names of the hair frames
+	tinyxml2::XMLElement *hair = doc.FirstChildElement()->FirstChildElement();
+
+	std::string firstFrame(hair->Attribute("name"));
+
+	for(hair; hair ; hair = hair->NextSiblingElement())
+	{
+		//load vertices
+		std::string name(hair->Attribute("name"));
+		m_anchorPoints.push_back(loadAnchorPositions(directory+name));
+	}
+
+	return firstFrame;
+}
+
+std::vector<Ogre::Vector3> HairModel::loadAnchorPositions(std::string filename)
+{
+	std::vector<Ogre::Vector3> vertices;
+
+	tinyxml2::XMLDocument doc;
+
+	//load xml document
+	doc.LoadFile(filename.c_str());
+
+	tinyxml2::XMLElement *hair = doc.FirstChildElement();
+
+	//get the first strand
+	tinyxml2::XMLElement *strand = hair->FirstChildElement();
+
+	//iterate through the strands and save the particles
+	for(strand ; strand ; strand = strand->NextSiblingElement())
+	{
+		//iterate through hair particles - first one is the root and should be fixed in position
+		tinyxml2::XMLElement *particle = strand->FirstChildElement();
+
+		for(particle ; particle ; particle = particle->NextSiblingElement())
+		{
+			float x = particle->FloatAttribute("x");
+			float y = particle->FloatAttribute("y");
+			float z = particle->FloatAttribute("z");
+
+			
+			vertices.push_back(Ogre::Vector3(x,y,z));
+		}
+	}
+
+	return vertices;
+}
+
+void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	tinyxml2::XMLDocument doc;
 
 	//load xml document
-	doc.LoadFile(filename);
+	doc.LoadFile(filename.c_str());
 
 	tinyxml2::XMLElement *hair = doc.FirstChildElement();
 
@@ -252,6 +305,8 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 	{
 		//iterate through hair particles - first one is the root and should be fixed in position
 		btAlignedObjectArray<btVector3> particles;
+		std::vector<btRigidBody*> anchors;
+
 		std::vector<float> masses;
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
 
@@ -264,10 +319,25 @@ void HairModel::generateHairStrands(const char* filename,btSoftRigidDynamicsWorl
 
 			particles.push_back(btVector3(x,y,z));
 			masses.push_back(1.0f);
+
+			//create anchor at this position - http://www.oogtech.org/content/2011/09/07/bullet-survival-kit-4-the-motion-state/
+			//we don't need a collision shape
+			btEmptyShape *emptyShape = new btEmptyShape();
+			btDefaultMotionState *anchorMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
+			btRigidBody::btRigidBodyConstructionInfo anchorConstructionInfo(0,anchorMotionState,emptyShape,btVector3(0,0,0));
+			btRigidBody *anchor = new btRigidBody(anchorConstructionInfo);
+			anchor->setWorldTransform(btTransform(btQuaternion(0,0,0,1),btVector3(x,y,z)));
+			//anchor->setCollisionFlags(anchor->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
+			//anchor->setActivationState(DISABLE_DEACTIVATION);
+
+			anchors.push_back(anchor);
+			m_anchors.push_back(anchor);
+
+			m_world->addCollisionObject(anchor,NULL,NULL);
 		}
 
 		//now to create the strand softbody and its ghost nodes
-		btSoftBody *hairStrand = createHairStrand(world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
+		btSoftBody *hairStrand = createHairStrand(world,particles,masses,anchors,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
 		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
 
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
@@ -309,7 +379,7 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
-btSoftBody* HairModel::createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
+btSoftBody* HairModel::createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses,std::vector<btRigidBody*> &anchors, btSoftBodyWorldInfo &worldInfo,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
 	//create softbody
@@ -328,6 +398,12 @@ btSoftBody* HairModel::createHairStrand(btSoftRigidDynamicsWorld *world, btAlign
 	for(int node = 0 ; node < strand->m_nodes.size()-2 ; node++)
 	{
 		strand->appendLink(node,node+2,bendingMaterial);
+	}
+
+	//attach to anchors - 01309193.pdf
+	for(int node = 0 ; node < strand->m_nodes.size() ; node++)
+	{
+		strand->appendAnchor(node,anchors[node]);
 	}
 
 	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
@@ -513,6 +589,7 @@ void HairModel::generateVertices(bool update, int section)
 				int index = (node*m_hairShape.size())+i;
 				m_strandVertices[section][index] = vert;
 			}
+
 			//creating new geometry
 			else
 			{

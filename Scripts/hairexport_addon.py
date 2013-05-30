@@ -29,11 +29,18 @@ class HairExporter(bpy.types.Operator,ExportHelper):
         #create XML document
         doc = Document()
         
+        #need to be in object mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+        
         #get scale - assuming top of head to base of neck 30cm
+        #ensure head is selected or else the scale will be very wrong
         scale = bpy.context.active_object.dimensions.z/0.3
         
         #convert the hair particles to a mesh of edges
         bpy.ops.object.modifier_convert(modifier="ParticleSystem 1")
+        
+        #get resolution
+        resolution = bpy.data.particles["ParticleSettings"].hair_step
         
         #break it up into individual strands
         bpy.ops.mesh.separate(type = 'LOOSE')
@@ -43,9 +50,14 @@ class HairExporter(bpy.types.Operator,ExportHelper):
         
         #set scale attribute
         hair.setAttribute("scale",str(scale))
+        hair.setAttribute("resolution",str(resolution))
         
         #iterate through hair strands
         polylines = bpy.context.selected_objects
+        
+        #get number of hair strands
+        numStrands = len(polylines)
+        hair.setAttribute("count",str(numStrands))
         
         for line in polylines:
             #create strand node

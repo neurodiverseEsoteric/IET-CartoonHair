@@ -550,7 +550,7 @@ void CartoonHairSimulation::createScene(void)
 	float c = m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2);
 
 	//setup dynamic hair
-	m_hairModel = new HairModel("../hair/hairtest2.xml",mSceneMgr,mWorld,
+	m_hairModel = new HairModel("../hair/","hairanimation.xml",mSceneMgr,mWorld,
 		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,
 		mCamera,
 		a,b,c);

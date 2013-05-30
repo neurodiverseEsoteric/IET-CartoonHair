@@ -64,7 +64,7 @@ struct Edge
 class HairModel
 {
 public:
-	HairModel(const char* filename, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
+	HairModel(std::string directory, std::string animation, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
 		Ogre::Camera *camera,
 		float a, float b, float c);
@@ -81,13 +81,14 @@ private:
 	//methods
 	void getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1);
 	void addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1);
-	void generateHairStrands(const char* filename,btSoftRigidDynamicsWorld *world,
+
+	void generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	void generateHairMesh(Ogre::SceneManager *sceneMgr);
 	float determineScale(float x);
 	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
-	btSoftBody *createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
+	btSoftBody *createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, std::vector<btRigidBody*> &anchors, btSoftBodyWorldInfo &worldInfo,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
@@ -99,6 +100,9 @@ private:
 	void addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
 
 	void generateEdges(bool update);
+
+	std::string loadAnchorPoints(std::string directory, std::string filename);
+	std::vector<Ogre::Vector3> loadAnchorPositions(std::string filename);
 	
 	Ogre::Vector3 calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3);
 
@@ -111,6 +115,11 @@ private:
 	std::vector<Ogre::Vector3> m_hairShape;
 	btAlignedObjectArray<HairSegment*> m_hairSegments;
 	btSoftRigidDynamicsWorld *m_world;
+
+	//animation variables
+	std::vector<std::vector<Ogre::Vector3>> m_anchorPoints;
+	std::vector<btRigidBody*> m_anchors;
+	float m_animationCounter;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
