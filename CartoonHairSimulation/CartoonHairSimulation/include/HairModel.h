@@ -88,7 +88,7 @@ private:
 	float determineScale(float x);
 	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
-	btSoftBody *createHairStrand(btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, std::vector<btRigidBody*> &anchors, btSoftBodyWorldInfo &worldInfo,
+	btSoftBody *createHairStrand(int strandIndex, btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
@@ -101,8 +101,9 @@ private:
 
 	void generateEdges(bool update);
 
+	void generateAnchorBody(btSoftRigidDynamicsWorld *world, btSoftBodyWorldInfo &worldInfo, btAlignedObjectArray<btVector3> &points);
 	std::string loadAnchorPoints(std::string directory, std::string filename);
-	std::vector<Ogre::Vector3> loadAnchorPositions(std::string filename);
+	btAlignedObjectArray<btVector3> loadAnchorPositions(std::string filename);
 	
 	Ogre::Vector3 calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3);
 
@@ -117,8 +118,8 @@ private:
 	btSoftRigidDynamicsWorld *m_world;
 
 	//animation variables
-	std::vector<std::vector<Ogre::Vector3>> m_anchorPoints;
-	std::vector<btRigidBody*> m_anchors;
+	btAlignedObjectArray<btAlignedObjectArray<btVector3>> m_anchorPoints;
+	btSoftBody *m_anchors;
 	float m_animationCounter;
 	
 	//rendering variables
