@@ -51,6 +51,15 @@ HairModel::~HairModel()
 	}
 	m_strandSoftBodies.clear();
 
+	for(int i = 0 ; i < m_anchorPoints.size() ; i++)
+	{
+		m_anchorPoints[i].clear();
+	}
+	m_anchorPoints.clear();
+
+	m_world->removeSoftBody(m_anchors);
+	delete m_anchors;
+
 }
 
 Ogre::ManualObject* HairModel::getHairManualObject()
