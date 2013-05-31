@@ -12,6 +12,9 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::SceneMa
 	m_c = c;
 	m_world = world;
 
+	m_currentFrame = 0;
+	m_animationTime = 0;
+
 	std::string hairFrame = loadAnchorPoints(directory,animation);
 	generateAnchorBody(world, world->getWorldInfo(), m_anchorPoints[0]);
 	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
@@ -117,6 +120,36 @@ void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* 
 	ghostObject->setUserPointer(segment);
 
 	m_hairSegments.push_back(segment);
+}
+
+void HairModel::updateAnchors(float timestep)
+{
+	m_animationTime += timestep*m_animationSpeed;
+
+	if(m_animationTime > 1.0f)
+	{
+		m_animationTime = 0.0f;
+		m_currentFrame++;
+		if(m_currentFrame>=m_anchorPoints.size())
+		{
+			m_currentFrame = 0;
+		}
+	}
+
+	int nextFrame = m_currentFrame+1;
+	if(nextFrame>=m_anchorPoints.size())
+	{
+		nextFrame = 0;
+	}
+
+	for(int node = 0 ; node < m_anchorPoints[m_currentFrame].size() ; node++)
+	{
+		btVector3 p0 = m_anchorPoints[m_currentFrame][node];
+		btVector3 p1 = m_anchorPoints[nextFrame][node];
+
+		btVector3 currentPosition = p0 + (p1-p0)*m_animationTime;
+		m_anchors->m_nodes[node].m_x = currentPosition;
+	}
 }
 
 void HairModel::updateStictionSegments()
@@ -244,6 +277,8 @@ std::string HairModel::loadAnchorPoints(std::string directory, std::string filen
 	tinyxml2::XMLDocument doc;
 
 	doc.LoadFile((directory+filename).c_str());
+
+	m_animationSpeed = doc.FirstChildElement()->FloatAttribute("speed");
 
 	//get names of the hair frames
 	tinyxml2::XMLElement *hair = doc.FirstChildElement()->FirstChildElement();

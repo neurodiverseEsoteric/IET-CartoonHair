@@ -75,6 +75,7 @@ public:
 	//Ogre::BillboardSet* getEdgeBillboardSet();
 	void updateManualObject();
 	void updateStictionSegments();
+	void updateAnchors(float timestep);
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
 private:
@@ -120,7 +121,9 @@ private:
 	//animation variables
 	btAlignedObjectArray<btAlignedObjectArray<btVector3>> m_anchorPoints;
 	btSoftBody *m_anchors;
-	float m_animationCounter;
+	float m_animationTime;
+	float m_animationSpeed;
+	int m_currentFrame;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;

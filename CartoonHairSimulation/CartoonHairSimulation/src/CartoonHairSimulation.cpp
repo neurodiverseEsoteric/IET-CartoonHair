@@ -616,6 +616,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		mWorld->stepSimulation(timestep);
 		m_hairModel->updateManualObject();
 		m_hairModel->updateStictionSegments();
+		m_hairModel->updateAnchors(timestep);
 	}
 
 	m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
