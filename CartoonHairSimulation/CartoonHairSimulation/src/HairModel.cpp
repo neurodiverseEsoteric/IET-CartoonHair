@@ -2,23 +2,27 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
-HairModel::HairModel(std::string directory, std::string animation, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
-	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-	Ogre::Camera *camera, float a, float b, float c)
+HairModel::HairModel(HairParameters &param)
 {
-	m_camera = camera;
-	m_a = a;
-	m_b = b;
-	m_c = c;
-	m_world = world;
+	m_camera = param.camera;
+	m_a = param.a;
+	m_b = param.b;
+	m_c = param.c;
+	m_world = param.world;
+
+	m_maxStictionConnections = param.maxStictionConnections;
+	m_stictionThreshold = param.stictionThreshold;
+	m_stictionMaterial = param.stictionMaterial;
+	m_stictionRestLength = param.stictionRestLength;
+	m_stictionK = param.stictionK;
 
 	m_currentFrame = 0;
 	m_animationTime = 0;
 
-	std::string hairFrame = loadAnchorPoints(directory,animation);
-	generateAnchorBody(world, world->getWorldInfo(), m_anchorPoints[0]);
-	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
-	generateHairMesh(sceneMgr);
+	std::string hairFrame = loadAnchorPoints(param.directory,param.animation);
+	generateAnchorBody(param.world, param.world->getWorldInfo(), m_anchorPoints[0]);
+	generateHairStrands(param.directory+hairFrame,param.world,param.edgeMaterial,param.bendingMaterial,param.torsionMaterial);
+	generateHairMesh(param.sceneMgr);
 }
 
 HairModel::~HairModel()
@@ -165,41 +169,32 @@ void HairModel::updateStictionSegments()
 		btGhostObject *ghost = currentSegment->ghostObject;
 		ghost->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 
-		////go through overlapping objects
-		//for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
-		//{
-		//	btCollisionObject *object = ghost->getOverlappingObject(obj);
-		//	HairSegment *overlappingSegment = (HairSegment*)object->getUserPointer();
+		//create stiction springs
+		for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
+		{
+			HairSegment *neighbourSegment = (HairSegment*)ghost->getOverlappingObject(obj)->getUserPointer();
+			//make sure it is not the same strand
+			if(neighbourSegment->strand != currentSegment->strand)
+			{
+				btVector3 point0, point1;
+				getClosestPoints(
+					currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
+					currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
+					neighbourSegment->strand->m_nodes[neighbourSegment->node0Index].m_x,
+					neighbourSegment->strand->m_nodes[neighbourSegment->node1Index].m_x,
+					point0,
+					point1
+					);
 
-		//	//see if hair is in the same strand - ignore if that is the case
-		//	if(overlappingSegment->strand != currentSegment->strand)
-		//	{
-		//		btVector3 point0, point1;
-
-		//		//determine closest points between segment
-		//		getClosestPoints(
-		//			currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
-		//			currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
-		//			overlappingSegment->strand->m_nodes[overlappingSegment->node0Index].m_x,
-		//			overlappingSegment->strand->m_nodes[overlappingSegment->node1Index].m_x,
-		//			point0,
-		//			point1
-		//			);
-
-		//		float length = (point1-point0).length();
-		//		//see if strands are withing the specified threshold of each other
-		//		if(length < TEMP_STICTION_THRESHOLD)
-		//		{
-		//			//generate spring force if near enough to each other
-		//			btVector3 force = (length-TEMP_STICTION_REST_LENGTH)*TEMP_STICTION_K*(point1-point0).normalize();
-
-		//			//just apply it to one side for the moment - as it is likely to be replicated later
-		//			overlappingSegment->strand->addForce(force,overlappingSegment->node0Index);
-		//			overlappingSegment->strand->addForce(force,overlappingSegment->node1Index);
-		//		}
-		//	}
-		//}
-		
+				float length = (point1-point0).length();
+				if(length < m_stictionThreshold)
+				{
+					btVector3 force = (length - m_stictionRestLength)*m_stictionK*(point1-point0).normalize();
+					neighbourSegment->strand->addForce(force,neighbourSegment->node0Index);
+					neighbourSegment->strand->addForce(force,neighbourSegment->node1Index);
+				}
+			}
+		}
 	}
 }
 

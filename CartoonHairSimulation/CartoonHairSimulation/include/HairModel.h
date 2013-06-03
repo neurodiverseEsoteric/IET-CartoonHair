@@ -12,12 +12,33 @@
 #define GHOST_GROUP 0x4
 #define SEGMENT_GROUP 0x8
 
+struct HairParameters
+{
+	std::string directory;
+	std::string animation;
+	Ogre::SceneManager *sceneMgr;
+	btSoftRigidDynamicsWorld *world;
+	btSoftBody::Material *edgeMaterial;
+	btSoftBody::Material *bendingMaterial;
+	btSoftBody::Material *torsionMaterial;
+	btSoftBody::Material *stictionMaterial;
+	Ogre::Camera *camera;
+	float a;
+	float b;
+	float c;
+	int maxStictionConnections;
+	float stictionThreshold;
+	float stictionRestLength;
+	float stictionK;
+};
+
 struct HairSegment
 {
 	btSoftBody *strand;
 	btGhostObject *ghostObject;
 	int node0Index;
 	int node1Index;
+	std::vector<btSoftBody*> stictionSprings;
 };
 
 enum EdgeType
@@ -64,10 +85,7 @@ struct Edge
 class HairModel
 {
 public:
-	HairModel(std::string directory, std::string animation, Ogre::SceneManager *sceneMgr, btSoftRigidDynamicsWorld *world,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,
-		Ogre::Camera *camera,
-		float a, float b, float c);
+	HairModel(HairParameters &param);
 	~HairModel();
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
@@ -115,8 +133,15 @@ private:
 	std::vector<btSoftBody*> m_strandSoftBodies;
 	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
 	std::vector<Ogre::Vector3> m_hairShape;
-	btAlignedObjectArray<HairSegment*> m_hairSegments;
 	btSoftRigidDynamicsWorld *m_world;
+
+	//stiction springs varialbes
+	btSoftBody::Material *m_stictionMaterial;
+	int m_maxStictionConnections;
+	float m_stictionThreshold;
+	float m_stictionRestLength;
+	float m_stictionK;
+	btAlignedObjectArray<HairSegment*> m_hairSegments;
 
 	//animation variables
 	btAlignedObjectArray<btAlignedObjectArray<btVector3>> m_anchorPoints;

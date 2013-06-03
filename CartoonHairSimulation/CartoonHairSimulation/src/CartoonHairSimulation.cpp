@@ -237,6 +237,7 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 			delete m_edgeMaterial;
 			delete m_bendingMaterial;
 			delete m_torsionMaterial;
+			delete m_stictionMaterial;
 		}
 
 		delete mWorld;
@@ -492,6 +493,7 @@ void CartoonHairSimulation::createScene(void)
 	m_edgeMaterial = new btSoftBody::Material();
 	m_bendingMaterial = new btSoftBody::Material();
 	m_torsionMaterial = new btSoftBody::Material();
+	m_stictionMaterial = new btSoftBody::Material();
 
 	m_edgeMaterial->m_kLST = 1.0;
 	m_bendingMaterial->m_kLST = 0.01;
@@ -550,10 +552,23 @@ void CartoonHairSimulation::createScene(void)
 	float c = m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2);
 
 	//setup dynamic hair
-	m_hairModel = new HairModel("../hair/","hairanimation.xml",mSceneMgr,mWorld,
-		m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,
-		mCamera,
-		a,b,c);
+	HairParameters param;
+	param.directory = "../hair/";
+	param.animation = "hairanimation.xml";
+	param.sceneMgr = mSceneMgr;
+	param.world = mWorld;
+	param.edgeMaterial = m_edgeMaterial;
+	param.bendingMaterial = m_bendingMaterial;
+	param.torsionMaterial = m_torsionMaterial;
+	param.stictionMaterial = NULL;
+	param.camera = mCamera;
+	param.a = a;
+	param.b = b;
+	param.c = c;
+	param.maxStictionConnections = 5;
+	param.stictionThreshold =  0.5f;
+
+	m_hairModel = new HairModel(param);
 	
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation

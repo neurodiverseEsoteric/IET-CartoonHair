@@ -99,6 +99,7 @@ protected:
 	btSoftBody::Material *m_edgeMaterial;
 	btSoftBody::Material *m_bendingMaterial;
 	btSoftBody::Material *m_torsionMaterial;
+	btSoftBody::Material *m_stictionMaterial;
 
 	DebugDrawer *m_debugDrawer;
 
