@@ -885,10 +885,13 @@ void HairModel::generateEdges(bool update)
 	}
 }
 
+//http://gv2.cs.tcd.ie/mcdonner/Teaching/Lectures/ComputerGraphics2012_L2.pdf
 Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3)
 {
-	Ogre::Vector3 normal = (v3-v1).crossProduct(v2-v1);
-	normal.normalise();
+	//have to flip the order of the normal as the vertex winding appears to have gone wrong
+	Ogre::Vector3 u1 = (v2-v1).normalisedCopy();
+	Ogre::Vector3 u2 = (v3-v1).normalisedCopy();
+	Ogre::Vector3 normal = ((u2).crossProduct(u1)).normalisedCopy();
 	return normal;
 }
 
@@ -936,9 +939,17 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 
 		//indices
-		for(int index = 0 ; index < m_strandIndices.size() ; index++)
+		for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
 		{
-			m_hairMesh->index(m_strandIndices[index]);
+			/*int i = m_strandIndices[index];
+			m_hairMesh->colour(1.0,0,0);
+			m_hairMesh->position(m_strandVertices[section][i]);
+			m_hairMesh->normal(m_strandNormals[section][i]);*/
+			//m_hairMesh->index(m_strandIndices[index]);
+			m_hairMesh->triangle(
+				m_strandIndices[index],
+				m_strandIndices[index+1],
+				m_strandIndices[index+2]);
 		}
 		
 		m_hairMesh->end();

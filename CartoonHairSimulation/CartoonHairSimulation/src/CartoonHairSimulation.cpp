@@ -517,6 +517,7 @@ void CartoonHairSimulation::createScene(void)
 
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
+	Ogre::Entity* test = mSceneMgr->createEntity("Cube","cube.mesh");
 
 	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
 	size_t vertexCount, indexCount;
@@ -576,17 +577,22 @@ void CartoonHairSimulation::createScene(void)
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
 
 	// Set ambient light
-	mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
+	//mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
-	l->setPosition(20,80,50);
+	l->setPosition(10,-10,10);
+
+	Ogre::SceneNode *child = headNode->createChildSceneNode();
+	child->attachObject(test);
+	child->setPosition(l->getPosition());
+	child->setScale(0.01,0.01,0.01);
 
 	//line everything to the head node
 	headNode->attachObject(head);
 	headNode->attachObject(m_debugDrawer->getLinesManualObject());
 	headNode->attachObject(m_hairModel->getHairManualObject());
-	headNode->attachObject(m_hairModel->getNormalsManualObject());
+	//headNode->attachObject(m_hairModel->getNormalsManualObject());
 	headNode->attachObject(m_hairModel->getEdgeManualObject());
 	//headNode->attachObject(m_hairModel->getEdgeBillboardSet());
 }
@@ -631,7 +637,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		mWorld->stepSimulation(timestep);
 		m_hairModel->updateManualObject();
 		m_hairModel->updateStictionSegments();
-		m_hairModel->updateAnchors(timestep);
+		//m_hairModel->updateAnchors(timestep);
 	}
 
 	m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
