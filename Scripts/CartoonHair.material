@@ -34,6 +34,8 @@ material IETCartoonHair/HairMaterial
 			diffuse 1 0 0 1
 			vertex_program_ref IETCartoonHair/ToonVertexShader
 			{
+				param_named_auto modelViewMatrix worldview_matrix
+				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
 				param_named_auto lightPos light_position 0
 			}
 			

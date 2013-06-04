@@ -8,6 +8,6 @@ varying vec3 l;
 
 void main()
 { 
-	float index = max(dot(l,n),0.0);
+	float index = max(dot(n,l),0.0);
 	gl_FragColor = hairColour*texture1D(cartoonTexture,index,0.0);
 }

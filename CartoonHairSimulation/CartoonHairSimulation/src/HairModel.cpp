@@ -891,7 +891,7 @@ Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogr
 	//have to flip the order of the normal as the vertex winding appears to have gone wrong
 	Ogre::Vector3 u1 = (v2-v1).normalisedCopy();
 	Ogre::Vector3 u2 = (v3-v1).normalisedCopy();
-	Ogre::Vector3 normal = ((u2).crossProduct(u1)).normalisedCopy();
+	Ogre::Vector3 normal = ((u1).crossProduct(u2)).normalisedCopy();
 	return normal;
 }
 
@@ -930,7 +930,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 		//vertices + normals
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
-			m_hairMesh->colour(1.0,0,0);
+			//m_hairMesh->colour(1.0,0,0);
 			m_hairMesh->position(m_strandVertices[section][vert]);
 			m_hairMesh->normal(m_strandNormals[section][vert]);
 
