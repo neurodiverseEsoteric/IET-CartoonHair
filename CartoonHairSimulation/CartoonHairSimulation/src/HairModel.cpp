@@ -756,7 +756,7 @@ void HairModel::generateEdgeMap()
 		int i3 = m_strandIndices[index+2];
 
 		std::pair<int,int> key;
-
+			
 		//edge 1
 		key.first = i1;
 		key.second = i2;
@@ -790,7 +790,7 @@ void HairModel::generateEdges(bool update)
 		}
 		else
 		{
-			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_LINE_LIST);
 		}
 
 		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
@@ -829,55 +829,14 @@ void HairModel::generateEdges(bool update)
 				}
 			}
 
+			//assert(it->second.flag == edge->flag);
+
 			//billboard particles for edges - inspired by a64-shin.pdf
 			//and http://www.lighthouse3d.com/opengl/billboarding/index.php?billCyl
 			if(edge->flag == EdgeType::SILHOUETTE || edge->flag == EdgeType::BORDER || edge->flag == EdgeType::CREASE)
 			{
-				//default vectors
-				Ogre::Vector3 right(1,0,0);
-				Ogre::Vector3 up(0,1,0);
-				Ogre::Vector3 lookAt(0,0,1);
-				
-				//get rotation for the default vectors to be in line with the orientation of the edge
-				Ogre::Vector3 direction = m_strandVertices[section][it->first.second]-m_strandVertices[section][it->first.first];
-				float length = direction.length();
-				direction.normalise();
-				Ogre::Quaternion rot = right.getRotationTo(direction);
-
-				//apply rotation
-				right = rot*right;
-				up = rot*up;
-				lookAt = rot*lookAt;
-
-				//determine orientation to face camera
-				Ogre::Vector3 objPos = m_strandVertices[section][it->first.first]+direction*length*0.5f;
-				Ogre::Vector3 objToCam = m_camera->getPosition()-objPos;
-				Ogre::Vector3 objToCamProj = objToCam;
-				objToCamProj.y = 0.0f;
-
-				objToCamProj.normalise();
-				rot = lookAt.getRotationTo(objToCamProj);
-
-				//create billboard particles
-				Ogre::Vector3 offset = right*0.1f;
-				offset = rot*offset;
-
-				Ogre::Vector3 node0 = m_strandVertices[section][it->first.first];
-				Ogre::Vector3 node1 = m_strandVertices[section][it->first.second];
-				Ogre::Vector3 p0,p1,p2,p3;
-				p0 = node0-offset;
-				p1 = node0+offset;
-				p2 = node1-offset;
-				p3 = node1+offset;
-
-				m_edgeMesh->position(p0);
-				m_edgeMesh->position(p2);
-				m_edgeMesh->position(p1);
-
-				m_edgeMesh->position(p1);
-				m_edgeMesh->position(p2);
-				m_edgeMesh->position(p3);
-
+				m_edgeMesh->position(m_strandVertices[section][it->first.first]);
+				m_edgeMesh->position(m_strandVertices[section][it->first.second]);
 			}
 		}
 

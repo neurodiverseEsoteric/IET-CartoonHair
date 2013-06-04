@@ -592,7 +592,7 @@ void CartoonHairSimulation::createScene(void)
 	headNode->attachObject(head);
 	headNode->attachObject(m_debugDrawer->getLinesManualObject());
 	headNode->attachObject(m_hairModel->getHairManualObject());
-	//headNode->attachObject(m_hairModel->getNormalsManualObject());
+	headNode->attachObject(m_hairModel->getNormalsManualObject());
 	headNode->attachObject(m_hairModel->getEdgeManualObject());
 	//headNode->attachObject(m_hairModel->getEdgeBillboardSet());
 }
@@ -761,6 +761,17 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 		else
 		{
 			m_debugDrawer->getLinesManualObject()->setVisible(true);
+		}
+	}
+	else if(arg.key == OIS::KC_N)
+	{
+		if(m_hairModel->getNormalsManualObject()->isVisible())
+		{
+			m_hairModel->getNormalsManualObject()->setVisible(false);
+		}
+		else
+		{
+			m_hairModel->getNormalsManualObject()->setVisible(true);
 		}
 	}
 	else if(arg.key == OIS::KC_M)
