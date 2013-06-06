@@ -856,7 +856,7 @@ void HairModel::generateEdges(bool update)
 		}
 		else
 		{
-			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_LINE_LIST);
+			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_LINE_STRIP);
 		}
 
 		std::deque<std::pair<int,int>> silhouette;
@@ -899,14 +899,32 @@ void HairModel::generateEdges(bool update)
 
 		}
 
+		//we now have the silhouettes - now to convert the points to device coordinates
+		//based off of artistic-sils-300dpi.pdf
+		//and
+		//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
+		std::vector<Ogre::Vector3> screenSpacePoints;
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
-			m_edgeMesh->position(m_strandVertices[section][silhouette[i].first]);
-			m_edgeMesh->position(m_strandVertices[section][silhouette[i].second]);
+			screenSpacePoints.push_back(toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera));
 		}
+
+		for(int i = 0 ; i < screenSpacePoints.size() ; i++)
+		{
+			m_edgeMesh->position(screenSpacePoints[i]);
+		}
+		//wrap around
+		m_edgeMesh->position(screenSpacePoints[0]);
 
 		m_edgeMesh->end();
 	}
+}
+
+Ogre::Vector3 HairModel::toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera)
+{
+	Ogre::Vector3 newPoint = camera->getProjectionMatrix() * camera->getViewMatrix() * point;
+	//newPoint.x*=camera->getAspectRatio();
+	return newPoint;
 }
 
 void HairModel::insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette)
