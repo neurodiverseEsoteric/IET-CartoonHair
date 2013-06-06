@@ -79,6 +79,7 @@ struct Edge
 	int edgeCount;
 	int triangle1Indices[3];
 	int triangle2Indices[3];
+	//std::vector<std::pair<int,int>> linkedEdges;
 };
 
 //http://www.fannieliu.com/hairsim/hairsim.html
@@ -116,7 +117,7 @@ private:
 	void generateEdgeMap();
 	void generateVertices(bool update, int section);
 	void generateNormals(bool update, int section);
-	void addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
+	void addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
 
 	void generateEdges(bool update);
 
@@ -125,6 +126,9 @@ private:
 	btAlignedObjectArray<btVector3> loadAnchorPositions(std::string filename);
 	
 	Ogre::Vector3 calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3);
+	bool isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector);
+	void insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette);
+	bool attemptInsert(std::pair<int,int> element, std::deque<std::pair<int,int>> &silhouette);
 
 	//variables
 
@@ -161,6 +165,7 @@ private:
 	Ogre::Camera *m_camera;
 
 	//edge rendering variables - npar2000_lake_et_al.pdf
+	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_tempEdgeMap;
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;
 
 };

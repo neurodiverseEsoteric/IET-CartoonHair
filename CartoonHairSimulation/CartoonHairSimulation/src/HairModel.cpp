@@ -723,9 +723,9 @@ void HairModel::generateNormals(bool update, int section)
 	}
 }
 
-void HairModel::addToEdgeMap(std::pair<int,int> key, int index1, int index2, int index3)
+void HairModel::addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3)
 {
-	Edge edge = m_edgeMap[key];
+	Edge edge = m_tempEdgeMap[key];
 	if(edge.edgeCount == 0)
 	{
 		edge.triangle1Indices[0] = index1;
@@ -743,11 +743,12 @@ void HairModel::addToEdgeMap(std::pair<int,int> key, int index1, int index2, int
 		assert(edge.edgeCount < 2);
 	}
 	edge.edgeCount++;
-	m_edgeMap[key] = edge;
+	m_tempEdgeMap[key] = edge;
 }
 
 void HairModel::generateEdgeMap()
 {
+	//std::vector<std::pair<int,int>> keys;
 	//go through every triangle
 	for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
 	{
@@ -761,25 +762,90 @@ void HairModel::generateEdgeMap()
 		key.first = i1;
 		key.second = i2;
 
-		addToEdgeMap(key,i1,i2,i3);
+		//keys.push_back(key);
+
+		addToTempEdgeMap(key,i1,i2,i3);
 
 		//edge 2
 		key.first = i1;
 		key.second = i3;
 
-		addToEdgeMap(key,i1,i2,i3);
+		//keys.push_back(key);
+
+		addToTempEdgeMap(key,i1,i2,i3);
 
 		//edge 3
 		key.first = i2;
 		key.second = i3;
 
-		addToEdgeMap(key,i1,i2,i3);
+		//keys.push_back(key);
+
+		addToTempEdgeMap(key,i1,i2,i3);
 	}
+
+	//organised edge map
+	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
+	for(it = m_tempEdgeMap.begin() ; it != m_tempEdgeMap.end() ; it++)
+	{
+		std::pair<int,int> pair = it->first;
+		//make sure lhs<rhs
+		if(pair.first > pair.second)
+		{
+			int temp = pair.first;
+			pair.first = pair.second;
+			pair.second = temp;
+		}
+
+		m_edgeMap[pair] = it->second;
+	}
+	//std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator current,link;
+	////link edges together
+	//for(current = m_edgeMap.begin() ; current != m_edgeMap.end() ; current++)
+	//{
+	//	std::pair<int,int> currentEdge = current->first;
+	//	for(link = m_edgeMap.begin() ; link != m_edgeMap.end() ; link++)
+	//	{
+	//		//make sure it is not the same edge
+	//		if(current!=link)
+	//		{
+	//			std::pair<int,int> possibleEdge = link->first;
+	//			if(currentEdge.first == possibleEdge.first ||
+	//				currentEdge.first == possibleEdge.second ||
+	//				currentEdge.second == possibleEdge.first ||
+	//				currentEdge.second == possibleEdge.second)
+	//			{
+	//				current->second.linkedEdges.push_back(possibleEdge);
+	//			}
+	//		}
+	//	}
+	//}
+}
+
+bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
+{
+	//calculate normals
+	//triangle 1
+	Ogre::Vector3 v1 = m_strandVertices[section][edge->triangle1Indices[0]];
+	Ogre::Vector3 v2 = m_strandVertices[section][edge->triangle1Indices[1]];
+	Ogre::Vector3 v3 = m_strandVertices[section][edge->triangle1Indices[2]];
+	Ogre::Vector3 normal1 = calculateNormal(v1,v2,v3);
+
+	//triangle 2
+	v1 = m_strandVertices[section][edge->triangle2Indices[0]];
+	v2 = m_strandVertices[section][edge->triangle2Indices[1]];
+	v3 = m_strandVertices[section][edge->triangle2Indices[2]];
+	Ogre::Vector3 normal2 = calculateNormal(v1,v2,v3);
+
+	//npar2000_lake_et_al.pdf
+	if(normal1.dotProduct(eyeVector)*normal2.dotProduct(eyeVector)<=0)
+	{
+		return true;
+	}
+	return false;
 }
 
 void HairModel::generateEdges(bool update)
 {
-
 	Ogre::Vector3 eyeVector = m_camera->getDirection();
 
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
@@ -793,33 +859,24 @@ void HairModel::generateEdges(bool update)
 			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_LINE_LIST);
 		}
 
+		std::deque<std::pair<int,int>> silhouette;
+		std::vector<std::pair<int,int>> temp;
+
 		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
 		for(it = m_edgeMap.begin() ; it != m_edgeMap.end() ; it++)
 		{
+			std::pair<int,int> currentPair = it->first;
 			Edge *edge = &(it->second);
-			assert(edge->edgeCount>0 && edge->edgeCount <3);
 
+			//classify
 			if(edge->edgeCount == 1)
 			{
 				edge->flag = EdgeType::BORDER;
 			}
-			else
+			else if (edge->edgeCount == 2)
 			{
-				//calculate normals
-				//triangle 1
-				Ogre::Vector3 v1 = m_strandVertices[section][edge->triangle1Indices[0]];
-				Ogre::Vector3 v2 = m_strandVertices[section][edge->triangle1Indices[1]];
-				Ogre::Vector3 v3 = m_strandVertices[section][edge->triangle1Indices[2]];
-				Ogre::Vector3 normal1 = calculateNormal(v1,v2,v3);
-
-				//triangle 2
-				v1 = m_strandVertices[section][edge->triangle2Indices[0]];
-				v2 = m_strandVertices[section][edge->triangle2Indices[1]];
-				v3 = m_strandVertices[section][edge->triangle2Indices[2]];
-				Ogre::Vector3 normal2 = calculateNormal(v1,v2,v3);
-
-				//npar2000_lake_et_al.pdf
-				if(normal1.dotProduct(eyeVector)*normal2.dotProduct(eyeVector)<=0)
+				//check if silhouette
+				if(isSilhouette(edge,section,eyeVector))
 				{
 					edge->flag = EdgeType::SILHOUETTE;
 				}
@@ -828,21 +885,156 @@ void HairModel::generateEdges(bool update)
 					edge->flag = EdgeType::NOTHING;
 				}
 			}
-
-			//assert(it->second.flag == edge->flag);
-
-			//billboard particles for edges - inspired by a64-shin.pdf
-			//and http://www.lighthouse3d.com/opengl/billboarding/index.php?billCyl
-			if(edge->flag == EdgeType::SILHOUETTE || edge->flag == EdgeType::BORDER || edge->flag == EdgeType::CREASE)
+			else
 			{
-				m_edgeMesh->position(m_strandVertices[section][it->first.first]);
-				m_edgeMesh->position(m_strandVertices[section][it->first.second]);
+				edge->flag = EdgeType::NOTHING;
 			}
+
+			//add to silhouette vector (should use some sort of insertion sort)
+			if(edge->flag == EdgeType::SILHOUETTE)
+			{
+				//elements.push_back(currentPair);
+				insertSilhouette(currentPair,temp,silhouette);
+			}
+
+		}
+
+		for(int i = 0 ; i < silhouette.size() ; i++)
+		{
+			m_edgeMesh->position(m_strandVertices[section][silhouette[i].first]);
+			m_edgeMesh->position(m_strandVertices[section][silhouette[i].second]);
 		}
 
 		m_edgeMesh->end();
 	}
 }
+
+void HairModel::insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette)
+{
+	//try to insert into silhouette
+	if(silhouette.empty())
+	{
+		silhouette.push_front(element);
+	}
+	else
+	{
+		//see if the element should go at the top
+		if(!attemptInsert(element,silhouette))
+		{
+			//we failed - try again later
+			temp.push_back(element);
+		}
+	}
+
+	//see if we can fit any of the previous elements
+	for(int i = temp.size()-1 ; i >= 0 ; i--)
+	{
+		if(attemptInsert(temp[i],silhouette))
+		{
+			temp.erase(temp.begin()+i);
+		}
+	}
+}
+
+bool HairModel::attemptInsert(std::pair<int,int> element, std::deque<std::pair<int,int>> &silhouette)
+{
+	if(element.second == silhouette.front().first)
+	{
+		silhouette.push_front(element);
+		return true;
+	}
+	else if(element.first == silhouette.front().first)
+	{
+		int x = element.first;
+		element.first = element.second;
+		element.second = x;
+		silhouette.push_front(element);
+		return true;
+	}
+	else if(element.first == silhouette.back().second)
+	{
+		silhouette.push_back(element);
+		return true;
+	}
+	else if(element.second == silhouette.back().second)
+	{
+		int x = element.first;
+		element.first = element.second;
+		element.second = x;
+		silhouette.push_back(element);
+		return true;
+	}
+	return false;
+}
+
+//cutcode
+//p755-kalins.pdf
+	////we randomly sample some edges until we hit part of the silhouette
+	////we then follow the edge loop until we hit the same edge again
+	////we will have then identified the silhouette
+	//std::vector<std::pair<int,int>> silhouette;
+	//std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
+	
+	//Edge *initialEdge;
+	//bool silhouetteFound = false;
+	//while(!silhouetteFound)
+	//{
+	//	it = m_edgeMap.begin();
+	//	std::advance(it,rand() % m_edgeMap.size());
+	//	Edge *edge = &(it->second);
+	//	if(edge->edgeCount == 2)
+	//	{
+	//		if(isSilhouette(edge,section,eyeVector))
+	//		{
+	//			silhouette.push_back(it->first);
+	//			initialEdge = edge;
+	//			silhouetteFound = true;
+	//		}
+	//	}
+	//}
+
+	////we now have the first part of the silhouette
+	//Edge *edge = initialEdge;
+	//bool loopComplete = false;
+	//while(!loopComplete)
+	//{
+	//	//iterate through linked edges looking for silhouette
+	//	for(int index = 0 ; index < edge->linkedEdges.size() ; index++)
+	//	{
+	//		std::pair<int,int> pair = edge->linkedEdges[index];
+	//		Edge *temp = &(m_edgeMap[pair]);
+	//		if(temp == initialEdge)
+	//		{
+	//			loopComplete = true;
+	//			break;
+	//		}
+
+	//		bool goingBackwards = false;
+	//		//make sure we don't roll back
+	//		for(int i = 0 ; i < silhouette.size() ; i++)
+	//		{
+	//			if(pair.first == silhouette[i].first
+	//				&& pair.second == silhouette[i].second)
+	//			{
+	//				goingBackwards = true;
+	//				break;
+	//			}
+	//		}
+
+	//		if(goingBackwards)
+	//		{
+	//			continue;
+	//		}
+
+	//		//check edge
+	//		if(isSilhouette(temp,section,eyeVector))
+	//		{
+	//			silhouette.push_back(pair);
+	//			edge = temp;
+	//			break;
+	//		}
+	//	}
+	//}
 
 //http://gv2.cs.tcd.ie/mcdonner/Teaching/Lectures/ComputerGraphics2012_L2.pdf
 Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3)
@@ -900,11 +1092,6 @@ void HairModel::createOrUpdateManualObject(bool update)
 		//indices
 		for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
 		{
-			/*int i = m_strandIndices[index];
-			m_hairMesh->colour(1.0,0,0);
-			m_hairMesh->position(m_strandVertices[section][i]);
-			m_hairMesh->normal(m_strandNormals[section][i]);*/
-			//m_hairMesh->index(m_strandIndices[index]);
 			m_hairMesh->triangle(
 				m_strandIndices[index],
 				m_strandIndices[index+1],
