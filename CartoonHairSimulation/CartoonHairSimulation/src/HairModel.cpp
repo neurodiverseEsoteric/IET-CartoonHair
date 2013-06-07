@@ -169,6 +169,9 @@ void HairModel::updateStictionSegments()
 		btGhostObject *ghost = currentSegment->ghostObject;
 		ghost->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
 
+		//disable stiction springs for now
+		continue;
+
 		//create stiction springs
 		for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
 		{
@@ -442,7 +445,7 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
 	btSoftBody::Material *testMaterial = new btSoftBody::Material();
-	testMaterial->m_kLST = 0.001f;
+	testMaterial->m_kLST = 0.01f;
 
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
@@ -856,7 +859,7 @@ void HairModel::generateEdges(bool update)
 		}
 		else
 		{
-			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_STRIP);
 		}
 
 		std::deque<std::pair<int,int>> silhouette;
@@ -910,10 +913,17 @@ void HairModel::generateEdges(bool update)
 			if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].first],m_camera))
 			{
 				screenSpacePoints.push_back(result);
+				if(i == silhouette.size()-1)
+				{
+					if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].second],m_camera))
+					{
+						screenSpacePoints.push_back(result);
+					}
+				}
 			}
 		}
 
-		if(screenSpacePoints.size()>1)
+		if(screenSpacePoints.size()>0)
 		{
 			//wrap around
 			screenSpacePoints.push_back(screenSpacePoints[0]);
@@ -960,19 +970,11 @@ void HairModel::generateEdges(bool update)
 				points.push_back(screenSpacePoints[i]-rib);
 			}
 
-			for(int i = 0 ; i < points.size()-1 ; i++)
+			for(int i = 0 ; i < points.size()-1 ; i+= 2)
 			{
-				//triangle 1
 				m_edgeMesh->position(points[i]);
 				m_edgeMesh->position(points[i+1]);
-				m_edgeMesh->position(points[i+2]);
-				//triangle 2
-				m_edgeMesh->position(points[i+1]);
-				m_edgeMesh->position(points[i+3]);
-				m_edgeMesh->position(points[i+2]);
 			}
-			//m_edgeMesh->position(Ogre::Vector3(-1,-1,0));
-
 		}
 		else
 		{
