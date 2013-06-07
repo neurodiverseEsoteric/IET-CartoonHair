@@ -906,25 +906,41 @@ void HairModel::generateEdges(bool update)
 		std::vector<Ogre::Vector3> screenSpacePoints;
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
-			screenSpacePoints.push_back(toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera));
+			Ogre::Vector3 result;
+			if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].first],m_camera))
+			{
+				screenSpacePoints.push_back(result);
+			}
 		}
 
-		for(int i = 0 ; i < screenSpacePoints.size() ; i++)
+		if(screenSpacePoints.size()>0)
 		{
-			m_edgeMesh->position(screenSpacePoints[i]);
+			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
+			{
+				m_edgeMesh->position(screenSpacePoints[i]);
+			}
+			//wrap around
+			m_edgeMesh->position(screenSpacePoints[0]);
 		}
-		//wrap around
-		m_edgeMesh->position(screenSpacePoints[0]);
+		else
+		{
+			m_edgeMesh->position(Ogre::Vector3(-1,-1,0));
+		}
 
 		m_edgeMesh->end();
 	}
 }
-
-Ogre::Vector3 HairModel::toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera)
+//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
+bool HairModel::toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera)
 {
-	Ogre::Vector3 newPoint = camera->getProjectionMatrix() * camera->getViewMatrix() * point;
-	//newPoint.x*=camera->getAspectRatio();
-	return newPoint;
+	result = camera->getProjectionMatrix() * camera->getViewMatrix() * point;
+	Ogre::Plane cameraPlane = Ogre::Plane(Ogre::Vector3(camera->getDerivedOrientation().zAxis()),
+		camera->getDerivedPosition());
+	if(cameraPlane.getSide(point) != Ogre::Plane::NEGATIVE_SIDE)
+	{
+		return false;
+	}
+	return true;
 }
 
 void HairModel::insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette)

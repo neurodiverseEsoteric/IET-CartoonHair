@@ -131,7 +131,7 @@ private:
 	bool attemptInsert(std::pair<int,int> element, std::deque<std::pair<int,int>> &silhouette);
 
 	//http://stackoverflow.com/questions/13682074/get-2d-screen-point-from-3d-point
-	Ogre::Vector3 toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera);
+	bool toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera);
 
 	//variables
 
