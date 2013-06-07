@@ -856,7 +856,7 @@ void HairModel::generateEdges(bool update)
 		}
 		else
 		{
-			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_LINE_STRIP);
+			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		}
 
 		std::deque<std::pair<int,int>> silhouette;
@@ -913,18 +913,70 @@ void HairModel::generateEdges(bool update)
 			}
 		}
 
-		if(screenSpacePoints.size()>0)
+		if(screenSpacePoints.size()>1)
 		{
+			//wrap around
+			screenSpacePoints.push_back(screenSpacePoints[0]);
+			std::vector<Ogre::Vector3> points;
 			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
 			{
-				m_edgeMesh->position(screenSpacePoints[i]);
+				Ogre::Vector3 edge1,edge2,rib;
+				if(i == 0)
+				{
+					edge1 = screenSpacePoints[1]-screenSpacePoints[0];
+					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
+					rib.normalise();
+
+				}
+				else if(i == screenSpacePoints.size()-1)
+				{
+					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
+					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
+					rib.normalise();
+				}
+				else
+				{
+					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
+					edge2 = screenSpacePoints[i+1]-screenSpacePoints[i];
+					float temp;
+					temp = edge1.x;
+					edge1.x = edge1.y;
+					edge1.y = -temp;
+					edge1.z = 0;
+					edge1.normalise();
+
+					temp = edge2.x;
+					edge2.x = edge2.y;
+					edge2.y = -temp;
+					edge2.z = 0;
+					edge2.normalise();
+
+					rib = edge1+edge2;
+					rib.normalise();
+				}
+				
+				rib*=0.01f;
+				points.push_back(screenSpacePoints[i]+rib);
+				points.push_back(screenSpacePoints[i]-rib);
 			}
-			//wrap around
-			m_edgeMesh->position(screenSpacePoints[0]);
+
+			for(int i = 0 ; i < points.size()-1 ; i++)
+			{
+				//triangle 1
+				m_edgeMesh->position(points[i]);
+				m_edgeMesh->position(points[i+1]);
+				m_edgeMesh->position(points[i+2]);
+				//triangle 2
+				m_edgeMesh->position(points[i+1]);
+				m_edgeMesh->position(points[i+3]);
+				m_edgeMesh->position(points[i+2]);
+			}
+			//m_edgeMesh->position(Ogre::Vector3(-1,-1,0));
+
 		}
 		else
 		{
-			m_edgeMesh->position(Ogre::Vector3(-1,-1,0));
+			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 		}
 
 		m_edgeMesh->end();
