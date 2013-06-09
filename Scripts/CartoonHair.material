@@ -8,6 +8,16 @@ fragment_program IETCartoonHair/ToonFragmentShader glsl
 	source toon.frag
 }
 
+vertex_program IETCartoonHair/EdgeVertexShader glsl
+{
+	source edge.vert
+}
+
+fragment_program IETCartoonHair/EdgeFragmentShader glsl
+{
+	source edge.frag
+}
+
 material IETCartoonHair/EdgeMaterial
 {
 	//http://www.ogre3d.org/tikiwiki/Materials#Stained_Glass_Window
@@ -15,10 +25,24 @@ material IETCartoonHair/EdgeMaterial
 	{
 		pass
 		{	
+			scene_blend modulate
+			cull_hardware none
+			cull_software none
+			vertex_program_ref IETCartoonHair/EdgeVertexShader
+			{
+			
+			}
+			
+			fragment_program_ref IETCartoonHair/EdgeFragmentShader
+			{
+				param_named edgeTexture int 0
+			}
+			
 			texture_unit
 			{
 				texture edge.png
-				alpha_op_ex source1 src_manual src_texture 0.5
+				//alpha_op_ex source1 src_manual src_texture 0.5
+				tex_address_mode wrap
 				filtering none
 			}
 		}

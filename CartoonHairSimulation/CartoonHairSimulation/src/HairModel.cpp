@@ -965,7 +965,7 @@ void HairModel::generateEdges(bool update)
 					rib.normalise();
 				}
 				
-				rib*=0.01f;
+				rib*=0.02f;
 				points.push_back(screenSpacePoints[i]+rib);
 				points.push_back(screenSpacePoints[i]-rib);
 			}
@@ -973,12 +973,23 @@ void HairModel::generateEdges(bool update)
 			for(int i = 0 ; i < points.size()-1 ; i+= 2)
 			{
 				m_edgeMesh->position(points[i]);
+				m_edgeMesh->textureCoord(i/2,1);
+
 				m_edgeMesh->position(points[i+1]);
+				m_edgeMesh->textureCoord(i/2,0);
 			}
 		}
 		else
 		{
+			//if we don't give texture coordinates - it breaks the texture coordinates of any strands using this section later
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
+			m_edgeMesh->textureCoord(0,1);
+			m_edgeMesh->position(Ogre::Vector3(0,0,0));
+			m_edgeMesh->textureCoord(0,0);
+			m_edgeMesh->position(Ogre::Vector3(0,0,0));
+			m_edgeMesh->textureCoord(1,1);
+			m_edgeMesh->position(Ogre::Vector3(0,0,0));
+			m_edgeMesh->textureCoord(0,1);
 		}
 
 		m_edgeMesh->end();

@@ -594,6 +594,11 @@ void CartoonHairSimulation::createScene(void)
 	headNode->attachObject(m_hairModel->getHairManualObject());
 	headNode->attachObject(m_hairModel->getNormalsManualObject());
 	headNode->attachObject(m_hairModel->getEdgeManualObject());
+
+	head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
+	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
+	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
+	
 	//headNode->attachObject(m_hairModel->getEdgeBillboardSet());
 }
 //-------------------------------------------------------------------------------------
@@ -684,6 +689,17 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
             mDetailsPanel->hide();
         }
     }
+	else if (arg.key == OIS::KC_H)
+	{
+		if(m_hairModel->getHairManualObject()->isVisible())
+		{
+			m_hairModel->getHairManualObject()->setVisible(false);
+		}
+		else
+		{
+			m_hairModel->getHairManualObject()->setVisible(true);
+		}
+	}
     else if (arg.key == OIS::KC_T)   // cycle polygon rendering mode
     {
         Ogre::String newVal;
