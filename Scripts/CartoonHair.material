@@ -41,10 +41,10 @@ material IETCartoonHair/EdgeMaterial
 			texture_unit
 			{
 				texture edge.png
-				//alpha_op_ex source1 src_manual src_texture 0.5
 				tex_address_mode wrap
 				filtering none
 			}
+			
 		}
 	}
 }
@@ -66,6 +66,10 @@ material IETCartoonHair/HairMaterial
 			fragment_program_ref IETCartoonHair/ToonFragmentShader
 			{
 				param_named cartoonTexture int 0
+				param_named stroke1 int 1
+				param_named stroke2 int 2
+				param_named stroke3 int 3
+				param_named stroke4 int 4
 				param_named_auto hairColour surface_diffuse_colour
 			}
 			
@@ -73,6 +77,30 @@ material IETCartoonHair/HairMaterial
 			{
 				texture cartoon.png 1d
 				tex_address_mode clamp
+				filtering none
+			}
+			texture_unit
+			{
+				texture stroke1.png
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit
+			{
+				texture stroke2.png
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit
+			{
+				texture stroke3.png
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit
+			{
+				texture stroke4.png
+				tex_address_mode wrap
 				filtering none
 			}
 		}

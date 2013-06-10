@@ -1030,7 +1030,7 @@ void HairModel::generateEdges(bool update)
 				scale*= std::max(left,right);
 
 				//apply depth cue scale
-				scale*= m_fd;
+				//scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
 
 				//multiply the scale by some value as otherwise 0 to 1 is far too big
 				scale*= 0.02f;
