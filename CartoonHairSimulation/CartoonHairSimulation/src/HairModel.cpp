@@ -19,6 +19,8 @@ HairModel::HairModel(HairParameters &param)
 	m_currentFrame = 0;
 	m_animationTime = 0;
 
+	m_depthCueCalculated = false;
+
 	std::string hairFrame = loadAnchorPoints(param.directory,param.animation);
 	generateAnchorBody(param.world, param.world->getWorldInfo(), m_anchorPoints[0]);
 	generateHairStrands(param.directory+hairFrame,param.world,param.edgeMaterial,param.bendingMaterial,param.torsionMaterial);
@@ -751,7 +753,6 @@ void HairModel::addToTempEdgeMap(std::pair<int,int> key, int index1, int index2,
 
 void HairModel::generateEdgeMap()
 {
-	//std::vector<std::pair<int,int>> keys;
 	//go through every triangle
 	for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
 	{
@@ -765,23 +766,17 @@ void HairModel::generateEdgeMap()
 		key.first = i1;
 		key.second = i2;
 
-		//keys.push_back(key);
-
 		addToTempEdgeMap(key,i1,i2,i3);
 
 		//edge 2
 		key.first = i1;
 		key.second = i3;
 
-		//keys.push_back(key);
-
 		addToTempEdgeMap(key,i1,i2,i3);
 
 		//edge 3
 		key.first = i2;
 		key.second = i3;
-
-		//keys.push_back(key);
 
 		addToTempEdgeMap(key,i1,i2,i3);
 	}
@@ -902,21 +897,71 @@ void HairModel::generateEdges(bool update)
 
 		}
 
+		//calculate depth cue scaling values - only need first section
+		//artistic-sils-300dpi.pdf
+		//this should be measured from the origin of the mesh but as it is a softbody it doesn't really have an origin
+		//so I will just use the first segment for measurements
+		if(section == 0)
+		{
+			btSoftBody *strand = m_strandSoftBodies[0];
+			//calculate intial depth ratio
+			btVector3 edge1 = strand->m_nodes[1].m_x-strand->m_nodes[0].m_x;
+
+			Ogre::Vector3 tp0,tp1,p0,p1;
+			p0 = Ogre::Vector3(strand->m_nodes[0].m_x.x(),strand->m_nodes[0].m_x.y(),strand->m_nodes[0].m_x.z());
+			p1 = Ogre::Vector3(strand->m_nodes[1].m_x.x(),strand->m_nodes[1].m_x.y(),strand->m_nodes[1].m_x.z());
+
+			toDeviceCoordinates(tp0,p0,m_camera);
+			toDeviceCoordinates(tp1,p1,m_camera);
+
+			Ogre::Vector3 edge2 = tp1-tp0;
+			if(m_depthCueCalculated == false)
+			{
+				m_depthCueCalculated = true;
+				m_di = edge1.length()/edge2.length();
+				m_dc = m_di;
+			}
+			else
+			{
+				m_dc = edge1.length()/edge2.length();
+			}
+			m_fd = sqrt(m_dc/m_di);
+		}
+
 		//we now have the silhouettes - now to convert the points to device coordinates
 		//based off of artistic-sils-300dpi.pdf
 		//and
 		//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
+		float zMin = std::numeric_limits<float>::max();
+		float zMax = std::numeric_limits<float>::min();
 		std::vector<Ogre::Vector3> screenSpacePoints;
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
 			Ogre::Vector3 result;
 			if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].first],m_camera))
 			{
+				if(result.z>zMax)
+				{
+					zMax = result.z;
+				}
+				if(result.z<zMin)
+				{
+					zMin = result.z;
+				}
+
 				screenSpacePoints.push_back(result);
 				if(i == silhouette.size()-1)
 				{
 					if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].second],m_camera))
 					{
+						if(result.z>zMax)
+						{
+							zMax = result.z;
+						}
+						if(result.z<zMin)
+						{
+							zMin = result.z;
+						}
 						screenSpacePoints.push_back(result);
 					}
 				}
@@ -930,12 +975,13 @@ void HairModel::generateEdges(bool update)
 			std::vector<Ogre::Vector3> points;
 			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
 			{
-				Ogre::Vector3 edge1,edge2,rib;
+				Ogre::Vector3 edge1,edge2,rib,norm;
 				if(i == 0)
 				{
 					edge1 = screenSpacePoints[1]-screenSpacePoints[0];
 					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
 					rib.normalise();
+					norm = rib;
 
 				}
 				else if(i == screenSpacePoints.size()-1)
@@ -943,6 +989,7 @@ void HairModel::generateEdges(bool update)
 					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
 					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
 					rib.normalise();
+					norm = rib;
 				}
 				else
 				{
@@ -954,6 +1001,7 @@ void HairModel::generateEdges(bool update)
 					edge1.y = -temp;
 					edge1.z = 0;
 					edge1.normalise();
+					norm = edge1;
 
 					temp = edge2.x;
 					edge2.x = edge2.y;
@@ -965,7 +1013,33 @@ void HairModel::generateEdges(bool update)
 					rib.normalise();
 				}
 				
-				rib*=0.02f;
+
+				//scale rib base on angle to stop corners being squeezed
+				float scale = abs(rib.length()/(rib.dotProduct(norm)));
+
+				if(scale>2)
+				{
+					scale = 2;
+				}
+
+				//vertex depth scale factor from artistic-sils-300dpi.pdf
+				float scaleFactor = 1.0f;
+				float left = 0.0f;
+				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
+
+				scale*= std::max(left,right);
+
+				//apply depth cue scale
+				scale*= m_fd;
+
+				//multiply the scale by some value as otherwise 0 to 1 is far too big
+				scale*= 0.02f;
+
+				rib *= scale;
+
+				//attempt to stop silhouettes penetrating strands
+				rib.z=-0.0015f;
+
 				points.push_back(screenSpacePoints[i]+rib);
 				points.push_back(screenSpacePoints[i]-rib);
 			}

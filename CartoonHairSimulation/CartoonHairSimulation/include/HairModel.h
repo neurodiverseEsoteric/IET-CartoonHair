@@ -156,6 +156,8 @@ private:
 	float m_animationTime;
 	float m_animationSpeed;
 	int m_currentFrame;
+	bool m_depthCueCalculated;
+	float m_di,m_dc,m_fd;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;

@@ -290,9 +290,9 @@ void CartoonHairSimulation::createCamera(void)
     mCamera = mSceneMgr->createCamera("PlayerCam");
 
     // Position it at 500 in Z direction
-    mCamera->setPosition(Ogre::Vector3(0,0,2));
+    mCamera->setPosition(Ogre::Vector3(-19,-2.4,-12));
     // Look back along -Z
-    mCamera->lookAt(Ogre::Vector3(0,0,-300));
+    mCamera->lookAt(Ogre::Vector3(0,0,0));
     mCamera->setNearClipDistance(0.1);
 	mCamera->setFarClipDistance(1000);
 
@@ -581,7 +581,7 @@ void CartoonHairSimulation::createScene(void)
 
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
-	l->setPosition(10,-10,10);
+	l->setPosition(-19,-2.4,-12);
 
 	Ogre::SceneNode *child = headNode->createChildSceneNode();
 	child->attachObject(test);
