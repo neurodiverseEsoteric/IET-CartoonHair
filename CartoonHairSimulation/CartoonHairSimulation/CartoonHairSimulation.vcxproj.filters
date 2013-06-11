@@ -33,6 +33,9 @@
     <ClInclude Include="include\DebugDrawer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\IdBufferRenderTargetListener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CartoonHairSimulation.cpp">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\DebugDrawer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\IdBufferRenderTargetListener.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

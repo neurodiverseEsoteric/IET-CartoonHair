@@ -21,6 +21,18 @@ HairModel::HairModel(HairParameters &param)
 
 	m_depthCueCalculated = false;
 
+	//create render texture for storing colour id buffer for silhouette visibility testing
+	//http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
+	Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual("idBuffer",
+		Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,Ogre::TEX_TYPE_2D,
+		param.window->getWidth(),param.window->getHeight(),0,Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+	m_idBuffer = texture->getBuffer()->getRenderTarget();
+	m_idBuffer->addViewport(param.camera);
+	m_idBuffer->getViewport(0)->setClearEveryFrame(true);
+	m_idBuffer->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
+	m_idBuffer->getViewport(0)->setOverlaysEnabled(false);
+	m_idBuffer->setAutoUpdated(true);
+
 	std::string hairFrame = loadAnchorPoints(param.directory,param.animation);
 	generateAnchorBody(param.world, param.world->getWorldInfo(), m_anchorPoints[0]);
 	generateHairStrands(param.directory+hairFrame,param.world,param.edgeMaterial,param.bendingMaterial,param.torsionMaterial);
@@ -84,6 +96,11 @@ Ogre::ManualObject* HairModel::getNormalsManualObject()
 Ogre::ManualObject* HairModel::getEdgeManualObject()
 {
 	return m_edgeMesh;
+}
+
+Ogre::RenderTexture* HairModel::getIdBufferTexture()
+{
+	return m_idBuffer;
 }
 
 void HairModel::updateManualObject()
@@ -447,7 +464,7 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
 	btSoftBody::Material *testMaterial = new btSoftBody::Material();
-	testMaterial->m_kLST = 0.01f;
+	testMaterial->m_kLST = 0.001f;
 
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
@@ -1023,7 +1040,7 @@ void HairModel::generateEdges(bool update)
 				}
 
 				//vertex depth scale factor from artistic-sils-300dpi.pdf
-				float scaleFactor = 1.0f;
+				float scaleFactor = 0.5f;
 				float left = 0.0f;
 				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
 

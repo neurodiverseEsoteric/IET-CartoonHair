@@ -23,6 +23,7 @@ struct HairParameters
 	btSoftBody::Material *torsionMaterial;
 	btSoftBody::Material *stictionMaterial;
 	Ogre::Camera *camera;
+	Ogre::RenderWindow *window;
 	float a;
 	float b;
 	float c;
@@ -91,6 +92,7 @@ public:
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
+	Ogre::RenderTexture* getIdBufferTexture();
 	//Ogre::BillboardSet* getEdgeBillboardSet();
 	void updateManualObject();
 	void updateStictionSegments();
@@ -156,8 +158,11 @@ private:
 	float m_animationTime;
 	float m_animationSpeed;
 	int m_currentFrame;
+
+	//silhouette variables
 	bool m_depthCueCalculated;
 	float m_di,m_dc,m_fd;
+	Ogre::RenderTexture *m_idBuffer;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
