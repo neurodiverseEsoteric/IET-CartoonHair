@@ -2,8 +2,30 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
+//based on http://content.gpwiki.org/index.php/OpenGL_Selection_Using_Unique_Color_IDs
+Ogre::ColourValue HairModel::generateUniqueColour()
+{
+	Ogre::ColourValue result = m_currentId;
+	m_currentId.r += ID_INCREMENT;
+	if(m_currentId.r > 1.0f)
+	{
+		m_currentId.r = 0.0f;
+		m_currentId.g += ID_INCREMENT;
+		if(m_currentId.g > 1.0f)
+		{
+			m_currentId.g = 0;
+			m_currentId.b += ID_INCREMENT;
+		}
+
+	}
+
+	return result;
+}
+
 HairModel::HairModel(HairParameters &param)
 {
+	m_currentId = Ogre::ColourValue(0.01,0.0,0.0);
+
 	m_camera = param.camera;
 	m_a = param.a;
 	m_b = param.b;
@@ -46,6 +68,7 @@ HairModel::~HairModel()
 	m_strandNormals.clear();
 	m_strandIndices.clear();
 	m_edgeMap.clear();
+	m_idColours.clear();
 
 	for(int i = 0 ; i < m_hairSegments.size() ; i++)
 	{
@@ -768,6 +791,14 @@ void HairModel::addToTempEdgeMap(std::pair<int,int> key, int index1, int index2,
 	m_tempEdgeMap[key] = edge;
 }
 
+void HairModel::generateIdColours()
+{
+	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
+	{
+		m_idColours.push_back(generateUniqueColour());
+	}
+}
+
 void HairModel::generateEdgeMap()
 {
 	//go through every triangle
@@ -1065,9 +1096,11 @@ void HairModel::generateEdges(bool update)
 			{
 				m_edgeMesh->position(points[i]);
 				m_edgeMesh->textureCoord(i/2,1);
+				m_edgeMesh->colour(m_idColours[section]);
 
 				m_edgeMesh->position(points[i+1]);
 				m_edgeMesh->textureCoord(i/2,0);
+				m_edgeMesh->colour(m_idColours[section]);
 			}
 		}
 		else
@@ -1075,12 +1108,16 @@ void HairModel::generateEdges(bool update)
 			//if we don't give texture coordinates - it breaks the texture coordinates of any strands using this section later
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 			m_edgeMesh->textureCoord(0,1);
+			m_edgeMesh->colour(m_idColours[section]);
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 			m_edgeMesh->textureCoord(0,0);
+			m_edgeMesh->colour(m_idColours[section]);
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 			m_edgeMesh->textureCoord(1,1);
+			m_edgeMesh->colour(m_idColours[section]);
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 			m_edgeMesh->textureCoord(0,1);
+			m_edgeMesh->colour(m_idColours[section]);
 		}
 
 		m_edgeMesh->end();
@@ -1243,6 +1280,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 	{
 		generateIndices();
 		generateEdgeMap();
+		generateIdColours();
 	}
 
 	//iterate through each section (one for each strand) of the hair mesh
@@ -1274,6 +1312,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 			//m_hairMesh->colour(1.0,0,0);
 			m_hairMesh->position(m_strandVertices[section][vert]);
 			m_hairMesh->normal(m_strandNormals[section][vert]);
+			m_hairMesh->colour(m_idColours[section]);
 
 			m_normalMesh->position(m_strandVertices[section][vert]);
 			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);

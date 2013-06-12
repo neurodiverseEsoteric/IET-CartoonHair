@@ -521,6 +521,7 @@ void CartoonHairSimulation::createScene(void)
 
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
+	head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 	Ogre::Entity* test = mSceneMgr->createEntity("Cube","cube.mesh");
 
 	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
@@ -575,7 +576,7 @@ void CartoonHairSimulation::createScene(void)
 	param.window = mWindow;
 
 	m_hairModel = new HairModel(param);
-	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer);
+	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head);
 
 	//m_hairModel->getIdBufferTexture()->addListener(m_idBufferListener);
 

@@ -6,6 +6,8 @@
 #define TEMP_STICTION_REST_LENGTH 0.08f
 #define TEMP_STICTION_K 0.1f
 
+#define ID_INCREMENT 0.05f
+
 //http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Collision_Filtering
 #define BODY_GROUP 0x1
 #define HAIR_GROUP 0x2
@@ -101,6 +103,7 @@ public:
 	void setCurveValues(float a, float b, float c);
 private:
 	//methods
+	Ogre::ColourValue generateUniqueColour();
 	void getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1);
 	void addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1);
 
@@ -117,6 +120,7 @@ private:
 
 	void generateIndices();
 	void generateEdgeMap();
+	void generateIdColours();
 	void generateVertices(bool update, int section);
 	void generateNormals(bool update, int section);
 	void addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
@@ -163,6 +167,8 @@ private:
 	bool m_depthCueCalculated;
 	float m_di,m_dc,m_fd;
 	Ogre::RenderTexture *m_idBuffer;
+	std::vector<Ogre::ColourValue> m_idColours;
+	Ogre::ColourValue m_currentId;
 	
 	//rendering variables
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;

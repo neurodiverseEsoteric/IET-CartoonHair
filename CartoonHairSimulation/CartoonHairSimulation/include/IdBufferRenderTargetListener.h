@@ -6,7 +6,7 @@
 class IdBufferRenderTargetListener : public Ogre::RenderTargetListener
 {
 public:
-	IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr,HairModel *hairModel,DebugDrawer *debugDrawer);
+	IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr,HairModel *hairModel,DebugDrawer *debugDrawer, Ogre::Entity *head);
 	virtual ~IdBufferRenderTargetListener();
 private:
 	virtual void createScene();
@@ -16,6 +16,7 @@ private:
 
 	Ogre::SceneNode *m_screenNode;
 	Ogre::Rectangle2D *m_screen;
+	Ogre::Entity *m_head;
 	HairModel *m_hairModel;
 	DebugDrawer *m_debugDrawer;
 
