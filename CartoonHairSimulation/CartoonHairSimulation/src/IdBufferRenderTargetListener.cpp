@@ -38,6 +38,7 @@ bool IdBufferRenderTargetListener::frameRenderingQueued(const Ogre::FrameEvent& 
 void IdBufferRenderTargetListener::preRenderTargetUpdate(const Ogre::RenderTargetEvent& evt)
 {
 	//disable visibility of manual objects
+	m_hairModel->getEdgeManualObject()->setVisible(false);
 	m_debugEnabled = m_debugDrawer->getLinesManualObject()->isVisible();
 	if(m_debugEnabled)
 	{
@@ -59,10 +60,10 @@ void IdBufferRenderTargetListener::preRenderTargetUpdate(const Ogre::RenderTarge
 		hair->setMaterialName(section,"IETCartoonHair/SolidMaterial");
 	}
 
-	for(int section = 0; section < edges->getNumSections() ; section++)
+	/*for(int section = 0; section < edges->getNumSections() ; section++)
 	{
 		edges->setMaterialName(section,"IETCartoonHair/SolidMaterial");
-	}
+	}*/
 
 	m_head->setMaterialName("IETCartoonHair/BlackMaterial",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 }
@@ -84,15 +85,15 @@ void IdBufferRenderTargetListener::postRenderTargetUpdate(const Ogre::RenderTarg
 	//change back materials
 	Ogre::ManualObject *hair = m_hairModel->getHairManualObject();
 	Ogre::ManualObject *edges = m_hairModel->getEdgeManualObject();
-
+	
 	for(int section = 0; section < hair->getNumSections() ; section++)
 	{
 		hair->setMaterialName(section,"IETCartoonHair/HairMaterial");
 	}
-	for(int section = 0; section < edges->getNumSections() ; section++)
+	/*for(int section = 0; section < edges->getNumSections() ; section++)
 	{
 		edges->setMaterialName(section,"IETCartoonHair/EdgeMaterial");
-	}
+	}*/
 
 	m_head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 }

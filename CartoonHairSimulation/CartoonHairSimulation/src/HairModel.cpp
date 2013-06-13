@@ -24,7 +24,7 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 
 HairModel::HairModel(HairParameters &param)
 {
-	m_currentId = Ogre::ColourValue(0.01,0.0,0.0);
+	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
 	m_camera = param.camera;
 	m_a = param.a;
@@ -905,6 +905,9 @@ void HairModel::generateEdges(bool update)
 			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_STRIP);
 		}
 
+		m_edgeMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("width",(float)m_camera->getViewport()->getActualWidth());
+		m_edgeMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("height",(float)m_camera->getViewport()->getActualHeight());
+
 		std::deque<std::pair<int,int>> silhouette;
 		std::vector<std::pair<int,int>> temp;
 
@@ -1086,7 +1089,7 @@ void HairModel::generateEdges(bool update)
 				rib *= scale;
 
 				//attempt to stop silhouettes penetrating strands
-				rib.z=-0.0015f;
+				//rib.z=-0.0015f;
 
 				points.push_back(screenSpacePoints[i]+rib);
 				points.push_back(screenSpacePoints[i]-rib);
