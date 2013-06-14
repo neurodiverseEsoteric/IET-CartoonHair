@@ -18,6 +18,79 @@ fragment_program IETCartoonHair/EdgeFragmentShader glsl
 	source edge.frag
 }
 
+vertex_program IETCartoonHair/SolidSilhouetteVertexShader glsl
+{
+	source solidedge.vert
+}
+
+fragment_program IETCartoonHair/SolidSilhouetteFragmentShader glsl
+{
+	source solidedge.frag
+}
+
+//http://www.ogre3d.org/tikiwiki/Materials#Solid_colour
+material IETCartoonHair/BlackMaterial
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				colour_op_ex source1 src_manual src_current 0 0 0
+			}
+		}
+	}
+}
+
+material IETCartoonHair/IdBufferMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			
+			texture_unit
+			{
+				texture idBuffer 2d
+			}
+		}
+	}
+}
+
+material IETCartoonHair/SolidMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+		}
+	}
+}
+
+material IETCartoonHair/SolidSilhouetteMaterial
+{
+	technique
+	{
+		pass
+		{
+			cull_hardware none
+			cull_software none
+			vertex_program_ref IETCartoonHair/SolidSilhouetteVertexShader
+			{
+			
+			}
+			
+			fragment_program_ref IETCartoonHair/SolidSilhouetteFragmentShader
+			{
+			
+			}
+		}
+	}
+}
+
 material IETCartoonHair/EdgeMaterial
 {
 	//http://www.ogre3d.org/tikiwiki/Materials#Stained_Glass_Window
@@ -25,9 +98,12 @@ material IETCartoonHair/EdgeMaterial
 	{
 		pass
 		{	
+			depth_check off
+			//depth_func always_pass
 			scene_blend modulate
 			cull_hardware none
 			cull_software none
+			
 			vertex_program_ref IETCartoonHair/EdgeVertexShader
 			{
 			
@@ -36,12 +112,21 @@ material IETCartoonHair/EdgeMaterial
 			fragment_program_ref IETCartoonHair/EdgeFragmentShader
 			{
 				param_named edgeTexture int 0
+				param_named idTexture int 1
 			}
 			
-			texture_unit
+			texture_unit 0
 			{
-				texture edge.png
+				texture edge.png 2d
 				tex_address_mode wrap
+				filtering none
+			}
+			
+			texture_unit 1
+			{
+				texture idBuffer 2d
+				//texture testgrid.png 2d
+				text_address_mode clamp
 				filtering none
 			}
 			
@@ -65,41 +150,41 @@ material IETCartoonHair/HairMaterial
 			
 			fragment_program_ref IETCartoonHair/ToonFragmentShader
 			{
+				param_named_auto hairColour surface_diffuse_colour
 				param_named cartoonTexture int 0
 				param_named stroke1 int 1
 				param_named stroke2 int 2
 				param_named stroke3 int 3
 				param_named stroke4 int 4
-				param_named_auto hairColour surface_diffuse_colour
 			}
 			
-			texture_unit
+			texture_unit 0
 			{
 				texture cartoon.png 1d
 				tex_address_mode clamp
 				filtering none
 			}
-			texture_unit
+			texture_unit 1
 			{
-				texture stroke1.png
+				texture stroke1.png 2d
 				tex_address_mode wrap
 				filtering none
 			}
-			texture_unit
+			texture_unit 2
 			{
-				texture stroke2.png
+				texture stroke2.png 2d
 				tex_address_mode wrap
 				filtering none
 			}
-			texture_unit
+			texture_unit 3
 			{
-				texture stroke3.png
+				texture stroke3.png 2d
 				tex_address_mode wrap
 				filtering none
 			}
-			texture_unit
+			texture_unit 4
 			{
-				texture stroke4.png
+				texture stroke4.png 2d
 				tex_address_mode wrap
 				filtering none
 			}
