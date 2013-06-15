@@ -1,0 +1,25 @@
+<scene formatVersion="1.0" upAxis="y" unitsPerMeter="1" minOgreVersion="1.4" author="OgreMax Scene Exporter by Derek Nedelman (www.ogremax.com)">
+    <environment>
+        <colourAmbient r="0.501961" g="0.501961" b="0.501961" />
+        <colourBackground r="0" g="0" b="0" />
+    </environment>
+    <nodes>
+        <node name="Natalie_LOD_0_NoFaceNoFingers">
+            <scale x="1" y="1" z="1" />
+            <position x="0" y="1.52588e-007" z="0" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+            <entity name="Natalie_LOD_0_NoFaceNoFingers" id="1" meshFile="Natalie_LOD_0_NoFaceNoFingers.mesh" castShadows="true" receiveShadows="true">
+                <subentities>
+                    <subentity index="0" materialName="Natalie_LOD_0_Body" />
+                    <subentity index="1" materialName="Natalie_LOD_0_Skin" />
+                    <subentity index="2" materialName="Natalie_LOD_0_Hair" />
+                </subentities>
+            </entity>
+        </node>
+        <node name="Trajectory_Bone">
+            <scale x="0.05" y="0.05" z="0.05" />
+            <position x="0" y="0" z="0" />
+            <rotation qx="0" qy="0" qz="0" qw="1" />
+        </node>
+    </nodes>
+</scene>

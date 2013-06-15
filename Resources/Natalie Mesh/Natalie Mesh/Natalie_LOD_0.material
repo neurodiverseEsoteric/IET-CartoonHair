@@ -1,0 +1,60 @@
+material Natalie_LOD_0_Body
+{
+	technique
+	{
+		pass
+		{
+			ambient 0 0 0 
+			diffuse 0 0 0 
+			specular 0 0 0 10
+			emissive 0 0 0 
+
+			texture_unit 
+			{
+				texture f008_body_color.tga
+			}
+		}
+	}
+}
+
+
+material Natalie_LOD_0_Hair
+{
+	technique
+	{
+		pass
+		{
+			ambient 0 0 0 
+			diffuse 0 0 0 
+			specular 0 0 0 10
+			emissive 0 0 0 
+
+			texture_unit 
+			{
+				texture f008_opacity_color.tga
+			}
+		}
+	}
+}
+
+
+material Natalie_LOD_0_Skin
+{
+	technique
+	{
+		pass
+		{
+			ambient 0 0 0 
+			diffuse 0 0 0 
+			specular 0 0 0 10
+			emissive 0 0 0 
+
+			texture_unit 
+			{
+				texture f008_head_color.tga
+			}
+		}
+	}
+}
+
+

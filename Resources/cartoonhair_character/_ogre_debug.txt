@@ -1,0 +1,20 @@
+12:55:36: Creating resource group General
+12:55:36: Creating resource group Internal
+12:55:36: Creating resource group Autodetect
+12:55:36: Registering ResourceManager for type Mesh
+12:55:36: Registering ResourceManager for type Material
+12:55:36: Registering ResourceManager for type Skeleton
+12:55:36: XMLSkeletonSerializer: reading XML data from C:\Users\Timothy\IET-CartoonHair\Resources\cartoonhair_character\blender_output\ShortDress.skeleton.xml...
+12:55:36: XMLSkeletonSerializer: Reading Bones name...
+12:55:36: XMLSkeletonSerializer: Reading Hierarchy data...
+12:55:36: XMLSkeletonSerializer: Reading Bones data...
+12:55:36: XMLSkeletonSerializer: Reading Animations data...
+12:55:37: XMLSkeletonSerializer: Finished. Running SkeletonSerializer...
+12:55:37: Exporting bones..
+12:55:37: Bones exported.
+12:55:37: Exporting animations, count=1
+12:55:37: Exporting animation: my_animation
+12:55:37: Animation exported.
+12:55:37: Unregistering ResourceManager for type Skeleton
+12:55:37: Unregistering ResourceManager for type Material
+12:55:37: Unregistering ResourceManager for type Mesh

@@ -517,12 +517,21 @@ void CartoonHairSimulation::createScene(void)
 		mWindow->getViewport(0)->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));
 	}
 
-	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	Ogre::SceneNode* characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
+	//Ogre::Entity* character = mSceneMgr->createEntity("Character","Natalie_LOD_0_NoFaceNoFingers.mesh");
+	//character->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+	Ogre::Entity* character = mSceneMgr->createEntity("Character","jaiqua.mesh");
+	//disable hair
+	characterNode->attachObject(character);
+	//characterNode->setScale(10,10,10);
+
+	Ogre::SceneNode* headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();//characterNode->createChildSceneNode();
+
 
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
 	head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-	Ogre::Entity* test = mSceneMgr->createEntity("Cube","cube.mesh");
 
 	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
 	size_t vertexCount, indexCount;
@@ -578,19 +587,6 @@ void CartoonHairSimulation::createScene(void)
 	m_hairModel = new HairModel(param);
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head);
 
-	//m_hairModel->getIdBufferTexture()->addListener(m_idBufferListener);
-
-	//setup mini-screen so we can view the id buffer - http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
-	/*Ogre::Rectangle2D *smallScreen = new Ogre::Rectangle2D(true);
-	smallScreen->setCorners(0.5f,-0.5f,1.0f,-1.0f);
-	smallScreen->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
-	Ogre::SceneNode *smallScreenNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("smallScreenNode");
-	smallScreenNode->attachObject(smallScreen);
-
-	smallScreen->setMaterial("IETCartoonHair/SmallScreenMaterial");*/
-
-
-
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
@@ -602,11 +598,6 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(-19,-2.4,-12);
 
-	Ogre::SceneNode *child = headNode->createChildSceneNode();
-	child->attachObject(test);
-	child->setPosition(l->getPosition());
-	child->setScale(0.01,0.01,0.01);
-
 	//line everything to the head node
 	headNode->attachObject(head);
 	headNode->attachObject(m_debugDrawer->getLinesManualObject());
@@ -617,8 +608,12 @@ void CartoonHairSimulation::createScene(void)
 	head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
-	
-	//headNode->attachObject(m_hairModel->getEdgeBillboardSet());
+
+	/*if(character->getSkeleton()->hasBone("head"))
+	{
+		Ogre::Vector3 headPos = character->getSkeleton()->getBone("head")->getPosition();
+		headNode->setPosition(headPos);
+	}*/
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
