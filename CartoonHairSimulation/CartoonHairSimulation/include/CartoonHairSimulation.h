@@ -95,6 +95,10 @@ protected:
 	btSoftBodySolver *mSoftBodySolver;
 
 	btRigidBody *m_headRigidBody;
+	Ogre::SceneNode *m_headNode;
+	Ogre::SceneNode *m_characterNode;
+	Ogre::Bone *m_headBone;
+	Ogre::Entity *m_character;
 
 	//spring materials
 	btSoftBody::Material *m_edgeMaterial;

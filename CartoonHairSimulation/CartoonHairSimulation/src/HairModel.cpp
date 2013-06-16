@@ -32,6 +32,9 @@ HairModel::HairModel(HairParameters &param)
 	m_c = param.c;
 	m_world = param.world;
 
+	//m_initialPosition = btVector3(0,0,0);//btVector3(param.initialPosition.x,param.initialPosition.y,param.initialPosition.z);
+	//m_initialOrientation = btQuaternion(0,0,0,1);//btQuaternion(param.initialOrientation.x,param.initialOrientation.y,param.initialOrientation.z,param.initialOrientation.w);
+
 	m_maxStictionConnections = param.maxStictionConnections;
 	m_stictionThreshold = param.stictionThreshold;
 	m_stictionMaterial = param.stictionMaterial;
@@ -124,6 +127,27 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 Ogre::RenderTexture* HairModel::getIdBufferTexture()
 {
 	return m_idBuffer;
+}
+
+void HairModel::applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation)
+{
+	//convert to bullet physics variables
+	//btVector3 translate(translation.x,translation.y,translation.z);
+	//btQuaternion orient(rotation.x,rotation.y,rotation.z,rotation.w);
+
+	////m_localTranslation = m_globalTranslation - translate;
+	//////m_localOrientation = m_globalOrientation - orient;
+	////btTransform transform(btQuaternion(rotation.x,rotation.y,rotation.z,rotation.w),
+	////	btVector3(translation.x,translation.y, translation.z));
+	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
+	{
+		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0.01,0,0);
+	}
+
+	for(int node = 0 ; node < m_anchors->m_nodes.size() ; node++)
+	{
+		m_anchors->m_nodes[node].m_x += btVector3(0.01,0,0);
+	}
 }
 
 void HairModel::updateManualObject()
@@ -361,7 +385,10 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 			float y = particle->FloatAttribute("y");
 			float z = particle->FloatAttribute("z");
 
-			vertices.push_back(btVector3(x,y,z));
+			btVector3 point(x,y,z);
+			//point = point + m_initialPosition;
+
+			vertices.push_back(point);
 		}
 	}
 
@@ -416,7 +443,10 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 			float y = particle->FloatAttribute("y");
 			float z = particle->FloatAttribute("z");
 
-			particles.push_back(btVector3(x,y,z));
+			btVector3 point(x,y,z);
+			//point = point + m_initialPosition;
+
+			particles.push_back(point);
 			masses.push_back(1.0f);
 
 			//create anchor at this position - http://www.oogtech.org/content/2011/09/07/bullet-survival-kit-4-the-motion-state/
@@ -501,7 +531,7 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 		strand->appendLink(node-1,node,edgeMaterial);
 
 		//generate stiction segment
-		addStictionSegment(world,strand,node-1,node);
+		//addStictionSegment(world,strand,node-1,node);
 	}
 
 	//create bending springs
@@ -606,7 +636,7 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 void HairModel::generateIndices()
 {
-	int numNodes = m_strandSoftBodies[0]->m_nodes.size();
+	int numNodes = NUM_HAIR_SAMPLES;//m_strandSoftBodies[0]->m_nodes.size();
 	int numVerts = m_hairShape.size();
 
 	//for the normal sides of the strand
@@ -668,20 +698,38 @@ void HairModel::generateVertices(bool update, int section)
 {
 	btSoftBody* body = m_strandSoftBodies[section];
 
+	//update spline
+	for(int node = 0 ; node < body->m_nodes.size() ; node++)
+	{
+		btVector3 pos = body->m_nodes[node].m_x;
+		Ogre::Vector3 position(pos.x(),pos.y(),pos.z());
+		if(update)
+		{
+			m_hairSplines[section].updatePoint(node,position);
+		}
+		else
+		{
+			m_hairSplines[section].addPoint(position);
+		}
+	}
+
+	m_hairSplines[section].recalcTangents();
+
 	//variables used to create geometry
 	Ogre::Vector3 shapeDir(0,-1,0);
 	Ogre::Quaternion rot;
 	float scale;
 
-	for(int node = 0 ; node < body->m_nodes.size()-1 ; node++)
-	{
-		float pos = (float)(node)/(body->m_nodes.size());
-		scale = determineScale(pos);
+	float increment = 1.0f/NUM_HAIR_SAMPLES;
 
-		rot = determineRotation(shapeDir,
-		Ogre::Vector3(body->m_nodes[node].m_x.x(),body->m_nodes[node].m_x.y(),body->m_nodes[node].m_x.z()),
-		Ogre::Vector3(body->m_nodes[node+1].m_x.x(),body->m_nodes[node+1].m_x.y(),body->m_nodes[node+1].m_x.z())
-			);
+	for(int t = 0 ; t < 1.0f-increment ; t+=increment)
+	{
+		scale = determineScale(t);
+
+		Ogre::Vector3 nodei = m_hairSplines[section].interpolate(t);
+		Ogre::Vector3 nodei_1 = m_hairSplines[section].interpolate(t+increment);
+
+		rot = determineRotation(shapeDir,nodei,nodei_1);
 
 		//generate shape
 		//if usual section of hair
@@ -691,15 +739,16 @@ void HairModel::generateVertices(bool update, int section)
 			vert = vert*scale;
 
 			vert = Ogre::Vector3(
-				body->m_nodes[node].m_x.x()+vert.x,
-				body->m_nodes[node].m_x.y()+vert.y,
-				body->m_nodes[node].m_x.z()+vert.z
+				nodei.x+vert.x,
+				nodei.y+vert.y,
+				nodei.z+vert.z
 				);
 
+			int currentNode = t*NUM_HAIR_SAMPLES;
 			//update existing geometry
 			if(update)
 			{
-				int index = (node*m_hairShape.size())+i;
+				int index = (currentNode*m_hairShape.size())+i;
 				m_strandVertices[section][index] = vert;
 			}
 
@@ -712,12 +761,12 @@ void HairModel::generateVertices(bool update, int section)
 	}
 
 	//in order to cap the top of the strand and taper the end - the last two vertices will be these points
-	Ogre::Vector3 start(body->m_nodes[0].m_x.x(),body->m_nodes[0].m_x.y(),body->m_nodes[0].m_x.z());
-	Ogre::Vector3 end(body->m_nodes[body->m_nodes.size()-1].m_x.x(),body->m_nodes[body->m_nodes.size()-1].m_x.y(),body->m_nodes[body->m_nodes.size()-1].m_x.z());
+	Ogre::Vector3 start(m_hairSplines[section].interpolate(0));
+	Ogre::Vector3 end(m_hairSplines[section].interpolate(1));
 
 	if(update)
 	{
-		int index = (body->m_nodes.size()-1)*m_hairShape.size();
+		int index = (NUM_HAIR_SAMPLES-1)*m_hairShape.size();
 		m_strandVertices[section][index] = start;
 		m_strandVertices[section][index+1] = end;
 	}
@@ -1301,6 +1350,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
+			m_hairSplines.push_back(Ogre::SimpleSpline());
 		}
 
 		//generate geometry

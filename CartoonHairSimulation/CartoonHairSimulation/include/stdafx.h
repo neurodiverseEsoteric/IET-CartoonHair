@@ -15,6 +15,7 @@
 #include <OgreConfigFile.h>
 #include <OgreException.h>
 #include <OgreWindowEventUtilities.h>
+#include <OgreSimpleSpline.h>
 
 #include <OISEvents.h>
 #include <OISInputManager.h>

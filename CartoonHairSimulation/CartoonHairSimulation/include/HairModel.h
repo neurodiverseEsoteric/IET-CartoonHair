@@ -8,6 +8,8 @@
 
 #define ID_INCREMENT 0.05f
 
+#define NUM_HAIR_SAMPLES 5
+
 //http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Collision_Filtering
 #define BODY_GROUP 0x1
 #define HAIR_GROUP 0x2
@@ -33,6 +35,8 @@ struct HairParameters
 	float stictionThreshold;
 	float stictionRestLength;
 	float stictionK;
+	Ogre::Vector3 initialPosition;
+	Ogre::Quaternion initialOrientation;
 };
 
 struct HairSegment
@@ -96,6 +100,7 @@ public:
 	Ogre::ManualObject* getEdgeManualObject();
 	Ogre::RenderTexture* getIdBufferTexture();
 	//Ogre::BillboardSet* getEdgeBillboardSet();
+	void applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation);
 	void updateManualObject();
 	void updateStictionSegments();
 	void updateAnchors(float timestep);
@@ -169,8 +174,13 @@ private:
 	Ogre::RenderTexture *m_idBuffer;
 	std::vector<Ogre::ColourValue> m_idColours;
 	Ogre::ColourValue m_currentId;
+
+	//binding to character variables
+	btVector3 m_initialPosition;
+	btQuaternion m_initialOrientation;
 	
 	//rendering variables
+	std::vector<Ogre::SimpleSpline> m_hairSplines;
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
 	//Ogre::BillboardSet *m_edgeSet;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
