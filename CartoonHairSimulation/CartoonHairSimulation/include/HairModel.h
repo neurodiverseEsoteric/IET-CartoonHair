@@ -9,6 +9,7 @@
 #define ID_INCREMENT 0.05f
 
 #define NUM_HAIR_SAMPLES 5
+#define NUM_HAIR_SHAPE_SAMPLES 4
 
 //http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Collision_Filtering
 #define BODY_GROUP 0x1

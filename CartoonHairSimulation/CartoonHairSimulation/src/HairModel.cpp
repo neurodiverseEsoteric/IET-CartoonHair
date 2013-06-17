@@ -486,12 +486,14 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 {
 	//create hair shape
-	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,-0.05));
-	m_hairShape.push_back(Ogre::Vector3(0,0,-0.1));
-	m_hairShape.push_back(Ogre::Vector3(0.0866,0,-0.05));
-	m_hairShape.push_back(Ogre::Vector3(0.0866,0,0.05));
-	m_hairShape.push_back(Ogre::Vector3(0,0,0.1));
-	m_hairShape.push_back(Ogre::Vector3(-0.0866,0,0.05));
+	Ogre::Vector3 vertex(0,0,-0.1);
+	Ogre::Radian rad(Ogre::Degree(-360.0f/NUM_HAIR_SHAPE_SAMPLES));
+	m_hairShape.push_back(vertex);
+	for(int sample = 1 ; sample < NUM_HAIR_SHAPE_SAMPLES ; sample++)
+	{
+		vertex = Ogre::Quaternion(rad,Ogre::Vector3::UNIT_Y)*vertex;
+		m_hairShape.push_back(vertex);
+	}
 
 	//create manual hair object
 	m_hairMesh = sceneMgr->createManualObject("hair");
