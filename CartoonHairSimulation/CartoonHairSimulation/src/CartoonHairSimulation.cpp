@@ -533,9 +533,11 @@ void CartoonHairSimulation::createScene(void)
 
 	m_characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
-	m_character = mSceneMgr->createEntity("Character","jaiqua.mesh");//"Natalie_LOD_0_NoFaceNoFingers.mesh");
-	//m_character->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-	//disable hair
+	m_character = mSceneMgr->createEntity("Character","jaiqua.mesh");
+	m_characterAnimationState = m_character->getAnimationState("Walk");
+	m_characterAnimationState->setLoop(true);
+	m_characterAnimationState->setEnabled(true);
+
 	m_characterNode->attachObject(m_character);
 
 	m_headNode = m_characterNode->createChildSceneNode();
@@ -596,7 +598,7 @@ void CartoonHairSimulation::createScene(void)
 	param.window = mWindow;
 
 	m_hairModel = new HairModel(param);
-	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head);
+	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head,m_character);
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
@@ -676,6 +678,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			m_hairModel->applyHeadTransform(boneOrientation,bonePosition);
 		}
 		mWorld->stepSimulation(timestep);
+		m_characterAnimationState->addTime(timestep);
 		//m_hairModel->updateStictionSegments();
 		//m_hairModel->updateAnchors(timestep);
 	}

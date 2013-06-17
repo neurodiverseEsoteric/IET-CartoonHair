@@ -943,7 +943,7 @@ bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
 
 void HairModel::generateEdges(bool update)
 {
-	Ogre::Vector3 eyeVector = m_camera->getDirection();
+	Ogre::Vector3 eyeVector = m_camera->getDerivedDirection();
 
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
@@ -1138,9 +1138,6 @@ void HairModel::generateEdges(bool update)
 				scale*= 0.02f;
 
 				rib *= scale;
-
-				//attempt to stop silhouettes penetrating strands
-				//rib.z=-0.0015f;
 
 				points.push_back(screenSpacePoints[i]+rib);
 				points.push_back(screenSpacePoints[i]-rib);

@@ -99,6 +99,7 @@ protected:
 	Ogre::SceneNode *m_characterNode;
 	Ogre::Bone *m_headBone;
 	Ogre::Entity *m_character;
+	Ogre::AnimationState *m_characterAnimationState;
 
 	//spring materials
 	btSoftBody::Material *m_edgeMaterial;
