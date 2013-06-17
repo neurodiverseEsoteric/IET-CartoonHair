@@ -722,8 +722,9 @@ void HairModel::generateVertices(bool update, int section)
 
 	float increment = 1.0f/NUM_HAIR_SAMPLES;
 
-	for(int t = 0 ; t < 1.0f-increment ; t+=increment)
+	for(int node = 0 ; node < NUM_HAIR_SAMPLES-1 ; node++)
 	{
+		float t = node*increment;
 		scale = determineScale(t);
 
 		Ogre::Vector3 nodei = m_hairSplines[section].interpolate(t);
@@ -744,11 +745,10 @@ void HairModel::generateVertices(bool update, int section)
 				nodei.z+vert.z
 				);
 
-			int currentNode = t*NUM_HAIR_SAMPLES;
 			//update existing geometry
 			if(update)
 			{
-				int index = (currentNode*m_hairShape.size())+i;
+				int index = (node*m_hairShape.size())+i;
 				m_strandVertices[section][index] = vert;
 			}
 

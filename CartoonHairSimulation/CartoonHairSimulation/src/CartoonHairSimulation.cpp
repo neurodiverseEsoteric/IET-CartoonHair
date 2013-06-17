@@ -659,25 +659,25 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if(m_physicsEnabled)
 	{
-		//if(!m_headBone)
-		//{
-		//	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
-		//	if(skeleton->hasBone("head"))
-		//	{
-		//		m_headBone = skeleton->getBone("head");
-		//	}
-		//}
-		//else
-		//{
-		//	//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
-		//	//Ogre::Quaternion rot = headNode->getOrientation();
-		//	Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
-		//	Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
-		//	m_hairModel->applyHeadTransform(boneOrientation,bonePosition);
-		//}
+		if(!m_headBone)
+		{
+			Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
+			if(skeleton->hasBone("head"))
+			{
+				m_headBone = skeleton->getBone("head");
+			}
+		}
+		else
+		{
+			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
+			//Ogre::Quaternion rot = headNode->getOrientation();
+			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
+			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
+			m_hairModel->applyHeadTransform(boneOrientation,bonePosition);
+		}
 		mWorld->stepSimulation(timestep);
 		//m_hairModel->updateStictionSegments();
-		m_hairModel->updateAnchors(timestep);
+		//m_hairModel->updateAnchors(timestep);
 	}
 
 	m_hairModel->updateManualObject();
