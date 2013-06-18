@@ -23,7 +23,7 @@ IdBufferRenderTargetListener::IdBufferRenderTargetListener(Ogre::SceneManager *s
 
 IdBufferRenderTargetListener::~IdBufferRenderTargetListener()
 {
-	//delete m_screen;
+
 }
 
 void IdBufferRenderTargetListener::createScene()

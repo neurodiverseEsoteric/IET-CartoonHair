@@ -99,8 +99,10 @@ public:
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
+	Ogre::ManualObject* getDebugEdgesManualObject();
+
 	Ogre::RenderTexture* getIdBufferTexture();
-	//Ogre::BillboardSet* getEdgeBillboardSet();
+
 	void applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation);
 	void updateManualObject();
 	void updateStictionSegments();
@@ -182,7 +184,7 @@ private:
 	
 	//rendering variables
 	std::vector<Ogre::SimpleSpline> m_hairSplines;
-	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh;
+	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh,*m_debugEdges;
 	//Ogre::BillboardSet *m_edgeSet;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;

@@ -124,6 +124,11 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 	return m_edgeMesh;
 }
 
+Ogre::ManualObject* HairModel::getDebugEdgesManualObject()
+{
+	return m_debugEdges;
+}
+
 Ogre::RenderTexture* HairModel::getIdBufferTexture()
 {
 	return m_idBuffer;
@@ -141,12 +146,12 @@ void HairModel::applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 tran
 	////	btVector3(translation.x,translation.y, translation.z));
 	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
 	{
-		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0.01,0,0);
+		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0.05,0,0);
 	}
 
 	for(int node = 0 ; node < m_anchors->m_nodes.size() ; node++)
 	{
-		m_anchors->m_nodes[node].m_x += btVector3(0.01,0,0);
+		m_anchors->m_nodes[node].m_x += btVector3(0.05,0,0);
 	}
 }
 
@@ -505,7 +510,8 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 	m_edgeMesh = sceneMgr->createManualObject("edges");
 	m_edgeMesh->setDynamic(true);
 
-	//m_edgeSet = sceneMgr->createBillboardSet("edges");
+	m_debugEdges = sceneMgr->createManualObject("debugEdges");
+	m_debugEdges->setDynamic(true);
 
 	createOrUpdateManualObject(false);
 	generateEdges(false);
@@ -950,10 +956,12 @@ void HairModel::generateEdges(bool update)
 		if(update)
 		{
 			m_edgeMesh->beginUpdate(section);
+			m_debugEdges->beginUpdate(section);
 		}
 		else
 		{
 			m_edgeMesh->begin("IETCartoonHair/EdgeMaterial",Ogre::RenderOperation::OT_TRIANGLE_STRIP);
+			m_debugEdges->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
 		}
 
 		m_edgeMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("width",(float)m_camera->getViewport()->getActualWidth());
@@ -993,6 +1001,8 @@ void HairModel::generateEdges(bool update)
 			//add to silhouette vector (should use some sort of insertion sort)
 			if(edge->flag == EdgeType::SILHOUETTE)
 			{
+				m_debugEdges->position(m_strandVertices[section][currentPair.first]);
+				m_debugEdges->position(m_strandVertices[section][currentPair.second]);
 				//elements.push_back(currentPair);
 				insertSilhouette(currentPair,temp,silhouette);
 			}
@@ -1172,15 +1182,16 @@ void HairModel::generateEdges(bool update)
 		}
 
 		m_edgeMesh->end();
+		m_debugEdges->end();
 	}
 }
 //http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
 bool HairModel::toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera)
 {
 	result = camera->getProjectionMatrix() * camera->getViewMatrix() * point;
-	Ogre::Plane cameraPlane = Ogre::Plane(Ogre::Vector3(camera->getDerivedOrientation().zAxis()),
+	Ogre::Plane cameraPlane = Ogre::Plane(camera->getDerivedDirection(),
 		camera->getDerivedPosition());
-	if(cameraPlane.getSide(point) != Ogre::Plane::NEGATIVE_SIDE)
+	if(cameraPlane.getSide(point) != Ogre::Plane::POSITIVE_SIDE)
 	{
 		return false;
 	}

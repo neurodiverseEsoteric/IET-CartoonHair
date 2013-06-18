@@ -541,7 +541,6 @@ void CartoonHairSimulation::createScene(void)
 	m_characterNode->attachObject(m_character);
 
 	m_headNode = m_characterNode->createChildSceneNode();
-
 	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
 	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
 	head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
@@ -618,6 +617,7 @@ void CartoonHairSimulation::createScene(void)
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("normals")->attachObject(m_hairModel->getNormalsManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
+	//m_headNode->createChildSceneNode("debugedges")->attachObject(m_hairModel->getDebugEdgesManualObject());
 
 	head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
