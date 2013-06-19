@@ -136,22 +136,14 @@ Ogre::RenderTexture* HairModel::getIdBufferTexture()
 
 void HairModel::applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation)
 {
-	//convert to bullet physics variables
-	//btVector3 translate(translation.x,translation.y,translation.z);
-	//btQuaternion orient(rotation.x,rotation.y,rotation.z,rotation.w);
-
-	////m_localTranslation = m_globalTranslation - translate;
-	//////m_localOrientation = m_globalOrientation - orient;
-	////btTransform transform(btQuaternion(rotation.x,rotation.y,rotation.z,rotation.w),
-	////	btVector3(translation.x,translation.y, translation.z));
 	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
 	{
-		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0.05,0,0);
+		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0,0.1,0);
 	}
 
 	for(int node = 0 ; node < m_anchors->m_nodes.size() ; node++)
 	{
-		m_anchors->m_nodes[node].m_x += btVector3(0.05,0,0);
+		m_anchors->m_nodes[node].m_x += btVector3(0,0.1,0);
 	}
 }
 
@@ -950,7 +942,6 @@ bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
 void HairModel::generateEdges(bool update)
 {
 	Ogre::Vector3 eyeVector = m_camera->getDerivedDirection();
-
 	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
 	{
 		if(update)
@@ -1001,8 +992,6 @@ void HairModel::generateEdges(bool update)
 			//add to silhouette vector (should use some sort of insertion sort)
 			if(edge->flag == EdgeType::SILHOUETTE)
 			{
-				m_debugEdges->position(m_strandVertices[section][currentPair.first]);
-				m_debugEdges->position(m_strandVertices[section][currentPair.second]);
 				//elements.push_back(currentPair);
 				insertSilhouette(currentPair,temp,silhouette);
 			}
@@ -1049,6 +1038,9 @@ void HairModel::generateEdges(bool update)
 		std::vector<Ogre::Vector3> screenSpacePoints;
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
+			m_debugEdges->position(m_strandVertices[section][silhouette[i].first]);
+			m_debugEdges->position(m_strandVertices[section][silhouette[i].second]);
+
 			Ogre::Vector3 result;
 			if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].first],m_camera))
 			{
@@ -1062,20 +1054,20 @@ void HairModel::generateEdges(bool update)
 				}
 
 				screenSpacePoints.push_back(result);
-				if(i == silhouette.size()-1)
+			}
+			if(i == silhouette.size()-1)
+			{
+				if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].second],m_camera))
 				{
-					if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].second],m_camera))
+					if(result.z>zMax)
 					{
-						if(result.z>zMax)
-						{
-							zMax = result.z;
-						}
-						if(result.z<zMin)
-						{
-							zMin = result.z;
-						}
-						screenSpacePoints.push_back(result);
+						zMax = result.z;
 					}
+					if(result.z<zMin)
+					{
+						zMin = result.z;
+					}
+					screenSpacePoints.push_back(result);
 				}
 			}
 		}
@@ -1127,7 +1119,7 @@ void HairModel::generateEdges(bool update)
 				
 
 				//scale rib base on angle to stop corners being squeezed
-				float scale = abs(rib.length()/(rib.dotProduct(norm)));
+				float scale = 1.0f;//abs(rib.length()/(rib.dotProduct(norm)));
 
 				if(scale>2)
 				{
@@ -1135,11 +1127,11 @@ void HairModel::generateEdges(bool update)
 				}
 
 				//vertex depth scale factor from artistic-sils-300dpi.pdf
-				float scaleFactor = 0.5f;
+				/*float scaleFactor = 0.5f;
 				float left = 0.0f;
 				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
 
-				scale*= std::max(left,right);
+				scale*= std::max(left,right);*/
 
 				//apply depth cue scale
 				//scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
@@ -1149,8 +1141,8 @@ void HairModel::generateEdges(bool update)
 
 				rib *= scale;
 
-				points.push_back(screenSpacePoints[i]+rib);
-				points.push_back(screenSpacePoints[i]-rib);
+				points.push_back(toWorldCoordinates(screenSpacePoints[i]-rib,m_camera));
+				points.push_back(toWorldCoordinates(screenSpacePoints[i]+rib,m_camera));
 			}
 
 			for(int i = 0 ; i < points.size()-1 ; i+= 2)
@@ -1186,16 +1178,35 @@ void HairModel::generateEdges(bool update)
 	}
 }
 //http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
+//http://www.ogre3d.org/forums/viewtopic.php?f=2&t=61872
+//http://webglfactory.blogspot.ie/2011/05/how-to-convert-world-to-screen.html
+//http://www.ogre3d.org/forums/viewtopic.php?f=4&t=7930
+//http://stackoverflow.com/questions/6137426/get-screen-space-coordinates-of-specific-verticies-of-a-3d-model-when-visible
+//http://gamedev.stackexchange.com/questions/50336/problems-projecting-a-point-to-screen?rq=1
 bool HairModel::toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera)
 {
-	result = camera->getProjectionMatrix() * camera->getViewMatrix() * point;
-	Ogre::Plane cameraPlane = Ogre::Plane(camera->getDerivedDirection(),
-		camera->getDerivedPosition());
-	if(cameraPlane.getSide(point) != Ogre::Plane::POSITIVE_SIDE)
+	if(!camera->isVisible(point))
 	{
 		return false;
 	}
+
+	Ogre::Vector4 p(point.x,point.y,point.z,1);
+
+	p = camera->getViewMatrix()*p;
+	p = camera->getProjectionMatrix()*p;
+
+	result = Ogre::Vector3(p.x,p.y,p.z);
+	result /= p.w;
+
 	return true;
+}
+
+Ogre::Vector3 HairModel::toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera)
+{
+	Ogre::Vector3 p(point);
+	p = camera->getProjectionMatrix().inverse()*p;
+	p = camera->getViewMatrix().inverse()*p;
+	return p;
 }
 
 void HairModel::insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette)
@@ -1409,10 +1420,6 @@ float HairModel::determineScale(float x)
 
 	//http://www.mathopenref.com/quadraticexplorer.html
 
-	//float func = -1.4*x*x + 0.2*x + 1.1;
-	//float func = -4.6*x*x + 2.6*x + 1.1;
-	//float func = -5.8*x*x + 3*x + 2.7;
-	//float func = -13.9*x*x+4.9*x+6.4;
 	float func = m_a*x*x + m_b*x + m_c;
 
 	return Ogre::Math::Abs(func);

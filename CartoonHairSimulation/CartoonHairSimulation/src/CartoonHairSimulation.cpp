@@ -307,11 +307,11 @@ void CartoonHairSimulation::createCamera(void)
     // Create the camera
     mCamera = mSceneMgr->createCamera("PlayerCam");
 
-    // Position it at 500 in Z direction
-    mCamera->setPosition(Ogre::Vector3(-19,-2.4,-12));
+    // Position it at 50 in Z direction
+    mCamera->setPosition(Ogre::Vector3(0,0,50));
     // Look back along -Z
-    mCamera->lookAt(Ogre::Vector3(0,0,0));
-    mCamera->setNearClipDistance(0.1);
+    mCamera->lookAt(Ogre::Vector3(0,0,-1));
+	mCamera->setNearClipDistance(0.1);
 	mCamera->setFarClipDistance(1000);
 
     mCameraMan = new OgreBites::SdkCameraMan(mCamera);   // create a default camera controller
@@ -622,6 +622,7 @@ void CartoonHairSimulation::createScene(void)
 	head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
+	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_4,4);
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)

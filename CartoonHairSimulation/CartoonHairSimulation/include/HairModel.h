@@ -146,6 +146,7 @@ private:
 
 	//http://stackoverflow.com/questions/13682074/get-2d-screen-point-from-3d-point
 	bool toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera);
+	Ogre::Vector3 toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera);
 
 	//variables
 

@@ -1,4 +1,4 @@
-﻿Build started 17/06/2013 11:39:17.
+﻿Build started 19/06/2013 13:55:34.
      1>Project "C:\Users\Timothy\IET-CartoonHair\CartoonHairSimulation\CartoonHairSimulation\CartoonHairSimulation.vcxproj" on node 2 (build target(s)).
      1>InitializeBuildStatus:
          Creating "obj\Debug\CartoonHairSimulation.unsuccessfulbuild" because "AlwaysCreate" was specified.
@@ -6,30 +6,30 @@
          All outputs are up-to-date.
          c:\Program Files (x86)\Microsoft Visual Studio 10.0\VC\bin\CL.exe /c /I"C:\CEGUI\CEGUI-0.7.8\cegui\include" /IC:\glm\ /I"C:\Bullet\bullet-2.81-rev2613\src" /Iinclude /I"C:\OgreSDK_vc10_v1-8-1\include" /I"C:\OgreSDK_vc10_v1-8-1\include\OIS" /I"C:\OgreSDK_vc10_v1-8-1\include\OGRE" /I"C:\OgreSDK_vc10_v1-8-1\Samples\Common\include" /I"C:\Program Files (x86)\PCL 1.6.0\3rdParty\Boost\include\\" /ZI /nologo /W3 /WX- /Od /Oy- /D WIN32 /D _DEBUG /D _WINDOWS /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /Gy /fp:fast /Zc:wchar_t /Zc:forScope /GR /Yu"stdafx.h" /Fp"obj\Debug\CartoonHairSimulation.pch" /Fo"obj\Debug\\" /Fd"obj\Debug\vc100.pdb" /Gd /TP /analyze- /errorReport:prompt src\HairModel.cpp /Zm258 
          HairModel.cpp
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\include\hairmodel.h(82): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\include\hairmodel.h(83): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(85): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(93): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(142): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(139): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(676): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(686): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(736): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(737): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(783): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(796): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(814): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(845): warning C4018: '<' : signed/unsigned mismatch
      1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(854): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(946): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(972): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(979): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(983): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(988): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(992): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1038): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1076): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1147): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1339): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1363): warning C4018: '<' : signed/unsigned mismatch
-     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1375): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(945): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(973): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(980): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(984): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(989): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(993): warning C4482: nonstandard extension used: enum 'EdgeType' used in qualified name
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1039): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1080): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1148): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1360): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1384): warning C4018: '<' : signed/unsigned mismatch
+     1>c:\users\timothy\iet-cartoonhair\cartoonhairsimulation\cartoonhairsimulation\src\hairmodel.cpp(1396): warning C4018: '<' : signed/unsigned mismatch
        ResourceCompile:
          All outputs are up-to-date.
        ManifestResourceCompile:
@@ -61,4 +61,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:03.29
+Time Elapsed 00:00:03.55
