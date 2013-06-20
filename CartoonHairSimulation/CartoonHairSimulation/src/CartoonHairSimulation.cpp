@@ -210,6 +210,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	m_torsionMaterial = NULL;
 	m_idBufferListener = NULL;
 	m_headBone = NULL;
+	m_tamGenerator = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -222,6 +223,11 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 
     if (mTrayMgr) delete mTrayMgr;
     if (mCameraMan) delete mCameraMan;
+
+	if(m_tamGenerator)
+	{
+		delete m_tamGenerator;
+	}
 
     //Remove ourself as a Window listener
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
@@ -377,7 +383,7 @@ void CartoonHairSimulation::createViewports(void)
 {
     // Create one viewport, entire window
     Ogre::Viewport* vp = mWindow->addViewport(mCamera);
-    vp->setBackgroundColour(Ogre::ColourValue(0,0,0));
+    vp->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));//Ogre::ColourValue(0,0,0));
 
     // Alter the camera aspect ratio to match the viewport
     mCamera->setAspectRatio(
@@ -478,6 +484,8 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
+	m_tamGenerator = new TAMGenerator(mSceneMgr,mRoot,TAM_TEXTURE_SIZE,TAM_TEXTURE_SIZE);
+
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);
 	mWorld->setDebugDrawer(m_debugDrawer);
@@ -525,11 +533,11 @@ void CartoonHairSimulation::createScene(void)
 	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
 	m_cSlider->setCurrentValue(6.4+m_cSlider->getMaxValue()/2);
 
-	//setup background colour
-	if(mWindow->getNumViewports())
-	{
-		mWindow->getViewport(0)->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));
-	}
+	////setup background colour
+	//if(mWindow->getNumViewports())
+	//{
+	//	mWindow->getViewport(0)->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));
+	//}
 
 	m_characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
@@ -595,6 +603,18 @@ void CartoonHairSimulation::createScene(void)
 	param.maxStictionConnections = 5;
 	param.stictionThreshold =  0.5f;
 	param.window = mWindow;
+
+
+	/*Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
+	if(skeleton->hasBone("head"))
+	{
+		m_headBone = skeleton->getBone("head");
+	}
+
+	Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
+	Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
+	param.initialOrientation = btQuaternion(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
+	param.initialPosition = btVector3(bonePosition.x,bonePosition.y,bonePosition.z);*/
 
 	m_hairModel = new HairModel(param);
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head,m_character);
@@ -662,15 +682,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if(m_physicsEnabled)
 	{
-		if(!m_headBone)
-		{
-			Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
-			if(skeleton->hasBone("head"))
-			{
-				m_headBone = skeleton->getBone("head");
-			}
-		}
-		else
+		if(m_headBone)
 		{
 			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
 			//Ogre::Quaternion rot = headNode->getOrientation();

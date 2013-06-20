@@ -31,9 +31,8 @@ HairModel::HairModel(HairParameters &param)
 	m_b = param.b;
 	m_c = param.c;
 	m_world = param.world;
-
-	//m_initialPosition = btVector3(0,0,0);//btVector3(param.initialPosition.x,param.initialPosition.y,param.initialPosition.z);
-	//m_initialOrientation = btQuaternion(0,0,0,1);//btQuaternion(param.initialOrientation.x,param.initialOrientation.y,param.initialOrientation.z,param.initialOrientation.w);
+/*m_translationOffset = param.initialPosition;
+	m_orientationOffset = param.initialOrientation;*/
 
 	m_maxStictionConnections = param.maxStictionConnections;
 	m_stictionThreshold = param.stictionThreshold;
@@ -70,6 +69,7 @@ HairModel::~HairModel()
 	m_strandVertices.clear();
 	m_strandNormals.clear();
 	m_strandIndices.clear();
+	m_strandTextureCoordinates.clear();
 	m_edgeMap.clear();
 	m_idColours.clear();
 
@@ -136,15 +136,12 @@ Ogre::RenderTexture* HairModel::getIdBufferTexture()
 
 void HairModel::applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation)
 {
-	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
-	{
-		m_strandSoftBodies[strand]->m_nodes[0].m_x += btVector3(0,0.1,0);
-	}
 
-	for(int node = 0 ; node < m_anchors->m_nodes.size() ; node++)
-	{
-		m_anchors->m_nodes[node].m_x += btVector3(0,0.1,0);
-	}
+}
+
+void HairModel::applyTransform(btTransform &transform)
+{
+
 }
 
 void HairModel::updateManualObject()
@@ -215,7 +212,7 @@ void HairModel::updateAnchors(float timestep)
 		btVector3 p1 = m_anchorPoints[nextFrame][node];
 
 		btVector3 currentPosition = p0 + (p1-p0)*m_animationTime;
-		m_anchors->m_nodes[node].m_x = currentPosition;
+		m_anchors->m_nodes[node].m_x = currentPosition+m_translationOffset;
 	}
 }
 
@@ -383,7 +380,7 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//point = point + m_initialPosition;
+			//point = point + m_translationOffset;
 
 			vertices.push_back(point);
 		}
@@ -441,25 +438,10 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//point = point + m_initialPosition;
+			//point = point + m_translationOffset;
 
 			particles.push_back(point);
 			masses.push_back(1.0f);
-
-			//create anchor at this position - http://www.oogtech.org/content/2011/09/07/bullet-survival-kit-4-the-motion-state/
-			//we don't need a collision shape
-			//btEmptyShape *emptyShape = new btEmptyShape();
-			//btDefaultMotionState *anchorMotionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
-			//btRigidBody::btRigidBodyConstructionInfo anchorConstructionInfo(0,anchorMotionState,emptyShape,btVector3(0,0,0));
-			//btRigidBody *anchor = new btRigidBody(anchorConstructionInfo);
-			//anchor->setWorldTransform(btTransform(btQuaternion(0,0,0,1),btVector3(x,y,z)));
-			//anchor->setCollisionFlags(anchor->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-			//anchor->setActivationState(DISABLE_DEACTIVATION);
-
-			//anchors.push_back(anchor);
-			//m_anchors.push_back(anchor);
-
-			//m_world->addCollisionObject(anchor,NULL,NULL);
 		}
 
 		//now to create the strand softbody and its ghost nodes
@@ -662,12 +644,23 @@ void HairModel::generateIndices()
 		
 			//trangle 1
 			m_strandIndices.push_back(index1);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(0,1));
+
 			m_strandIndices.push_back(index2);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(1,1));
+
 			m_strandIndices.push_back(index3);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(0,0));
+
 			//triangle 2
 			m_strandIndices.push_back(index4);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(1,0));
+
 			m_strandIndices.push_back(index3);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(0,0));
+
 			m_strandIndices.push_back(index2);
+			m_strandTextureCoordinates.push_back(Ogre::Vector2(1,1));
 		}
 	}
 
@@ -678,10 +671,15 @@ void HairModel::generateIndices()
 		int index1 = vert;
 		int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
 		m_strandIndices.push_back(topIndex);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(0,0));
+
 		m_strandIndices.push_back(index2);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(0,1));
+
 		m_strandIndices.push_back(index1);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(1,1));
 	}
-	//for the tip
+	//for the tip - the tips texture coordinates are multiplied by 2 to give them the correct scale in relation to the other hair segments
 	int tipIndex = topIndex+1;
 	for(int vert = 0 ; vert < m_hairShape.size() ; vert++)
 	{
@@ -689,8 +687,13 @@ void HairModel::generateIndices()
 		int index1 = vert;
 		int index2 = (index1==m_hairShape.size()-1)?0:vert+1;
 		m_strandIndices.push_back(tipIndex);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(0,0));
+
 		m_strandIndices.push_back(index1+offset);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(0,2));
+
 		m_strandIndices.push_back(index2+offset);
+		m_strandTextureCoordinates.push_back(Ogre::Vector2(2,2));
 	}
 }
 
@@ -1185,10 +1188,10 @@ void HairModel::generateEdges(bool update)
 //http://gamedev.stackexchange.com/questions/50336/problems-projecting-a-point-to-screen?rq=1
 bool HairModel::toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera)
 {
-	if(!camera->isVisible(point))
+	/*if(!camera->isVisible(point))
 	{
 		return false;
-	}
+	}*/
 
 	Ogre::Vector4 p(point.x,point.y,point.z,1);
 
@@ -1267,75 +1270,6 @@ bool HairModel::attemptInsert(std::pair<int,int> element, std::deque<std::pair<i
 	return false;
 }
 
-//cutcode
-//p755-kalins.pdf
-	////we randomly sample some edges until we hit part of the silhouette
-	////we then follow the edge loop until we hit the same edge again
-	////we will have then identified the silhouette
-	//std::vector<std::pair<int,int>> silhouette;
-	//std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
-	
-	//Edge *initialEdge;
-	//bool silhouetteFound = false;
-	//while(!silhouetteFound)
-	//{
-	//	it = m_edgeMap.begin();
-	//	std::advance(it,rand() % m_edgeMap.size());
-	//	Edge *edge = &(it->second);
-	//	if(edge->edgeCount == 2)
-	//	{
-	//		if(isSilhouette(edge,section,eyeVector))
-	//		{
-	//			silhouette.push_back(it->first);
-	//			initialEdge = edge;
-	//			silhouetteFound = true;
-	//		}
-	//	}
-	//}
-
-	////we now have the first part of the silhouette
-	//Edge *edge = initialEdge;
-	//bool loopComplete = false;
-	//while(!loopComplete)
-	//{
-	//	//iterate through linked edges looking for silhouette
-	//	for(int index = 0 ; index < edge->linkedEdges.size() ; index++)
-	//	{
-	//		std::pair<int,int> pair = edge->linkedEdges[index];
-	//		Edge *temp = &(m_edgeMap[pair]);
-	//		if(temp == initialEdge)
-	//		{
-	//			loopComplete = true;
-	//			break;
-	//		}
-
-	//		bool goingBackwards = false;
-	//		//make sure we don't roll back
-	//		for(int i = 0 ; i < silhouette.size() ; i++)
-	//		{
-	//			if(pair.first == silhouette[i].first
-	//				&& pair.second == silhouette[i].second)
-	//			{
-	//				goingBackwards = true;
-	//				break;
-	//			}
-	//		}
-
-	//		if(goingBackwards)
-	//		{
-	//			continue;
-	//		}
-
-	//		//check edge
-	//		if(isSilhouette(temp,section,eyeVector))
-	//		{
-	//			silhouette.push_back(pair);
-	//			edge = temp;
-	//			break;
-	//		}
-	//	}
-	//}
-
 //http://gv2.cs.tcd.ie/mcdonner/Teaching/Lectures/ComputerGraphics2012_L2.pdf
 Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3)
 {
@@ -1383,22 +1317,27 @@ void HairModel::createOrUpdateManualObject(bool update)
 		//vertices + normals
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
-			//m_hairMesh->colour(1.0,0,0);
-			m_hairMesh->position(m_strandVertices[section][vert]);
+			/*m_hairMesh->position(m_strandVertices[section][vert]);
 			m_hairMesh->normal(m_strandNormals[section][vert]);
 			m_hairMesh->colour(m_idColours[section]);
+			m_hairMesh->textureCoord(m_strandTextureCoordinates[vert]);*/
 
 			m_normalMesh->position(m_strandVertices[section][vert]);
 			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);
 		}
 
 		//indices
-		for(int index = 0 ; index < m_strandIndices.size() ; index+=3)
+		for(int index = 0 ; index < m_strandIndices.size() ; index++)//index+=3)
 		{
-			m_hairMesh->triangle(
+			/*m_hairMesh->triangle(
 				m_strandIndices[index],
 				m_strandIndices[index+1],
-				m_strandIndices[index+2]);
+				m_strandIndices[index+2]);*/
+
+			m_hairMesh->position(m_strandVertices[section][m_strandIndices[index]]);
+			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
+			m_hairMesh->colour(m_idColours[section]);
+			m_hairMesh->textureCoord(m_strandTextureCoordinates[index]);
 		}
 		
 		m_hairMesh->end();

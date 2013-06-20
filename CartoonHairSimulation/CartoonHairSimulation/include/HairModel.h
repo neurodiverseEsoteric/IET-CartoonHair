@@ -36,8 +36,8 @@ struct HairParameters
 	float stictionThreshold;
 	float stictionRestLength;
 	float stictionK;
-	Ogre::Vector3 initialPosition;
-	Ogre::Quaternion initialOrientation;
+	btVector3 initialPosition;
+	btQuaternion initialOrientation;
 };
 
 struct HairSegment
@@ -126,6 +126,8 @@ private:
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 
+	void applyTransform(btTransform &transform);
+
 	void generateIndices();
 	void generateEdgeMap();
 	void generateIdColours();
@@ -172,6 +174,8 @@ private:
 	float m_animationSpeed;
 	int m_currentFrame;
 
+	//temporally coherent hatching variables
+
 	//silhouette variables
 	bool m_depthCueCalculated;
 	float m_di,m_dc,m_fd;
@@ -180,8 +184,8 @@ private:
 	Ogre::ColourValue m_currentId;
 
 	//binding to character variables
-	btVector3 m_initialPosition;
-	btQuaternion m_initialOrientation;
+	btVector3 m_translationOffset;
+	btQuaternion m_orientationOffset;
 	
 	//rendering variables
 	std::vector<Ogre::SimpleSpline> m_hairSplines;
@@ -189,6 +193,7 @@ private:
 	//Ogre::BillboardSet *m_edgeSet;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
+	std::vector<Ogre::Vector2> m_strandTextureCoordinates;
 	std::vector<int> m_strandIndices;
 	float m_a,m_b,m_c;
 

@@ -81,7 +81,6 @@ void IdBufferRenderTargetListener::postRenderTargetUpdate(const Ogre::RenderTarg
 		m_hairModel->getNormalsManualObject()->setVisible(true);
 	}
 	m_screen->setVisible(true);
-	//m_hairModel->getEdgeManualObject()->setVisible(true);
 
 	//change back materials
 	Ogre::ManualObject *hair = m_hairModel->getHairManualObject();
