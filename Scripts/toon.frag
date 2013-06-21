@@ -16,22 +16,25 @@ void main()
 { 
 	float index = max(dot(n,l),0.0);
 	vec4 strokeColour;
-	if(index < 0.25)
-	{
-		strokeColour = texture2DProj(stroke4,proj);
-	}
-	else if (index < 0.5)
-	{
-		strokeColour = texture2DProj(stroke3,proj);
-	}
-	else if( index < 0.75)
-	{
-		strokeColour = texture2DProj(stroke2,proj);
-	}
-	else
-	{
-		strokeColour = texture2DProj(stroke1,proj);
-	}
+	
+	//if(index < 0.25)
+	//{
+	//	strokeColour = texture2DProj(stroke4,proj);
+	//}
+	//else if (index < 0.5)
+	//{
+	//	strokeColour = texture2DProj(stroke3,proj);
+	//}
+	//else if( index < 0.75)
+	//{
+	//	strokeColour = texture2DProj(stroke2,proj);
+	//}
+	//else
+	//{
+	//	strokeColour = texture2DProj(stroke1,proj);
+	//}
+	
+	strokeColour = texture2D(stroke1,gl_TexCoord[0].st);
 	
 	gl_FragColor = strokeColour*hairColour*texture1D(cartoonTexture,index,0.0);
 }

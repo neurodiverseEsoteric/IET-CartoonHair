@@ -11,15 +11,14 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{3BEFA1D3-4C8B-4854-A306-03935F4D9C8E}</ProjectGuid>
-    <RootNamespace>CartoonHairSimulation</RootNamespace>
+    <ProjectGuid>{A9DA9D29-B4DD-41BF-AE41-0E1B43EF0890}</ProjectGuid>
+    <RootNamespace>TAMGenerator</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -61,20 +60,18 @@
       <FloatingPointModel>Fast</FloatingPointModel>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>$(CEGUI_HOME)\cegui\include;$(GLM_HOME)\;$(BULLET_HOME)\src;include;$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\Samples\Common\include;$(BOOST_ROOT)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>include;$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\Samples\Common\include;$(BOOST_ROOT)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
-      <AdditionalOptions>/Zm258 %(AdditionalOptions)</AdditionalOptions>
-      <PrecompiledHeaderOutputFile>$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
+      <AdditionalOptions>/Zm141 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(OutDir)/CartoonHairSimulation.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>$(OutDir)/TAMGenerator.pdb</ProgramDatabaseFile>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>$(CEGUI_HOME)\lib;$(BULLET_HOME)\lib;$(OGRE_HOME)\lib\debug;$(BOOST_ROOT)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>CEGUIBase_d.lib;CEGUIOgreRenderer_d.lib;LinearMath_vs2010_debug.lib;BulletDynamics_vs2010_debug.lib;BulletCollision_vs2010_debug.lib;BulletSoftBody_vs2010_debug.lib;OgreMain_d.lib;OIS_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalOptions>/NODEFAULTLIB:LIBCMTD %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib\debug;$(BOOST_ROOT)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreMain_d.lib;OIS_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Message>Copying exe to samples bin directory ...</Message>
@@ -84,7 +81,8 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -100,9 +98,7 @@
       <StringPooling>true</StringPooling>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <FloatingPointModel>Fast</FloatingPointModel>
-      <AdditionalIncludeDirectories>$(CEGUI_HOME)\cegui\include;$(GLM_HOME)\;$(BULLET_HOME)\src;include;$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\Samples\Common\include;$(BOOST_ROOT)\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <AdditionalOptions>/Zm258 %(AdditionalOptions)</AdditionalOptions>
-      <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>include;$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\Samples\Common\include;$(OGRE_HOME)\boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -110,8 +106,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <OutputFile>$(OutDir)\$(ProjectName).exe</OutputFile>
-      <AdditionalLibraryDirectories>$(CEGUI_HOME)\lib;$(BULLET_HOME)\lib;$(OGRE_HOME)\lib\release;$(BOOST_ROOT)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>CEGUIBase.lib;CEGUIOgreRenderer.lib;LinearMath_vs2010.lib;BulletDynamics_vs2010.lib;BulletCollision_vs2010.lib;BulletSoftBody_vs2010.lib;OgreMain.lib;OIS.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib\release;$(OGRE_HOME)\boost\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreMain.lib;OIS.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Message>Copying exe to samples bin directory ...</Message>
@@ -119,31 +115,22 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\CartoonHairSimulation.h" />
-    <ClInclude Include="include\DebugDrawer.h" />
-    <ClInclude Include="include\HairModel.h" />
-    <ClInclude Include="include\IdBufferRenderTargetListener.h" />
     <ClInclude Include="include\stdafx.h" />
-    <ClInclude Include="include\tinyxml2.h" />
+    <ClInclude Include="include\TAMGenerator.h" />
     <ClInclude Include="res\Resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\CartoonHairSimulation.cpp" />
-    <ClCompile Include="src\DebugDrawer.cpp" />
-    <ClCompile Include="src\HairModel.cpp" />
-    <ClCompile Include="src\IdBufferRenderTargetListener.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\tinyxml2.cpp" />
+    <ClCompile Include="src\TAMGenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="docs\ReadMe.txt" />
-    <None Include="res\CartoonHairSimulation.ico" />
+    <None Include="res\TAMGenerator.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="res\CartoonHairSimulation.rc" />
+    <ResourceCompile Include="res\TAMGenerator.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

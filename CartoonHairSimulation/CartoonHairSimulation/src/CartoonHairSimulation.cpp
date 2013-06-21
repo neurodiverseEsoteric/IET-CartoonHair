@@ -484,7 +484,7 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
-	m_tamGenerator = new TAMGenerator(mSceneMgr,mRoot,TAM_TEXTURE_SIZE,TAM_TEXTURE_SIZE);
+	//m_tamGenerator = new TAMGenerator(mSceneMgr,mRoot,TAM_TEXTURE_SIZE,TAM_TEXTURE_SIZE);
 
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);

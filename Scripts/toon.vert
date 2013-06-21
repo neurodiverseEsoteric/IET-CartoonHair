@@ -19,4 +19,5 @@ void main()
 	n = normalize(gl_Normal);
 	l = normalize(lightPos.xyz-v);
     gl_Position = modelViewProjectionMatrix*gl_Vertex;
+	gl_TexCoord[0] = gl_MultiTexCoord0;
 }
