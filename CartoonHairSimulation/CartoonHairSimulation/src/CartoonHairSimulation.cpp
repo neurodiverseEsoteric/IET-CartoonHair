@@ -210,7 +210,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	m_torsionMaterial = NULL;
 	m_idBufferListener = NULL;
 	m_headBone = NULL;
-	m_tamGenerator = NULL;
+	/*m_tamGenerator = NULL;*/
 }
 
 //-------------------------------------------------------------------------------------
@@ -224,10 +224,10 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
     if (mTrayMgr) delete mTrayMgr;
     if (mCameraMan) delete mCameraMan;
 
-	if(m_tamGenerator)
+	/*if(m_tamGenerator)
 	{
 		delete m_tamGenerator;
-	}
+	}*/
 
     //Remove ourself as a Window listener
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
