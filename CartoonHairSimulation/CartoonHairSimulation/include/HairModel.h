@@ -94,7 +94,10 @@ struct Edge
 class HairModel
 {
 public:
-	HairModel(HairParameters &param);
+	HairModel(std::string directory, std::string animation, Ogre::Vector3 position,
+		Ogre::Quaternion orientation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,
+		btSoftRigidDynamicsWorld *world, float a,float b, float c);//HairParameters &param);
 	~HairModel();
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
@@ -184,8 +187,8 @@ private:
 	Ogre::ColourValue m_currentId;
 
 	//binding to character variables
-	btVector3 m_translationOffset;
-	btQuaternion m_orientationOffset;
+	Ogre::Vector3 m_translationOffset;
+	Ogre::Quaternion m_orientationOffset;
 	
 	//rendering variables
 	std::vector<Ogre::SimpleSpline> m_hairSplines;

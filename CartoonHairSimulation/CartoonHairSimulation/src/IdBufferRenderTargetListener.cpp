@@ -95,7 +95,7 @@ void IdBufferRenderTargetListener::postRenderTargetUpdate(const Ogre::RenderTarg
 		edges->setMaterialName(section,"IETCartoonHair/EdgeMaterial");
 	}
 	
-	m_character->setMaterialName("jaiqua",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
+	m_character->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
 	m_head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 }

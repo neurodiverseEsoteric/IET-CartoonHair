@@ -22,23 +22,21 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 	return result;
 }
 
-HairModel::HairModel(HairParameters &param)
+HairModel::HairModel(std::string directory, std::string animation, Ogre::Vector3 position,
+		Ogre::Quaternion orientation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,
+		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
 {
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
-	m_camera = param.camera;
-	m_a = param.a;
-	m_b = param.b;
-	m_c = param.c;
-	m_world = param.world;
-/*m_translationOffset = param.initialPosition;
-	m_orientationOffset = param.initialOrientation;*/
+	m_camera = camera;//param.camera;
+	m_a = a;//param.a;
+	m_b = b;//param.b;
+	m_c = c;//param.c;
+	m_world = world;//param.world;
 
-	m_maxStictionConnections = param.maxStictionConnections;
-	m_stictionThreshold = param.stictionThreshold;
-	m_stictionMaterial = param.stictionMaterial;
-	m_stictionRestLength = param.stictionRestLength;
-	m_stictionK = param.stictionK;
+	m_translationOffset = position;
+	m_orientationOffset = orientation;
 
 	m_currentFrame = 0;
 	m_animationTime = 0;
@@ -49,18 +47,19 @@ HairModel::HairModel(HairParameters &param)
 	//http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
 	Ogre::TexturePtr texture = Ogre::TextureManager::getSingleton().createManual("idBuffer",
 		Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,Ogre::TEX_TYPE_2D,
-		param.window->getWidth(),param.window->getHeight(),0,Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+		window->getWidth(),window->getHeight(),0,Ogre::PF_R8G8B8, Ogre::TU_RENDERTARGET);
+
 	m_idBuffer = texture->getBuffer()->getRenderTarget();
-	m_idBuffer->addViewport(param.camera);
+	m_idBuffer->addViewport(m_camera);
 	m_idBuffer->getViewport(0)->setClearEveryFrame(true);
 	m_idBuffer->getViewport(0)->setBackgroundColour(Ogre::ColourValue::Black);
 	m_idBuffer->getViewport(0)->setOverlaysEnabled(false);
 	m_idBuffer->setAutoUpdated(true);
 
-	std::string hairFrame = loadAnchorPoints(param.directory,param.animation);
-	generateAnchorBody(param.world, param.world->getWorldInfo(), m_anchorPoints[0]);
-	generateHairStrands(param.directory+hairFrame,param.world,param.edgeMaterial,param.bendingMaterial,param.torsionMaterial);
-	generateHairMesh(param.sceneMgr);
+	std::string hairFrame = loadAnchorPoints(directory,animation);
+	generateAnchorBody(world,world->getWorldInfo(), m_anchorPoints[0]);
+	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
+	generateHairMesh(sceneMgr);
 }
 
 HairModel::~HairModel()
@@ -212,7 +211,8 @@ void HairModel::updateAnchors(float timestep)
 		btVector3 p1 = m_anchorPoints[nextFrame][node];
 
 		btVector3 currentPosition = p0 + (p1-p0)*m_animationTime;
-		m_anchors->m_nodes[node].m_x = currentPosition+m_translationOffset;
+		btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+		m_anchors->m_nodes[node].m_x = currentPosition + translation;
 	}
 }
 
@@ -380,7 +380,8 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//point = point + m_translationOffset;
+			btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+			point = point + translation;
 
 			vertices.push_back(point);
 		}
@@ -438,7 +439,8 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//point = point + m_translationOffset;
+			btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+			point = point + translation;
 
 			particles.push_back(point);
 			masses.push_back(1.0f);

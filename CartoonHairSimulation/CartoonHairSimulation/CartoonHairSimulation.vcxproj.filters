@@ -36,6 +36,12 @@
     <ClInclude Include="include\IdBufferRenderTargetListener.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\SkeletonDebug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\ObjectTextDisplay.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\CartoonHairSimulation.cpp">
@@ -54,6 +60,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\IdBufferRenderTargetListener.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\SkeletonDebug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ObjectTextDisplay.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
