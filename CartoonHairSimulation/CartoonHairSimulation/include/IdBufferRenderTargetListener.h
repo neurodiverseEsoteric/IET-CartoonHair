@@ -6,20 +6,35 @@
 class IdBufferRenderTargetListener : public Ogre::RenderTargetListener
 {
 public:
-	IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr,HairModel *hairModel,DebugDrawer *debugDrawer, Ogre::Entity *head, Ogre::Entity *character);
+	IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr);
 	virtual ~IdBufferRenderTargetListener();
+
+	void addObjectToID(Ogre::ManualObject *manualObject, Ogre::String idMaterial);
+	void addObjectToID(Ogre::Entity *entity, Ogre::String idMaterial);
+	void addObjectToIgnore(Ogre::MovableObject *movableObject);
+	void addObjectToDarken(Ogre::ManualObject *manualObject);
+	void addObjectToDarken(Ogre::Entity *entity);
 private:
 	virtual void createScene();
 	virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
 	virtual void preRenderTargetUpdate(const Ogre::RenderTargetEvent& evt);
 	virtual void postRenderTargetUpdate(const Ogre::RenderTargetEvent& evt);
 
+	std::vector<Ogre::ManualObject*> m_idManualObjects;
+	std::vector<Ogre::String> m_idManualObjectsMaterials;
+	std::vector<Ogre::Entity*> m_idEntities;
+	std::vector<Ogre::String> m_idEntityMaterials;
+	std::vector<Ogre::String> m_idManualObjectIdMaterials;
+	std::vector<Ogre::String> m_idEntityIdMaterials;
+
+	std::vector<Ogre::MovableObject*> m_ignoredObjects;
+	std::vector<bool> m_ignoredObjectVisibility;
+
+	std::vector<Ogre::ManualObject*> m_darkenedManualObjects;
+	std::vector<Ogre::Entity*> m_darkenedEntities;
+	std::vector<Ogre::String> m_darkenedManualObjectsMaterials;
+	std::vector<Ogre::String> m_darkenedEntityMaterials;
+
 	Ogre::SceneNode *m_screenNode;
 	Ogre::Rectangle2D *m_screen;
-	Ogre::Entity *m_head,*m_character;
-	HairModel *m_hairModel;
-	DebugDrawer *m_debugDrawer;
-
-	bool m_debugEnabled;
-	bool m_normalEnabled;
 };

@@ -568,6 +568,7 @@ void CartoonHairSimulation::createScene(void)
 	m_character->setMaterialName("BaseWhiteNoLighting");
 	m_characterNode->setScale(40,40,40);
 	m_characterNode->yaw(Ogre::Radian(Ogre::Degree(180)));
+	m_characterNode->setPosition(20,0,10);
 	//m_characterAnimationState = m_character->getAnimationState("Walk");
 	//m_characterAnimationState->setLoop(true);
 	//m_characterAnimationState->setEnabled(true);
@@ -578,45 +579,12 @@ void CartoonHairSimulation::createScene(void)
 	//m_skeletonDrawer->showNames(true);
 
 	m_headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
-	//model by http://www.turbosquid.com/FullPreview/Index.cfm/ID/403363
-	Ogre::Entity* head = mSceneMgr->createEntity("Head", "oldheadbust.mesh");
-	head->setMaterialName("BaseWhiteNoLighting",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
-
-	//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
-	size_t vertexCount, indexCount;
-	Ogre::Vector3* vertices;
-	unsigned long* indices;
-
-	getMeshInformation(head->getMesh(),
-		vertexCount,
-		vertices,
-		indexCount,
-		indices,
-		Ogre::Vector3::ZERO,
-		Ogre::Quaternion::IDENTITY,
-		Ogre::Vector3::UNIT_SCALE);
-
-	//create collision rigid body - based upon https://bitbucket.org/alexeyknyshev/ogrebullet/src/555c70e80bf4/Collisions/src/Utils/OgreBulletCollisionsMeshToShapeConverter.cpp?at=master
-	btConvexHullShape* complexHull = new btConvexHullShape((btScalar*) &vertices[0].x,vertexCount,sizeof(Ogre::Vector3));
-
-	btDefaultMotionState *headMotionState = new btDefaultMotionState(
-		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
-	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,complexHull,btVector3(0,0,0));
-
-	m_headRigidBody = new btRigidBody(headConstructionInfo);
-
-	mWorld->addRigidBody(m_headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
-
-	//clean up
-	delete[] vertices;
-	delete[] indices;
 
 	float a = m_aSlider->getCurrentValue()-(m_aSlider->getMaxValue()/2);
 	float b = m_bSlider->getCurrentValue()-(m_bSlider->getMaxValue()/2);
 	float c = m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2);
 
 	//setup dynamic hair
-	
 
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 	Ogre::Vector3 hairPosition(0,0,0);
@@ -632,21 +600,28 @@ void CartoonHairSimulation::createScene(void)
 	m_hairModel = new HairModel("../Hair/",
 		"hairanimation.xml",hairPosition,hairOrientation,
 		mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,mWorld,a,b,c);
-	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr,m_hairModel,m_debugDrawer,head,m_character);
+
+	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr);
+
+	m_hairModel->getIdBufferTexture()->addListener(m_idBufferListener);
+
+	m_idBufferListener->addObjectToID(m_hairModel->getHairManualObject(),"IETCartoonHair/SolidMaterial");
+	m_idBufferListener->addObjectToID(m_hairModel->getEdgeManualObject(),"IETCartoonHair/SolidSilhouetteMaterial");
+	m_idBufferListener->addObjectToIgnore(m_hairModel->getNormalsManualObject());
+	m_idBufferListener->addObjectToIgnore(m_hairModel->getDebugEdgesManualObject());
+	m_idBufferListener->addObjectToIgnore(m_debugDrawer->getLinesManualObject());
+	m_idBufferListener->addObjectToDarken(m_character);
 
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
-
-	// Set ambient light
-	//mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
 
 	// Create a light
 	Ogre::Light* l = mSceneMgr->createLight("MainLight");
 	l->setPosition(-19,-2.4,-12);
 
 	//line everything to the head node
-	m_headNode->attachObject(head);
+	//m_headNode->attachObject(head);
 
 	m_headNode->createChildSceneNode("debuglines")->attachObject(m_debugDrawer->getLinesManualObject());
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
@@ -654,10 +629,12 @@ void CartoonHairSimulation::createScene(void)
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
 	//m_headNode->createChildSceneNode("debugedges")->attachObject(m_hairModel->getDebugEdgesManualObject());
 
-	head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
+	//set rendering order
+	//head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
+
+	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
-	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_4,4);
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
