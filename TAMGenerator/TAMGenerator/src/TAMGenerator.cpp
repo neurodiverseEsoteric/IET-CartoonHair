@@ -254,6 +254,21 @@ bool TAMGenerator::setup(void)
 
     return false;
 };
+
+float TAMGenerator::getAverageTone(Ogre::PixelBox &pixels)
+{
+	float sum = 0;
+	//get average tone - we will just look at one colour channel (green) as the strokes are b/w
+	for(int y = 0 ; y < pixels.getHeight() ; y++)
+	{
+		for(int x = 0 ; x < pixels.getWidth() ; x++)
+		{
+			sum += pixels.getColourAt(x,y,0).g;
+		}
+	}
+	return sum/(pixels.getWidth()*pixels.getHeight());
+}
+
 //-------------------------------------------------------------------------------------
 void TAMGenerator::createScene(void)
 {
@@ -289,10 +304,6 @@ void TAMGenerator::createScene(void)
 		Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 		node->attachObject(strokeQuad);
 
-		Ogre::Real randX = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
-		Ogre::Real randY = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
-		node->setPosition(randX,randY,0);
-
 		if(stroke>NUM_STROKES/2)
 		{
 			node->roll(Ogre::Radian(Ogre::Degree(90)));
@@ -311,14 +322,55 @@ void TAMGenerator::createScene(void)
 	m_renderTex->getViewport(0)->setClearEveryFrame(true);
 	m_renderTex->getViewport(0)->setBackgroundColour(Ogre::ColourValue::White);
 
+	int pBoxWidth = m_renderTex->getWidth();
+	int pBoxHeight = m_renderTex->getHeight();
+	Ogre::PixelFormat pBoxPixelFormat = m_renderTex->suggestPixelFormat();
+	unsigned char* pBoxPixelData = new unsigned char[pBoxWidth*pBoxHeight*Ogre::PixelUtil::getNumElemBytes(pBoxPixelFormat)];
+	
+	Ogre::PixelBox pixels(pBoxWidth,pBoxHeight,1,pBoxPixelFormat,pBoxPixelData);
+
+	m_renderTex->update(false);
 	int strokeIncrement = NUM_STROKES/NUM_TEXTURES;
 	for(int tex = 0 ; tex < NUM_TEXTURES ; tex++)
 	{
 		for(int stroke = tex*strokeIncrement ; stroke < (tex*strokeIncrement)+strokeIncrement ; stroke++)
 		{
+			//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Render+Target+to+QImage+%5BQT%5D
+			float bestAvgToneDifference = 0;
+			Ogre::Vector2 bestPosition(0,0);
+
+			//get the last average tone
+			m_renderTex->copyContentsToMemory(pixels,Ogre::RenderTarget::FB_AUTO);
+			float lastTone = getAverageTone(pixels);
+
+			//find the best candidate
 			m_strokeNodes[stroke]->setVisible(true);
+
+			for(int candidate = 0 ; candidate < STROKE_CANDIDATES ; candidate++)
+			{
+				//generate new position
+				Ogre::Real randX = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
+				Ogre::Real randY = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
+				m_strokeNodes[stroke]->setPosition(randX,randY,0);
+
+				//determine contribution
+				m_renderTex->update(false);
+				m_renderTex->copyContentsToMemory(pixels,Ogre::RenderTarget::FB_AUTO);
+				float newTone = getAverageTone(pixels);
+
+				float difference = Ogre::Math::Abs(newTone-lastTone); //if i was using different levels this would be sum of all levels(newTone-lastTone)
+				if(difference>bestAvgToneDifference)
+				{
+					bestAvgToneDifference = difference;
+					bestPosition.x = randX;
+					bestPosition.y = randY;
+				}
+			}
+
+			//candidate found
+			m_strokeNodes[stroke]->setPosition(bestPosition.x,bestPosition.y,0);
 		}
-		m_renderTex->update(false);
+
 
 		//calculate name
 		std::stringstream name;
