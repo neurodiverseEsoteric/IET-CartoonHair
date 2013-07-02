@@ -413,7 +413,7 @@ void CartoonHairSimulation::createViewports(void)
 {
     // Create one viewport, entire window
     Ogre::Viewport* vp = mWindow->addViewport(mCamera);
-    vp->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92));//Ogre::ColourValue(0,0,0));
+    vp->setBackgroundColour(Ogre::ColourValue(0.39,0.58,0.92,0.0f));//Ogre::ColourValue(0,0,0));
 
     // Alter the camera aspect ratio to match the viewport
     mCamera->setAspectRatio(
@@ -590,12 +590,12 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::Vector3 hairPosition(0,0,0);
 	Ogre::Quaternion hairOrientation(0,0,0,1);
 
-	if(skeleton->hasBone("Head"))
+	/*if(skeleton->hasBone("Head"))
 	{
 		m_headBone = skeleton->getBone("Head");
 		hairPosition = localToWorldPosition(m_headBone,m_character);
 		hairOrientation = localToWorldOrientation(m_headBone,m_character);
-	}
+	}*/
 
 	m_hairModel = new HairModel("../Hair/",
 		"hairanimation.xml",hairPosition,hairOrientation,
