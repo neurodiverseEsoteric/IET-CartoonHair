@@ -38,10 +38,10 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Vector3
 	m_translationOffset = position;
 	m_orientationOffset = orientation;
 
-	m_currentFrame = 0;
 	m_animationTime = 0;
 
 	m_depthCueCalculated = false;
+	m_positiveInterpolation = true;
 
 	//create render texture for storing colour id buffer for silhouette visibility testing
 	//http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
@@ -57,7 +57,7 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Vector3
 	m_idBuffer->setAutoUpdated(true);
 
 	std::string hairFrame = loadAnchorPoints(directory,animation);
-	generateAnchorBody(world,world->getWorldInfo(), m_anchorPoints[0]);
+	generateAnchorBody(world,world->getWorldInfo(), m_anchorPoints);
 	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
 	generateHairMesh(sceneMgr);
 }
@@ -97,11 +97,8 @@ HairModel::~HairModel()
 	}
 	m_strandSoftBodies.clear();
 
-	for(int i = 0 ; i < m_anchorPoints.size() ; i++)
-	{
-		m_anchorPoints[i].clear();
-	}
 	m_anchorPoints.clear();
+	m_anchorSplines.clear();
 
 	m_world->removeSoftBody(m_anchors);
 	delete m_anchors;
@@ -187,32 +184,24 @@ void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* 
 
 void HairModel::updateAnchors(float timestep)
 {
-	m_animationTime += timestep*m_animationSpeed;
-
+	float increment = timestep*m_animationSpeed;
+	m_animationTime += (m_positiveInterpolation)?increment:-increment;
 	if(m_animationTime > 1.0f)
 	{
+		m_animationTime = 1.0f;
+		m_positiveInterpolation = false;
+	}
+	if(m_animationTime < 0.0f)
+	{
 		m_animationTime = 0.0f;
-		m_currentFrame++;
-		if(m_currentFrame>=m_anchorPoints.size())
-		{
-			m_currentFrame = 0;
-		}
+		m_positiveInterpolation = true;
 	}
 
-	int nextFrame = m_currentFrame+1;
-	if(nextFrame>=m_anchorPoints.size())
+	for(int anchor = 0 ; anchor < m_anchorSplines.size() ; anchor++)
 	{
-		nextFrame = 0;
-	}
-
-	for(int node = 0 ; node < m_anchorPoints[m_currentFrame].size() ; node++)
-	{
-		btVector3 p0 = m_anchorPoints[m_currentFrame][node];
-		btVector3 p1 = m_anchorPoints[nextFrame][node];
-
-		btVector3 currentPosition = p0 + (p1-p0)*m_animationTime;
-		btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
-		m_anchors->m_nodes[node].m_x = currentPosition + translation;
+		Ogre::Vector3 pos = m_anchorSplines[anchor].interpolate(m_animationTime);
+		btVector3 bPos(pos.x,pos.y,pos.z);
+		m_anchors->m_nodes[anchor].m_x = bPos;
 	}
 }
 
@@ -343,12 +332,42 @@ std::string HairModel::loadAnchorPoints(std::string directory, std::string filen
 
 	std::string firstFrame(hair->Attribute("name"));
 
+	btAlignedObjectArray<btAlignedObjectArray<btVector3>> points;
+
 	for(hair; hair ; hair = hair->NextSiblingElement())
 	{
 		//load vertices
 		std::string name(hair->Attribute("name"));
-		m_anchorPoints.push_back(loadAnchorPositions(directory+name));
+		points.push_back(loadAnchorPositions(directory+name));
 	}
+
+	//save the first set of position so that we can create their initial positions in the physics engine
+	for(int anchor = 0 ; anchor < points[0].size() ; anchor++)
+	{
+		m_anchorPoints.push_back(points[0][anchor]);
+	}
+
+	//create anchor point splines
+	int numAnchors = points[0].size();
+	for(int anchor = 0 ; anchor < numAnchors ; anchor++)
+	{
+		Ogre::SimpleSpline spline;
+		for(int frame = 0 ; frame < points.size() ; frame++)
+		{
+			btVector3 bPos = points[frame][anchor];
+			Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+			spline.addPoint(pos);
+		}
+		spline.recalcTangents();
+		m_anchorSplines.push_back(spline);
+	}
+
+	//clean up
+	for(int i = 0 ; i < points.size() ; i++)
+	{
+		points[i].clear();
+	}
+	points.clear();
 
 	return firstFrame;
 }

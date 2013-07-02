@@ -690,7 +690,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			m_characterAnimationState->addTime(timestep);
 		}
 		//m_hairModel->updateStictionSegments();
-		//m_hairModel->updateAnchors(timestep);
+		m_hairModel->updateAnchors(timestep);
 	}
 
 	m_hairModel->updateManualObject();

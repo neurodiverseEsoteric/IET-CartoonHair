@@ -7,6 +7,7 @@
 #define TEMP_STICTION_K 0.1f
 
 #define ID_INCREMENT 0.05f
+#define ANCHOR_FRAME_INCRMENT 0.01f
 
 #define NUM_HAIR_SAMPLES 5
 #define NUM_HAIR_SHAPE_SAMPLES 6
@@ -171,11 +172,12 @@ private:
 	btAlignedObjectArray<HairSegment*> m_hairSegments;
 
 	//animation variables
-	btAlignedObjectArray<btAlignedObjectArray<btVector3>> m_anchorPoints;
+	btAlignedObjectArray<btVector3> m_anchorPoints;
+	std::vector<Ogre::SimpleSpline> m_anchorSplines;
 	btSoftBody *m_anchors;
 	float m_animationTime;
 	float m_animationSpeed;
-	int m_currentFrame;
+	bool m_positiveInterpolation;
 
 	//temporally coherent hatching variables
 
