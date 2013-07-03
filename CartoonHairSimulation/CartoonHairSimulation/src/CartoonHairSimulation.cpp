@@ -514,7 +514,6 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
-
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);
 	mWorld->setDebugDrawer(m_debugDrawer);
@@ -535,10 +534,10 @@ void CartoonHairSimulation::createScene(void)
 	CEGUI::System::getSingleton().setGUISheet(m_guiRoot);
 
 	//link up sliders
-	m_edgeSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/edgeSlider");
+	/*m_edgeSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/edgeSlider");
 	m_bendingSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/bendingSlider");
 	m_torsionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/torsionSlider");
-	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");
+	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");*/
 
 	m_aSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/aValue");
 	m_bSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/bValue");
@@ -550,13 +549,13 @@ void CartoonHairSimulation::createScene(void)
 	m_torsionMaterial = new btSoftBody::Material();
 	m_stictionMaterial = new btSoftBody::Material();
 
-	m_edgeMaterial->m_kLST = 1.0;
-	m_bendingMaterial->m_kLST = 0.01;
-	m_torsionMaterial->m_kLST = 0.01;
+	m_edgeMaterial->m_kLST = EDGE_STIFFNESS;
+	m_bendingMaterial->m_kLST = BENDING_STIFFNESS;
+	m_torsionMaterial->m_kLST = TORSION_STIFFNESS;
 
-	m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
+	/*m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
 	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
-	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);
+	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);*/
 
 	m_aSlider->setCurrentValue(-13.9+m_aSlider->getMaxValue()/2);
 	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
@@ -635,6 +634,15 @@ void CartoonHairSimulation::createScene(void)
 	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
+
+	//setup compositor
+#ifdef IMAGESPACE_SILHOUETTE
+		Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+		m_character->setVisible(false);
+		m_hairModel->getEdgeManualObject()->setVisible(false);
+		Ogre::MaterialManager::getSingleton().addListener(new HairMaterialListener());
+#endif
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -680,7 +688,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		{
 			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
 			//Ogre::Quaternion rot = headNode->getOrientation();
-		/*	Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
+		/*Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
 			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);*/
 			//m_hairModel->applyHeadTransform(boneOrientation,bonePosition);
 		}
@@ -695,9 +703,9 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	m_hairModel->updateManualObject();
 
-	m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
+	/*m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
 	m_bendingMaterial->m_kLST = m_bendingSlider->getCurrentValue();
-	m_torsionMaterial->m_kLST = m_torsionSlider->getCurrentValue();
+	m_torsionMaterial->m_kLST = m_torsionSlider->getCurrentValue();*/
 
 	m_hairModel->setCurveValues(
 		m_aSlider->getCurrentValue()-(m_aSlider->getMaxValue()/2),
@@ -705,10 +713,12 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2)
 		);
 	
-
-	m_debugDrawer->begin();
-	mWorld->debugDrawWorld();
-	m_debugDrawer->end();
+	if(m_debugDrawer->getLinesManualObject()->isVisible())
+	{
+		m_debugDrawer->begin();
+		mWorld->debugDrawWorld();
+		m_debugDrawer->end();
+	}
 
 	//TO DO: add any methods you would like to be called
 

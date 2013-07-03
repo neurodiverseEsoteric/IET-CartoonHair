@@ -1,0 +1,66 @@
+//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Compositor
+compositor IETCartoonHair/SilhouetteCompositor
+{
+	technique
+	{
+		
+		texture original target_width target_height PF_A8R8G8B8
+		texture scene target_width target_height PF_A8R8G8B8
+		texture edge target_width target_height PF_A8R8G8B8
+		texture dilation target_width target_height PF_A8R8G8B8
+		
+		target original
+		{
+			input previous
+		}
+		
+		target scene
+		{
+			input none
+			pass clear
+			{
+			
+			}
+			
+			material_scheme solid
+			
+			pass render_scene
+			{
+				
+			}
+		}
+
+		target edge
+		{
+			input none
+			pass render_quad
+			{
+				material IETCartoonHair/Sobel
+				input 0 scene
+			}
+		}
+		
+		target dilation
+		{
+			input none
+			pass render_quad
+			{
+				material IETCartoonHair/Dilation
+				input 0 edge
+			}
+		}
+		
+		target_output
+		{
+			input none
+			pass render_quad
+			{
+				material IETCartoonHair/Composite
+				input 0 dilation
+				input 1 original
+			}
+		}
+		
+		
+	}
+}

@@ -121,6 +121,7 @@
   <ItemGroup>
     <ClInclude Include="include\CartoonHairSimulation.h" />
     <ClInclude Include="include\DebugDrawer.h" />
+    <ClInclude Include="include\HairMaterialListener.h" />
     <ClInclude Include="include\HairModel.h" />
     <ClInclude Include="include\IdBufferRenderTargetListener.h" />
     <ClInclude Include="include\ObjectTextDisplay.h" />

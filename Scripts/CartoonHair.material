@@ -28,6 +28,26 @@ fragment_program IETCartoonHair/SolidSilhouetteFragmentShader glsl
 	source solidedge.frag
 }
 
+vertex_program IETCartoonHair/SobelVertexShader glsl
+{
+	source sobel.vert
+}
+
+fragment_program IETCartoonHair/SobelFragmentShader glsl
+{
+	source sobel.frag
+}
+
+vertex_program IETCartoonHair/DilationVertexShader glsl
+{
+	source dilation.vert
+}
+
+fragment_program IETCartoonHair/DilationFragmentShader glsl
+{
+	source dilation.frag
+}
+
 //http://www.ogre3d.org/tikiwiki/Materials#Solid_colour
 material IETCartoonHair/BlackMaterial
 {
@@ -92,8 +112,8 @@ material IETCartoonHair/SolidSilhouetteMaterial
 	{
 		pass
 		{
-			cull_hardware none
-			cull_software none
+			lighting off
+			scene_blend alpha_blend
 			vertex_program_ref IETCartoonHair/SolidSilhouetteVertexShader
 			{
 				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
@@ -101,7 +121,13 @@ material IETCartoonHair/SolidSilhouetteMaterial
 			
 			fragment_program_ref IETCartoonHair/SolidSilhouetteFragmentShader
 			{
-			
+				param_named edgeTexture int 0
+			}
+			texture_unit 0
+			{
+				texture edge.png 2d
+				tex_address_mode wrap
+				filtering none
 			}
 		}
 	}
@@ -116,8 +142,7 @@ material IETCartoonHair/EdgeMaterial
 		{	
 			depth_check off
 			scene_blend modulate
-			cull_hardware none
-			cull_software none
+			//seperate_scene_blend_op add max
 			
 			vertex_program_ref IETCartoonHair/EdgeVertexShader
 			{
@@ -133,7 +158,7 @@ material IETCartoonHair/EdgeMaterial
 			
 			texture_unit 0
 			{
-				texture dashed.png 2d
+				texture edge.png 2d
 				tex_address_mode wrap
 				filtering none
 			}
@@ -145,6 +170,85 @@ material IETCartoonHair/EdgeMaterial
 				filtering none
 			}
 			
+		}
+	}
+}
+
+material IETCartoonHair/Dilation
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref IETCartoonHair/DilationVertexShader
+			{
+			
+			}
+			fragment_program_ref IETCartoonHair/DilationFragmentShader
+			{
+				param_named width float 1024.0
+				param_named height float 768.0
+				param_named dilationX int 3
+				param_named dilationY int 3
+				param_named frameBuffer int 0
+			}
+			
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+		}
+	}
+}
+
+material IETCartoonHair/Sobel
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref IETCartoonHair/SobelVertexShader
+			{
+			
+			}
+			fragment_program_ref IETCartoonHair/SobelFragmentShader
+			{
+				param_named width float 1024.0
+				param_named height float 768.0
+				param_named edgeThreshold float 8
+				param_named frameBuffer int 0
+			}
+			
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+		}
+	}
+}
+
+material IETCartoonHair/Composite
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+			texture_unit
+			{
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			}
 		}
 	}
 }

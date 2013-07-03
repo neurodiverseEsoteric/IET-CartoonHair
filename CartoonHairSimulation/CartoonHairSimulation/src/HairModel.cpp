@@ -1357,7 +1357,11 @@ void HairModel::createOrUpdateManualObject(bool update)
 
 			m_hairMesh->position(m_strandVertices[section][m_strandIndices[index]]);
 			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
+#ifdef IMAGESPACE_SILHOUETTE
+			m_hairMesh->colour(1,1,1);
+#else
 			m_hairMesh->colour(m_idColours[section]);
+#endif
 			m_hairMesh->textureCoord(m_strandTextureCoordinates[index]);
 		}
 		
