@@ -287,38 +287,38 @@ material IETCartoonHair/HairMaterial
 			}
 			texture_unit 1
 			{
-				texture tamtex0.png 2d
+				texture stroke0.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
 			texture_unit 2
 			{
-				texture tamtex1.png 2d
+				texture stroke1.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
 			texture_unit 3
 			{
-				texture tamtex2.png 2d
+				texture stroke2.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
 			texture_unit 4
 			{
-				texture tamtex3.png 2d
+				texture stroke3.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
 			texture_unit 5
 			{
-				texture tamtex4.png 2d
+				texture stroke4.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
 			
 			texture_unit 6
 			{
-				texture tamtex5.png 2d
+				texture stroke5.dds 2d
 				tex_address_mode wrap
 				filtering none
 			}
