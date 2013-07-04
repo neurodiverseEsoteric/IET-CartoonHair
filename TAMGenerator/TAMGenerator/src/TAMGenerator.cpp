@@ -250,7 +250,7 @@ bool TAMGenerator::setup(void)
 	// Create the scene
     createScene();
 
-	createFrameListener();
+	//createFrameListener();
 
     return false;
 };
@@ -278,7 +278,8 @@ void TAMGenerator::createScene(void)
 	for(int stroke = 0 ; stroke < NUM_STROKES ; stroke++)
 	{
 		Ogre::ManualObject *strokeQuad = mSceneMgr->createManualObject();
-		strokeQuad->setDynamic(false);
+		m_strokes.push_back(strokeQuad);
+		strokeQuad->setDynamic(true);
 		strokeQuad->begin("IETCartoonHair/TAMMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 		
 		Ogre::Vector3 topLeft(-STROKE_WIDTH/2.0f,STROKE_HEIGHT/2.0f,0);
@@ -371,11 +372,80 @@ void TAMGenerator::createScene(void)
 			m_strokeNodes[stroke]->setPosition(bestPosition.x,bestPosition.y,0);
 		}
 
-
+		m_renderTex->update(false);
 		//calculate name
 		std::stringstream name;
-		name << "tamtex" << tex << ".png";
+		name << "textures\\full\\tamtex" << tex << ".png";
 		m_renderTex->writeContentsToFile(name.str());
+	}
+
+	//now to render the mip maps
+	int side = TEX_SIDE;
+	int visibleIncrement = 2;
+	for(int level = 0 ; level < MIPMAP_LEVELS ; level++)
+	{
+		if(level>0)
+		{
+			visibleIncrement *= 2;
+		}
+		side = side/2;
+		//change render target size
+
+		rtt = Ogre::TextureManager::getSingleton().createManual("rtt",Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME,
+		Ogre::TEX_TYPE_2D,side,side,0,Ogre::PF_R8G8B8,Ogre::TU_RENDERTARGET);
+		m_renderTex = rtt->getBuffer()->getRenderTarget();
+		m_renderTex->addViewport(mCamera);
+		m_renderTex->getViewport(0)->setClearEveryFrame(true);
+		m_renderTex->getViewport(0)->setBackgroundColour(Ogre::ColourValue::White);
+
+		//go through all nodes and increase their scale to keep the pixel sizes the same
+		for(int stroke = 0 ; stroke < m_strokeNodes.size() ; stroke++)
+		{
+			m_strokeNodes[stroke]->setVisible(false);
+			//update stroke
+			Ogre::ManualObject *object = m_strokes[stroke];
+			object->beginUpdate(0);
+			float height = STROKE_HEIGHT*visibleIncrement;
+			Ogre::Vector3 topLeft(-STROKE_WIDTH/2.0f,height/2.0f,0);
+			Ogre::Vector3 topRight(STROKE_WIDTH/2.0f,height/2.0f,0);
+			Ogre::Vector3 bottomLeft(-STROKE_WIDTH/2.0f,-height/2.0f,0);
+			Ogre::Vector3 bottomRight(STROKE_WIDTH/2.0f,-height/2.0f,0);
+
+			object->position(topLeft);
+			object->textureCoord(0,1);
+
+			object->position(bottomLeft);
+			object->textureCoord(0,0);
+
+			object->position(bottomRight);
+			object->textureCoord(1,0);
+
+			object->position(topRight);
+			object->textureCoord(1,1);
+
+			object->quad(0,1,2,3);
+			object->end();
+		}
+
+		for(int tex = 0 ; tex < NUM_TEXTURES ; tex++)
+		{
+			int count = 0;
+			for(int stroke = tex*strokeIncrement ; stroke < (tex*strokeIncrement)+strokeIncrement ; stroke++)
+			{
+				count++;
+				if(count==visibleIncrement)
+				{
+					count = 0;
+					m_strokeNodes[stroke]->setVisible(true);
+				}
+			}
+
+			m_renderTex->update(false);
+			//calculate name
+			std::stringstream name;
+			name << "textures\\mip\\tamtex" << tex << "mip" << level << ".png";
+			m_renderTex->writeContentsToFile(name.str());
+		}
 	}
 }
 //-------------------------------------------------------------------------------------
