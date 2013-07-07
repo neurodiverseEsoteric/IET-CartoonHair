@@ -1099,7 +1099,7 @@ void HairModel::generateEdges(bool update)
 		if(screenSpacePoints.size()>0)
 		{
 			//wrap around
-			screenSpacePoints.push_back(screenSpacePoints[0]);
+			//screenSpacePoints.push_back(screenSpacePoints[0]);
 			std::vector<Ogre::Vector3> points;
 			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
 			{
@@ -1143,7 +1143,7 @@ void HairModel::generateEdges(bool update)
 				
 
 				//scale rib base on angle to stop corners being squeezed
-				float scale = 1.0f;//abs(rib.length()/(rib.dotProduct(norm)));
+				float scale = abs(rib.length()/(rib.dotProduct(norm)));
 
 				if(scale>2)
 				{
@@ -1151,14 +1151,14 @@ void HairModel::generateEdges(bool update)
 				}
 
 				//vertex depth scale factor from artistic-sils-300dpi.pdf
-				/*float scaleFactor = 0.5f;
+				float scaleFactor = 0.5f;
 				float left = 0.0f;
 				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
 
-				scale*= std::max(left,right);*/
+				scale*= std::max(left,right);
 
 				//apply depth cue scale
-				//scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
+				scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
 
 				//multiply the scale by some value as otherwise 0 to 1 is far too big
 				scale*= 0.02f;
