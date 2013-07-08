@@ -119,6 +119,7 @@ protected:
 
 	bool m_cameraControl;
 	bool m_physicsEnabled;
+	bool m_headTransformApplied;
 };
 
 #endif // #ifndef __CartoonHairSimulation_h_

@@ -22,8 +22,7 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 	return result;
 }
 
-HairModel::HairModel(std::string directory, std::string animation, Ogre::Vector3 position,
-		Ogre::Quaternion orientation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
 {
@@ -35,8 +34,11 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Vector3
 	m_c = c;//param.c;
 	m_world = world;//param.world;
 
-	m_translationOffset = position;
-	m_orientationOffset = orientation;
+	m_translationOffset = Ogre::Vector3(0,0,0);
+	m_orientationOffset = Ogre::Quaternion(0,0,0,1);
+
+	/*m_translationOffset = position;
+	m_orientationOffset = orientation;*/
 
 	m_animationTime = 0;
 
@@ -71,15 +73,6 @@ HairModel::~HairModel()
 	m_strandTextureCoordinates.clear();
 	m_edgeMap.clear();
 	m_idColours.clear();
-
-	for(int i = 0 ; i < m_hairSegments.size() ; i++)
-	{
-		btGhostObject* ghost = m_hairSegments[i]->ghostObject;
-		m_world->removeCollisionObject(ghost);
-		delete ghost->getCollisionShape();
-		delete ghost;
-		delete m_hairSegments[i];
-	}
 
 	for(int i = 0 ; i < m_ghostStrandSoftBodies.size() ; i++)
 	{
@@ -130,9 +123,29 @@ Ogre::RenderTexture* HairModel::getIdBufferTexture()
 	return m_idBuffer;
 }
 
-void HairModel::applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation)
+void HairModel::applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation)
 {
-
+	m_translationOffset = translation;
+	btVector3 bTrans(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+	//apply translation offset to roots (and particles if first time) anchors are updated later
+	//roots
+	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
+	{
+		
+		m_strandSoftBodies[strand]->m_nodes[0].m_x = m_rootPoints[strand] + bTrans;
+		if(first)
+		{
+			for(int node = 1 ; node < m_strandSoftBodies[strand]->m_nodes.size() ; node++)
+			{
+				m_strandSoftBodies[strand]->m_nodes[node].m_x += bTrans;
+			}
+			for(int node = 0 ; node < m_ghostStrandSoftBodies[strand]->m_nodes.size() ; node++)
+			{
+				m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x += bTrans;
+			}
+		}
+		
+	}
 }
 
 void HairModel::applyTransform(btTransform &transform)
@@ -149,37 +162,6 @@ void HairModel::updateManualObject()
 float HairModel::getSimulationScale()
 {
 	return m_simulationScale;
-}
-
-void HairModel::addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1)
-{
-	//determine the length of the hair
-	btVector3 node2Node = strand->m_nodes[nodeIndex1].m_x - strand->m_nodes[nodeIndex0].m_x;
-	btVector3 midPoint = (strand->m_nodes[nodeIndex1].m_x + strand->m_nodes[nodeIndex0].m_x)*0.5f;
-	float length = node2Node.length();
-	float halfExtent = length*0.5f;
-
-	btGhostObject *ghostObject = new btGhostObject();
-
-	//create collision shape - make it a box
-	btBoxShape *boxShape = new btBoxShape(btVector3(halfExtent,halfExtent,halfExtent));
-	ghostObject->setCollisionShape(boxShape);
-
-	ghostObject->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
-
-	world->addCollisionObject(ghostObject,SEGMENT_GROUP,SEGMENT_GROUP);
-
-	HairSegment *segment = new HairSegment();
-
-	segment->ghostObject = ghostObject;
-	segment->strand = strand;
-	segment->node0Index = nodeIndex0;
-	segment->node1Index = nodeIndex1;
-
-	//have the ghost object point to the hair segment so we can later determine what segment is colliding
-	ghostObject->setUserPointer(segment);
-
-	m_hairSegments.push_back(segment);
 }
 
 void HairModel::updateAnchors(float timestep)
@@ -199,54 +181,9 @@ void HairModel::updateAnchors(float timestep)
 
 	for(int anchor = 0 ; anchor < m_anchorSplines.size() ; anchor++)
 	{
-		Ogre::Vector3 pos = m_anchorSplines[anchor].interpolate(m_animationTime);
+		Ogre::Vector3 pos = m_anchorSplines[anchor].interpolate(m_animationTime) + m_translationOffset;
 		btVector3 bPos(pos.x,pos.y,pos.z);
 		m_anchors->m_nodes[anchor].m_x = bPos;
-	}
-}
-
-void HairModel::updateStictionSegments()
-{
-	for(int segment = 0 ; segment < m_hairSegments.size() ; segment++)
-	{
-		HairSegment *currentSegment = m_hairSegments[segment];
-		btSoftBody *strand = currentSegment->strand;
-
-		btVector3 node2Node = strand->m_nodes[currentSegment->node1Index].m_x - strand->m_nodes[currentSegment->node0Index].m_x;
-		btVector3 midPoint = (strand->m_nodes[currentSegment->node1Index].m_x + strand->m_nodes[currentSegment->node0Index].m_x)*0.5f;
-
-		btGhostObject *ghost = currentSegment->ghostObject;
-		ghost->setWorldTransform(btTransform(btQuaternion(0,0,0,1),midPoint));
-
-		//disable stiction springs for now
-		continue;
-
-		//create stiction springs
-		for(int obj = 0 ; obj < ghost->getNumOverlappingObjects() ; obj++)
-		{
-			HairSegment *neighbourSegment = (HairSegment*)ghost->getOverlappingObject(obj)->getUserPointer();
-			//make sure it is not the same strand
-			if(neighbourSegment->strand != currentSegment->strand)
-			{
-				btVector3 point0, point1;
-				getClosestPoints(
-					currentSegment->strand->m_nodes[currentSegment->node0Index].m_x,
-					currentSegment->strand->m_nodes[currentSegment->node1Index].m_x,
-					neighbourSegment->strand->m_nodes[neighbourSegment->node0Index].m_x,
-					neighbourSegment->strand->m_nodes[neighbourSegment->node1Index].m_x,
-					point0,
-					point1
-					);
-
-				float length = (point1-point0).length();
-				if(length < m_stictionThreshold)
-				{
-					btVector3 force = (length - m_stictionRestLength)*m_stictionK*(point1-point0).normalize();
-					neighbourSegment->strand->addForce(force,neighbourSegment->node0Index);
-					neighbourSegment->strand->addForce(force,neighbourSegment->node1Index);
-				}
-			}
-		}
 	}
 }
 
@@ -389,7 +326,6 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 	//iterate through the strands and save the particles
 	for(strand ; strand ; strand = strand->NextSiblingElement())
 	{
-		//iterate through hair particles - first one is the root and should be fixed in position
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
 
 		for(particle ; particle ; particle = particle->NextSiblingElement())
@@ -399,8 +335,8 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
-			point = point + translation;
+			//btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+			//point = point + translation;
 
 			vertices.push_back(point);
 		}
@@ -458,12 +394,15 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
-			point = point + translation;
+			//btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+			//point = point + translation;
 
 			particles.push_back(point);
 			masses.push_back(1.0f);
 		}
+
+		//get the root position
+		m_rootPoints.push_back(particles[0]);
 
 		//now to create the strand softbody and its ghost nodes
 		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);

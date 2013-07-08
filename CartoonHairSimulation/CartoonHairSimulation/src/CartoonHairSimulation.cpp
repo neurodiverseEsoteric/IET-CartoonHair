@@ -222,7 +222,8 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mMouse(0),
     mKeyboard(0),
 	m_cameraControl(true),
-	m_physicsEnabled(false)
+	m_physicsEnabled(false),
+	m_headTransformApplied(false)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -534,11 +535,6 @@ void CartoonHairSimulation::createScene(void)
 	CEGUI::System::getSingleton().setGUISheet(m_guiRoot);
 
 	//link up sliders
-	/*m_edgeSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/edgeSlider");
-	m_bendingSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/bendingSlider");
-	m_torsionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/torsionSlider");
-	m_stictionSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/springWindow/stictionSlider");*/
-
 	m_aSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/aValue");
 	m_bSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/bValue");
 	m_cSlider = (CEGUI::Slider*) m_guiRoot->getChildRecursive("Root/curveWindow/cValue");
@@ -552,10 +548,6 @@ void CartoonHairSimulation::createScene(void)
 	m_edgeMaterial->m_kLST = EDGE_STIFFNESS;
 	m_bendingMaterial->m_kLST = BENDING_STIFFNESS;
 	m_torsionMaterial->m_kLST = TORSION_STIFFNESS;
-
-	/*m_edgeSlider->setCurrentValue(m_edgeMaterial->m_kLST);
-	m_bendingSlider->setCurrentValue(m_bendingMaterial->m_kLST);
-	m_torsionSlider->setCurrentValue(m_torsionMaterial->m_kLST);*/
 
 	m_aSlider->setCurrentValue(-13.9+m_aSlider->getMaxValue()/2);
 	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
@@ -586,19 +578,18 @@ void CartoonHairSimulation::createScene(void)
 	//setup dynamic hair
 
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
-	Ogre::Vector3 hairPosition(0,0,0);
-	Ogre::Quaternion hairOrientation(0,0,0,1);
+	/*Ogre::Vector3 hairPosition(0,0,0);
+	Ogre::Quaternion hairOrientation(0,0,0,1);*/
 
-	/*if(skeleton->hasBone("Head"))
+	if(skeleton->hasBone("Head"))
 	{
 		m_headBone = skeleton->getBone("Head");
-		hairPosition = localToWorldPosition(m_headBone,m_character);
-		hairOrientation = localToWorldOrientation(m_headBone,m_character);
-	}*/
+		/*hairPosition = localToWorldPosition(m_headBone,m_character);
+		hairOrientation = localToWorldOrientation(m_headBone,m_character);*/
+	}
 
 	m_hairModel = new HairModel("../Hair/",
-		"hairanimation.xml",hairPosition,hairOrientation,
-		mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,mWorld,a,b,c);
+		"hairanimation.xml", mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,mWorld,a,b,c);
 
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr);
 
@@ -684,21 +675,21 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if(m_physicsEnabled)
 	{
-		if(m_headBone)
-		{
-			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
-			//Ogre::Quaternion rot = headNode->getOrientation();
-		/*Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
-			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);*/
-			//m_hairModel->applyHeadTransform(boneOrientation,bonePosition);
-		}
-		mWorld->stepSimulation(timestep);
 		if(m_characterAnimationState)
 		{
 			m_characterAnimationState->addTime(timestep);
 		}
-		//m_hairModel->updateStictionSegments();
 		m_hairModel->updateAnchors(timestep);
+		if(m_headBone)
+		{
+			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
+			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
+			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
+			m_hairModel->applyHeadTransform(!m_headTransformApplied,bonePosition,boneOrientation);
+			//the first time - apply head transform will move all of the strand particles
+			m_headTransformApplied = true;
+		}
+		mWorld->stepSimulation(timestep);
 	}
 
 	m_hairModel->updateManualObject();

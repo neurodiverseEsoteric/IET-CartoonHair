@@ -2,9 +2,6 @@
 
 #define SHIFT_X 0.2f
 #define TOLERANCE 0.000001
-#define TEMP_STICTION_THRESHOLD 0.1f
-#define TEMP_STICTION_REST_LENGTH 0.08f
-#define TEMP_STICTION_K 0.1f
 
 #define ID_INCREMENT 0.05f
 #define ANCHOR_FRAME_INCRMENT 0.01f
@@ -95,8 +92,7 @@ struct Edge
 class HairModel
 {
 public:
-	HairModel(std::string directory, std::string animation, Ogre::Vector3 position,
-		Ogre::Quaternion orientation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+	HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c);//HairParameters &param);
 	~HairModel();
@@ -107,9 +103,8 @@ public:
 
 	Ogre::RenderTexture* getIdBufferTexture();
 
-	void applyHeadTransform(Ogre::Quaternion rotation, Ogre::Vector3 translation);
+	void applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation);
 	void updateManualObject();
-	void updateStictionSegments();
 	void updateAnchors(float timestep);
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
@@ -117,7 +112,6 @@ private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
 	void getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1);
-	void addStictionSegment(btSoftRigidDynamicsWorld *world, btSoftBody* strand, int nodeIndex0, int nodeIndex1);
 
 	void generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
@@ -163,15 +157,8 @@ private:
 	std::vector<Ogre::Vector3> m_hairShape;
 	btSoftRigidDynamicsWorld *m_world;
 
-	//stiction springs varialbes
-	btSoftBody::Material *m_stictionMaterial;
-	int m_maxStictionConnections;
-	float m_stictionThreshold;
-	float m_stictionRestLength;
-	float m_stictionK;
-	btAlignedObjectArray<HairSegment*> m_hairSegments;
-
 	//animation variables
+	btAlignedObjectArray<btVector3> m_rootPoints;
 	btAlignedObjectArray<btVector3> m_anchorPoints;
 	std::vector<Ogre::SimpleSpline> m_anchorSplines;
 	btSoftBody *m_anchors;
