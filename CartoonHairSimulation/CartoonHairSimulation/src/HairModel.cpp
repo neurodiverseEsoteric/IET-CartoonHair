@@ -126,31 +126,40 @@ Ogre::RenderTexture* HairModel::getIdBufferTexture()
 void HairModel::applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation)
 {
 	m_translationOffset = translation;
-	btVector3 bTrans(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
+	m_orientationOffset = rotation;
+	Ogre::Vector3 offset = translation;
+	btVector3 bOffset(offset.x,offset.y,offset.z);
 	//apply translation offset to roots (and particles if first time) anchors are updated later
 	//roots
 	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
 	{
-		
-		m_strandSoftBodies[strand]->m_nodes[0].m_x = m_rootPoints[strand] + bTrans;
+		{
+			Ogre::Vector3 pos(m_rootPoints[strand].x(),m_rootPoints[strand].y(),m_rootPoints[strand].z());
+			pos = m_orientationOffset*pos;
+			m_strandSoftBodies[strand]->m_nodes[0].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
+		}
+
 		if(first)
 		{
 			for(int node = 1 ; node < m_strandSoftBodies[strand]->m_nodes.size() ; node++)
 			{
-				m_strandSoftBodies[strand]->m_nodes[node].m_x += bTrans;
+				btVector3 bPos = m_strandSoftBodies[strand]->m_nodes[node].m_x;
+				Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+				pos = m_orientationOffset*pos;
+
+				m_strandSoftBodies[strand]->m_nodes[node].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
 			}
 			for(int node = 0 ; node < m_ghostStrandSoftBodies[strand]->m_nodes.size() ; node++)
 			{
-				m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x += bTrans;
+				btVector3 bPos = m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x;
+				Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+				pos = m_orientationOffset*pos;
+
+				m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
 			}
 		}
 		
 	}
-}
-
-void HairModel::applyTransform(btTransform &transform)
-{
-
 }
 
 void HairModel::updateManualObject()
@@ -181,7 +190,7 @@ void HairModel::updateAnchors(float timestep)
 
 	for(int anchor = 0 ; anchor < m_anchorSplines.size() ; anchor++)
 	{
-		Ogre::Vector3 pos = m_anchorSplines[anchor].interpolate(m_animationTime) + m_translationOffset;
+		Ogre::Vector3 pos = m_orientationOffset*m_anchorSplines[anchor].interpolate(m_animationTime) + m_translationOffset;
 		btVector3 bPos(pos.x,pos.y,pos.z);
 		m_anchors->m_nodes[anchor].m_x = bPos;
 	}

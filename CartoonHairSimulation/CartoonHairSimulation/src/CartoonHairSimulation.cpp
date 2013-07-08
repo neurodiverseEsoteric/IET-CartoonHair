@@ -584,8 +584,6 @@ void CartoonHairSimulation::createScene(void)
 	if(skeleton->hasBone("Head"))
 	{
 		m_headBone = skeleton->getBone("Head");
-		/*hairPosition = localToWorldPosition(m_headBone,m_character);
-		hairOrientation = localToWorldOrientation(m_headBone,m_character);*/
 	}
 
 	m_hairModel = new HairModel("../Hair/",
@@ -685,6 +683,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
 			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
 			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
+			boneOrientation = INITIAL_ORIENTATION*boneOrientation;
 			m_hairModel->applyHeadTransform(!m_headTransformApplied,bonePosition,boneOrientation);
 			//the first time - apply head transform will move all of the strand particles
 			m_headTransformApplied = true;
@@ -693,10 +692,6 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	}
 
 	m_hairModel->updateManualObject();
-
-	/*m_edgeMaterial->m_kLST = m_edgeSlider->getCurrentValue();
-	m_bendingMaterial->m_kLST = m_bendingSlider->getCurrentValue();
-	m_torsionMaterial->m_kLST = m_torsionSlider->getCurrentValue();*/
 
 	m_hairModel->setCurveValues(
 		m_aSlider->getCurrentValue()-(m_aSlider->getMaxValue()/2),

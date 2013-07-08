@@ -124,8 +124,6 @@ private:
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 
-	void applyTransform(btTransform &transform);
-
 	void generateIndices();
 	void generateEdgeMap();
 	void generateIdColours();
