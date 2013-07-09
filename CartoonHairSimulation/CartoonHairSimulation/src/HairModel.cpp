@@ -23,7 +23,7 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 }
 
 HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
-		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,
+		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
 {
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
@@ -60,7 +60,7 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 
 	std::string hairFrame = loadAnchorPoints(directory,animation);
 	generateAnchorBody(world,world->getWorldInfo(), m_anchorPoints);
-	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial);
+	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
 	generateHairMesh(sceneMgr);
 }
 
@@ -368,7 +368,7 @@ void HairModel::generateAnchorBody(btSoftRigidDynamicsWorld *world, btSoftBodyWo
 }
 
 void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial)
 {
 	tinyxml2::XMLDocument doc;
 
@@ -414,7 +414,7 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 		m_rootPoints.push_back(particles[0]);
 
 		//now to create the strand softbody and its ghost nodes
-		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
+		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
 		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
 
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
@@ -462,18 +462,15 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
 btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
-	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *anchorMaterial)
 {
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
-	btSoftBody::Material *testMaterial = new btSoftBody::Material();
-	testMaterial->m_kLST = 0.001f;
-
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
 	{
-		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),testMaterial);
+		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),anchorMaterial);
 	}
 
 	//create edge links
@@ -974,32 +971,32 @@ void HairModel::generateEdges(bool update)
 		//artistic-sils-300dpi.pdf
 		//this should be measured from the origin of the mesh but as it is a softbody it doesn't really have an origin
 		//so I will just use the first segment for measurements
-		if(section == 0)
-		{
-			btSoftBody *strand = m_strandSoftBodies[0];
-			//calculate intial depth ratio
-			btVector3 edge1 = strand->m_nodes[1].m_x-strand->m_nodes[0].m_x;
+		//if(section == 0)
+		//{
+		//	btSoftBody *strand = m_strandSoftBodies[0];
+		//	//calculate intial depth ratio
+		//	btVector3 edge1 = strand->m_nodes[1].m_x-strand->m_nodes[0].m_x;
 
-			Ogre::Vector3 tp0,tp1,p0,p1;
-			p0 = Ogre::Vector3(strand->m_nodes[0].m_x.x(),strand->m_nodes[0].m_x.y(),strand->m_nodes[0].m_x.z());
-			p1 = Ogre::Vector3(strand->m_nodes[1].m_x.x(),strand->m_nodes[1].m_x.y(),strand->m_nodes[1].m_x.z());
+		//	Ogre::Vector3 tp0,tp1,p0,p1;
+		//	p0 = Ogre::Vector3(strand->m_nodes[0].m_x.x(),strand->m_nodes[0].m_x.y(),strand->m_nodes[0].m_x.z());
+		//	p1 = Ogre::Vector3(strand->m_nodes[1].m_x.x(),strand->m_nodes[1].m_x.y(),strand->m_nodes[1].m_x.z());
 
-			toDeviceCoordinates(tp0,p0,m_camera);
-			toDeviceCoordinates(tp1,p1,m_camera);
+		//	toDeviceCoordinates(tp0,p0,m_camera);
+		//	toDeviceCoordinates(tp1,p1,m_camera);
 
-			Ogre::Vector3 edge2 = tp1-tp0;
-			if(m_depthCueCalculated == false)
-			{
-				m_depthCueCalculated = true;
-				m_di = edge1.length()/edge2.length();
-				m_dc = m_di;
-			}
-			else
-			{
-				m_dc = edge1.length()/edge2.length();
-			}
-			m_fd = sqrt(m_dc/m_di);
-		}
+		//	Ogre::Vector3 edge2 = tp1-tp0;
+		//	if(m_depthCueCalculated == false)
+		//	{
+		//		m_depthCueCalculated = true;
+		//		m_di = edge1.length()/edge2.length();
+		//		m_dc = m_di;
+		//	}
+		//	else
+		//	{
+		//		m_dc = edge1.length()/edge2.length();
+		//	}
+		//	m_fd = sqrt(m_dc/m_di);
+		//}
 
 		//we now have the silhouettes - now to convert the points to device coordinates
 		//based off of artistic-sils-300dpi.pdf
@@ -1106,7 +1103,7 @@ void HairModel::generateEdges(bool update)
 				scale*= std::max(left,right);
 
 				//apply depth cue scale
-				scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
+				//scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
 
 				//multiply the scale by some value as otherwise 0 to 1 is far too big
 				scale*= 0.02f;

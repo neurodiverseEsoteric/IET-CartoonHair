@@ -223,7 +223,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mKeyboard(0),
 	m_cameraControl(true),
 	m_physicsEnabled(false),
-	m_headTransformApplied(false)
+	m_animationEnabled(false)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -237,6 +237,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	m_edgeMaterial = NULL;
 	m_bendingMaterial = NULL;
 	m_torsionMaterial = NULL;
+	m_anchorMaterial = NULL;
 	m_idBufferListener = NULL;
 	m_headBone = NULL;
 	m_skeletonDrawer = NULL;
@@ -292,7 +293,7 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 			delete m_edgeMaterial;
 			delete m_bendingMaterial;
 			delete m_torsionMaterial;
-			delete m_stictionMaterial;
+			delete m_anchorMaterial;
 		}
 
 		delete mWorld;
@@ -448,7 +449,7 @@ void CartoonHairSimulation::setupResources(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createResourceListener(void)
 {
-
+	
 }
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::loadResources(void)
@@ -543,11 +544,12 @@ void CartoonHairSimulation::createScene(void)
 	m_edgeMaterial = new btSoftBody::Material();
 	m_bendingMaterial = new btSoftBody::Material();
 	m_torsionMaterial = new btSoftBody::Material();
-	m_stictionMaterial = new btSoftBody::Material();
+	m_anchorMaterial = new btSoftBody::Material();
 
 	m_edgeMaterial->m_kLST = EDGE_STIFFNESS;
 	m_bendingMaterial->m_kLST = BENDING_STIFFNESS;
 	m_torsionMaterial->m_kLST = TORSION_STIFFNESS;
+	m_anchorMaterial->m_kLST = ANCHOR_STIFFNESS;
 
 	m_aSlider->setCurrentValue(-13.9+m_aSlider->getMaxValue()/2);
 	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
@@ -555,14 +557,14 @@ void CartoonHairSimulation::createScene(void)
 
 	m_characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
-	m_character = mSceneMgr->createEntity("Character","Natalie_LOD_0_NoFaceNoFingers.mesh");
+	m_character = mSceneMgr->createEntity("Character","ninja.mesh");//"Natalie_LOD_0_NoFaceNoFingers.mesh");
 	m_character->setMaterialName("BaseWhiteNoLighting");
-	m_characterNode->setScale(40,40,40);
+	m_characterNode->setScale(0.4,0.4,0.4);
 	m_characterNode->yaw(Ogre::Radian(Ogre::Degree(180)));
-	m_characterNode->setPosition(20,0,10);
-	//m_characterAnimationState = m_character->getAnimationState("Walk");
-	//m_characterAnimationState->setLoop(true);
-	//m_characterAnimationState->setEnabled(true);
+	m_characterNode->setPosition(0,-10,0);
+	m_characterAnimationState = m_character->getAnimationState("Walk");
+	m_characterAnimationState->setLoop(true);
+	m_characterAnimationState->setEnabled(true);
 
 	m_characterNode->attachObject(m_character);
 	m_skeletonDrawer = new SkeletonDebug(m_character,mSceneMgr,mCamera);
@@ -581,13 +583,19 @@ void CartoonHairSimulation::createScene(void)
 	/*Ogre::Vector3 hairPosition(0,0,0);
 	Ogre::Quaternion hairOrientation(0,0,0,1);*/
 
-	if(skeleton->hasBone("Head"))
-	{
-		m_headBone = skeleton->getBone("Head");
-	}
-
 	m_hairModel = new HairModel("../Hair/",
-		"hairanimation.xml", mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,mWorld,a,b,c);
+		"hairanimation.xml", mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,m_anchorMaterial,mWorld,a,b,c);
+
+	if(skeleton->hasBone("Joint8"))
+	{
+		m_headBone = skeleton->getBone("Joint8");
+		//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
+		Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
+		Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
+		boneOrientation = INITIAL_ORIENTATION*boneOrientation;
+		m_hairModel->applyHeadTransform(true,bonePosition,boneOrientation);
+		m_hairModel->updateAnchors(0);
+	}
 
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr);
 
@@ -673,21 +681,19 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	if(m_physicsEnabled)
 	{
-		if(m_characterAnimationState)
+		if(m_animationEnabled && m_characterAnimationState)
 		{
-			m_characterAnimationState->addTime(timestep);
+			m_characterAnimationState->addTime(timestep*ANIMATION_SPEED);
 		}
-		m_hairModel->updateAnchors(timestep);
 		if(m_headBone)
 		{
 			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
 			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
 			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
 			boneOrientation = INITIAL_ORIENTATION*boneOrientation;
-			m_hairModel->applyHeadTransform(!m_headTransformApplied,bonePosition,boneOrientation);
-			//the first time - apply head transform will move all of the strand particles
-			m_headTransformApplied = true;
+			m_hairModel->applyHeadTransform(false,bonePosition,boneOrientation);
 		}
+		m_hairModel->updateAnchors(timestep);
 		mWorld->stepSimulation(timestep);
 	}
 
@@ -852,6 +858,10 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 	else if(arg.key == OIS::KC_L)
 	{
 		m_physicsEnabled = !m_physicsEnabled;
+	}
+	else if(arg.key == OIS::KC_V)
+	{
+		m_animationEnabled = !m_animationEnabled;
 	}
 
 	if(m_cameraControl)
