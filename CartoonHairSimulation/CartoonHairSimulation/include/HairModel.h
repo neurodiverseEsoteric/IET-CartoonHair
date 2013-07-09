@@ -1,5 +1,11 @@
 #include "stdafx.h"
 
+#define EDGE_SPRINGS
+#define BENDING_SPRINGS
+#define TORSION_SPRINGS
+#define ANCHOR_SPRINGS
+#define GHOST_STRAND
+
 #define SHIFT_X 0.2f
 #define TOLERANCE 0.000001
 

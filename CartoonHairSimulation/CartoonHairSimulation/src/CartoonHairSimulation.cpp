@@ -38,153 +38,7 @@ Ogre::Quaternion localToWorldOrientation(Ogre::Bone* bone, Ogre::Entity* entity)
 	return entity->getParentSceneNode()->convertLocalToWorldOrientation(orient);
 }
 
-////http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger
-//Ogre::Vector3 localToWorldPosition(Ogre::Entity* ent, Ogre::Bone* bone)
-//{
-//    Vector3 world_position = bone->_getDerivedPosition();
-// 
-//    //multiply with the parent derived transformation
-//    Ogre::Node *pParentNode = ent->getParentNode();
-//    Ogre::SceneNode *pSceneNode = ent->getParentSceneNode();
-//    while (pParentNode != NULL)
-//    {
-//        //process the current i_Node
-//        if (pParentNode != pSceneNode)
-//        {
-//            //this is a tag point (a connection point between 2 entities). which means it has a parent i_Node to be processed
-//            world_position = pParentNode->_getFullTransform() * world_position;
-//            pParentNode = pParentNode->getParent();
-//        }
-//        else
-//        {
-//            //this is the scene i_Node meaning this is the last i_Node to process
-//            world_position = pParentNode->_getFullTransform() * world_position;
-//            break;
-//        }
-//    }
-//    return world_position;
-//}
 
-//-------------------------------------------------------------------------------------
-//taken from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=RetrieveVertexData
-//according to the terms listed on this webpage - the code is in the public domain
-//this can be used to get the vertices from the mesh
-void getMeshInformation(const Ogre::MeshPtr mesh,
-                        size_t &vertex_count,
-                        Ogre::Vector3* &vertices,
-                        size_t &index_count,
-                        unsigned long* &indices,
-                        const Ogre::Vector3 &position,
-                        const Ogre::Quaternion &orient,
-                        const Ogre::Vector3 &scale)
-{
-    bool added_shared = false;
-    size_t current_offset = 0;
-    size_t shared_offset = 0;
-    size_t next_offset = 0;
-    size_t index_offset = 0;
- 
-    vertex_count = index_count = 0;
- 
-    // Calculate how many vertices and indices we're going to need
-    for ( unsigned short i = 0; i < mesh->getNumSubMeshes(); ++i)
-    {
-        Ogre::SubMesh* submesh = mesh->getSubMesh(i);
-        // We only need to add the shared vertices once
-        if(submesh->useSharedVertices)
-        {
-            if( !added_shared )
-            {
-                vertex_count += mesh->sharedVertexData->vertexCount;
-                added_shared = true;
-            }
-        }
-        else
-        {
-            vertex_count += submesh->vertexData->vertexCount;
-        }
-        // Add the indices
-        index_count += submesh->indexData->indexCount;
-    }
- 
-    // Allocate space for the vertices and indices
-    vertices = new Ogre::Vector3[vertex_count];
-    indices = new unsigned long[index_count];
- 
-    added_shared = false;
- 
-    // Run through the submeshes again, adding the data into the arrays
-    for (unsigned short i = 0; i < mesh->getNumSubMeshes(); ++i)
-    {
-        Ogre::SubMesh* submesh = mesh->getSubMesh(i);
- 
-        Ogre::VertexData* vertex_data = submesh->useSharedVertices ? mesh->sharedVertexData : submesh->vertexData;
- 
-        if ((!submesh->useSharedVertices) || (submesh->useSharedVertices && !added_shared))
-        {
-            if(submesh->useSharedVertices)
-            {
-                added_shared = true;
-                shared_offset = current_offset;
-            }
- 
-            const Ogre::VertexElement* posElem =
-                vertex_data->vertexDeclaration->findElementBySemantic(Ogre::VES_POSITION);
- 
-            Ogre::HardwareVertexBufferSharedPtr vbuf =
-                vertex_data->vertexBufferBinding->getBuffer(posElem->getSource());
- 
-            unsigned char* vertex =
-                static_cast<unsigned char*>(vbuf->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
- 
-            // There is _no_ baseVertexPointerToElement() which takes an Ogre::Real or a double
-            //  as second argument. So make it float, to avoid trouble when Ogre::Real will
-            //  be comiled/typedefed as double:
-            //Ogre::Real* pReal;
-            float* pReal;
- 
-            for( size_t j = 0; j < vertex_data->vertexCount; ++j, vertex += vbuf->getVertexSize())
-            {
-                posElem->baseVertexPointerToElement(vertex, &pReal);
-                Ogre::Vector3 pt(pReal[0], pReal[1], pReal[2]);
-                vertices[current_offset + j] = (orient * (pt * scale)) + position;
-            }
- 
-            vbuf->unlock();
-            next_offset += vertex_data->vertexCount;
-        }
- 
-        Ogre::IndexData* index_data = submesh->indexData;
-        size_t numTris = index_data->indexCount / 3;
-        Ogre::HardwareIndexBufferSharedPtr ibuf = index_data->indexBuffer;
- 
-        bool use32bitindexes = (ibuf->getType() == Ogre::HardwareIndexBuffer::IT_32BIT);
- 
-        unsigned long* pLong = static_cast<unsigned long*>(ibuf->lock(Ogre::HardwareBuffer::HBL_READ_ONLY));
-        unsigned short* pShort = reinterpret_cast<unsigned short*>(pLong);
- 
-        size_t offset = (submesh->useSharedVertices)? shared_offset : current_offset;
- 
-        if ( use32bitindexes )
-        {
-            for ( size_t k = 0; k < numTris*3; ++k)
-            {
-                indices[index_offset++] = pLong[k] + static_cast<unsigned long>(offset);
-            }
-        }
-        else
-        {
-            for ( size_t k = 0; k < numTris*3; ++k)
-            {
-                indices[index_offset++] = static_cast<unsigned long>(pShort[k]) +
-                                          static_cast<unsigned long>(offset);
-            }
-        }
- 
-        ibuf->unlock();
-        current_offset = next_offset;
-    }
-}
 
 //http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
 CEGUI::MouseButton convertButton(OIS::MouseButtonID buttonID)
@@ -223,7 +77,8 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mKeyboard(0),
 	m_cameraControl(true),
 	m_physicsEnabled(false),
-	m_animationEnabled(false)
+	m_animationEnabled(false),
+	m_firstTransformation(true)
 {
 	mWorld = NULL;
 	mSoftBodySolver = NULL;
@@ -516,6 +371,10 @@ bool CartoonHairSimulation::setup(void)
 //-------------------------------------------------------------------------------------
 void CartoonHairSimulation::createScene(void)
 {
+	// Create a light
+	Ogre::Light* l = mSceneMgr->createLight("MainLight");
+	l->setPosition(-19,-2.4,-12);
+
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);
 	mWorld->setDebugDrawer(m_debugDrawer);
@@ -557,12 +416,12 @@ void CartoonHairSimulation::createScene(void)
 
 	m_characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
-	m_character = mSceneMgr->createEntity("Character","ninja.mesh");//"Natalie_LOD_0_NoFaceNoFingers.mesh");
+	m_character = mSceneMgr->createEntity("Character","ninja.mesh");
 	m_character->setMaterialName("BaseWhiteNoLighting");
 	m_characterNode->setScale(0.4,0.4,0.4);
 	m_characterNode->yaw(Ogre::Radian(Ogre::Degree(180)));
-	m_characterNode->setPosition(0,-10,0);
-	m_characterAnimationState = m_character->getAnimationState("Walk");
+	m_characterNode->setPosition(0,-40,0);
+	m_characterAnimationState = m_character->getAnimationState("Spin");
 	m_characterAnimationState->setLoop(true);
 	m_characterAnimationState->setEnabled(true);
 
@@ -578,23 +437,13 @@ void CartoonHairSimulation::createScene(void)
 	float c = m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2);
 
 	//setup dynamic hair
-
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
-	/*Ogre::Vector3 hairPosition(0,0,0);
-	Ogre::Quaternion hairOrientation(0,0,0,1);*/
 
 	m_hairModel = new HairModel("../Hair/",
 		"hairanimation.xml", mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,m_anchorMaterial,mWorld,a,b,c);
-
 	if(skeleton->hasBone("Joint8"))
 	{
 		m_headBone = skeleton->getBone("Joint8");
-		//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
-		Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
-		Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
-		boneOrientation = INITIAL_ORIENTATION*boneOrientation;
-		m_hairModel->applyHeadTransform(true,bonePosition,boneOrientation);
-		m_hairModel->updateAnchors(0);
 	}
 
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr);
@@ -612,21 +461,19 @@ void CartoonHairSimulation::createScene(void)
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
 
-	// Create a light
-	Ogre::Light* l = mSceneMgr->createLight("MainLight");
-	l->setPosition(-19,-2.4,-12);
+	//create head rigidbody
+	btBoxShape *headShape = new btBoxShape(btVector3(2.4,5.0,3.0));
+	btDefaultMotionState *headMotionState = new btDefaultMotionState(
+		btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
+	btRigidBody::btRigidBodyConstructionInfo headConstructionInfo(0,headMotionState,headShape,btVector3(0,0,0));
 
-	//line everything to the head node
-	//m_headNode->attachObject(head);
+	m_headRigidBody = new btRigidBody(headConstructionInfo);
+	mWorld->addRigidBody(m_headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
 
 	m_headNode->createChildSceneNode("debuglines")->attachObject(m_debugDrawer->getLinesManualObject());
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("normals")->attachObject(m_hairModel->getNormalsManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
-	//m_headNode->createChildSceneNode("debugedges")->attachObject(m_hairModel->getDebugEdgesManualObject());
-
-	//set rendering order
-	//head->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 
 	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
@@ -691,7 +538,12 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
 			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
 			boneOrientation = INITIAL_ORIENTATION*boneOrientation;
-			m_hairModel->applyHeadTransform(false,bonePosition,boneOrientation);
+			m_hairModel->applyHeadTransform(m_firstTransformation,bonePosition,boneOrientation);
+			btVector3 bBonePosition(bonePosition.x,bonePosition.y,bonePosition.z);
+			btQuaternion bBoneOrientation(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
+
+			m_headRigidBody->setWorldTransform(btTransform(bBoneOrientation,bBonePosition));
+			m_firstTransformation = false;
 		}
 		m_hairModel->updateAnchors(timestep);
 		mWorld->stepSimulation(timestep);

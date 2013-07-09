@@ -423,7 +423,7 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 		m_strandSoftBodies.push_back(hairStrand);
 		m_ghostStrandSoftBodies.push_back(ghostStrand);
 
-		////clean up
+		//clean up
 		particles.clear();
 		masses.clear();
 
@@ -467,35 +467,35 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
 
+#ifdef ANCHOR_SPRINGS
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
 	{
 		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),anchorMaterial);
 	}
+#endif
 
+#ifdef EDGE_SPRINGS
 	//create edge links
 	for(int node = 1 ; node < particles.size() ; node++)
 	{
 		strand->appendLink(node-1,node,edgeMaterial);
-
-		//generate stiction segment
-		//addStictionSegment(world,strand,node-1,node);
 	}
+#endif
 
+#ifdef BENDING_SPRINGS
 	//create bending springs
 	for(int node = 0 ; node < strand->m_nodes.size()-2 ; node++)
 	{
 		strand->appendLink(node,node+2,bendingMaterial);
 	}
+#endif
 
 	//attach to anchors - 01309193.pdf
 	/*for(int node = 0 ; node < strand->m_nodes.size() ; node++)
 	{
 		strand->appendAnchor(node,anchors[node],true,0.1f);
 	}*/
-
-	//static node test
-	//strand->appendNode(btVector3(0,0,0),0.0f);
 
 	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
 
@@ -553,6 +553,7 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 	btSoftBody *ghostStrand = new btSoftBody(strand->getWorldInfo(),particles.size(),&particles[0],&masses[0]);
 
+#ifdef GHOST_STRAND
 	//create bending springs
 	for(int node = 1 ; node < ghostStrand->m_nodes.size() ; node++)
 	{
@@ -572,6 +573,7 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 		ghostStrand->appendLink(&(ghostStrand->m_nodes[node]),&(strand->m_nodes[node+2]),torsionMaterial);
 		ghostStrand->appendLink(&(strand->m_nodes[node]),&(ghostStrand->m_nodes[node+1]),torsionMaterial);
 	}
+#endif
 
 	//clean up
 	particles.clear();
@@ -967,36 +969,6 @@ void HairModel::generateEdges(bool update)
 
 		}
 
-		//calculate depth cue scaling values - only need first section
-		//artistic-sils-300dpi.pdf
-		//this should be measured from the origin of the mesh but as it is a softbody it doesn't really have an origin
-		//so I will just use the first segment for measurements
-		//if(section == 0)
-		//{
-		//	btSoftBody *strand = m_strandSoftBodies[0];
-		//	//calculate intial depth ratio
-		//	btVector3 edge1 = strand->m_nodes[1].m_x-strand->m_nodes[0].m_x;
-
-		//	Ogre::Vector3 tp0,tp1,p0,p1;
-		//	p0 = Ogre::Vector3(strand->m_nodes[0].m_x.x(),strand->m_nodes[0].m_x.y(),strand->m_nodes[0].m_x.z());
-		//	p1 = Ogre::Vector3(strand->m_nodes[1].m_x.x(),strand->m_nodes[1].m_x.y(),strand->m_nodes[1].m_x.z());
-
-		//	toDeviceCoordinates(tp0,p0,m_camera);
-		//	toDeviceCoordinates(tp1,p1,m_camera);
-
-		//	Ogre::Vector3 edge2 = tp1-tp0;
-		//	if(m_depthCueCalculated == false)
-		//	{
-		//		m_depthCueCalculated = true;
-		//		m_di = edge1.length()/edge2.length();
-		//		m_dc = m_di;
-		//	}
-		//	else
-		//	{
-		//		m_dc = edge1.length()/edge2.length();
-		//	}
-		//	m_fd = sqrt(m_dc/m_di);
-		//}
 
 		//we now have the silhouettes - now to convert the points to device coordinates
 		//based off of artistic-sils-300dpi.pdf
