@@ -1,5 +1,7 @@
 #include "stdafx.h"
 
+//#define IMAGE_SPACE_HATCHING
+
 #define EDGE_SPRINGS
 #define BENDING_SPRINGS
 #define TORSION_SPRINGS

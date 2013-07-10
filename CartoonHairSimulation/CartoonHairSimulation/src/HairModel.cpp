@@ -1238,7 +1238,11 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 		else
 		{
+#ifdef IMAGE_SPACE_HATCHING
+			m_hairMesh->begin("IETCartoonHair/OldHatch",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+#else
 			m_hairMesh->begin("IETCartoonHair/HairMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+#endif
 			m_normalMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
 
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
