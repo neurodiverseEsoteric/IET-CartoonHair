@@ -1,0 +1,5 @@
+<?xml version="1.0" ?>
+<shape>
+	<sphere radius="1.0" x="0.0" y="1.0201523303985596" z="-0.0"/>
+	<sphere radius="1.0" x="0.0" y="0.0" z="-0.0"/>
+</shape>

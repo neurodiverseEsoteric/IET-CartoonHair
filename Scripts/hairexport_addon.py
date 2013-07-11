@@ -102,7 +102,6 @@ def exporter_func(self,context):
 def register():
     bpy.utils.register_module(__name__)
     bpy.types.INFO_MT_file_export.append(exporter_func)
-    bpy
 
 def unregister():
     bpy.utils.unregister_module(__name__)
