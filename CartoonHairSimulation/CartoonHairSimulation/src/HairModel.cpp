@@ -16,7 +16,6 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 			m_currentId.g = 0;
 			m_currentId.b += ID_INCREMENT;
 		}
-
 	}
 
 	return result;
@@ -28,21 +27,17 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 {
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
-	m_camera = camera;//param.camera;
-	m_a = a;//param.a;
-	m_b = b;//param.b;
-	m_c = c;//param.c;
-	m_world = world;//param.world;
+	m_camera = camera;
+	m_a = a;
+	m_b = b;
+	m_c = c;
+	m_world = world;
 
 	m_translationOffset = Ogre::Vector3(0,0,0);
 	m_orientationOffset = Ogre::Quaternion(0,0,0,1);
 
-	/*m_translationOffset = position;
-	m_orientationOffset = orientation;*/
-
 	m_animationTime = 0;
 
-	m_depthCueCalculated = false;
 	m_positiveInterpolation = true;
 
 	//create render texture for storing colour id buffer for silhouette visibility testing
@@ -89,6 +84,12 @@ HairModel::~HairModel()
 		delete strand;
 	}
 	m_strandSoftBodies.clear();
+
+	for(int i = 0 ; i < m_blendingSpringMaterials.size() ; i++)
+	{
+		delete m_blendingSpringMaterials[i];
+	}
+	m_blendingSpringMaterials.clear();
 
 	m_anchorPoints.clear();
 	m_anchorSplines.clear();
@@ -194,74 +195,6 @@ void HairModel::updateAnchors(float timestep)
 		btVector3 bPos(pos.x,pos.y,pos.z);
 		m_anchors->m_nodes[anchor].m_x = bPos;
 	}
-}
-
-//based on calculations from http://www.fannieliu.com/hairsim/hairsim.html and http://physbam.stanford.edu/~fedkiw/papers/stanford2002-01.pdf
-void HairModel::getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1)
-{
-	glm::vec3 s0p0(strand0p0.x(),strand0p0.y(),strand0p0.z());
-	glm::vec3 s0p1(strand0p1.x(),strand0p1.y(),strand0p1.z());
-	glm::vec3 s1p0(strand1p0.x(),strand1p0.y(),strand1p0.z());
-	glm::vec3 s1p1(strand1p1.x(),strand1p1.y(),strand1p1.z());
-
-	glm::vec3 p0,p1;
-
-	glm::vec3 x21 = s0p1 - s0p0;
-	glm::vec3 x31 = s1p0 - s0p0;
-	glm::vec3 x43 = s1p1 - s1p0;
-
-	float a = 0.0f, b = 0.0f;
-	if(glm::length(glm::cross(x21,x43))>TOLERANCE)
-	{
-		float dx21x21 = glm::dot(x21,x21);
-		float dmx21x43 = glm::dot(-x21,x43);
-		float dx43x43 = glm::dot(x43,x43);
-		float dx21x31 = glm::dot(x21,x31);
-		float dmx43x31 = glm::dot(-x43,x31);
-
-		//http://en.wikipedia.org/wiki/Linear_least_squares_(mathematics)
-		//we are trying to solve the linear least squares problem X*beta = y
-		glm::mat2x2 X( 
-			dx21x21,dmx21x43,
-			dmx21x43,dx43x43
-			);
-
-		glm::vec2 y(
-			dx21x31,
-			dmx43x31
-			);
-
-		glm::mat2x2 Xt = glm::transpose(X);
-
-		glm::vec2 beta = glm::inverse(Xt*X)*Xt*y;
-		
-		a = beta.x;
-		b = beta.y;
-
-		//clamp
-		if(a>1)
-		{
-			a = 1;
-		}
-		else if(a<0)
-		{
-			a = 0;
-		}
-		if(b>1)
-		{
-			b = 1;
-		}
-		else if(b<0)
-		{
-			b = 0;
-		}
-	}
-
-	p0 = s0p0 + a*x21;
-	p1 = s1p0 + b*x43;
-
-	point0.setValue(p0.x,p0.y,p0.z);
-	point1.setValue(p1.x,p1.y,p1.z);
 }
 
 //loads all of the specified hair frames into a vector of vectors for anchor animation and returns the first frame's location
@@ -390,7 +323,6 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 	{
 		//iterate through hair particles - first one is the root and should be fixed in position
 		btAlignedObjectArray<btVector3> particles;
-		//std::vector<btRigidBody*> anchors;
 
 		std::vector<float> masses;
 		tinyxml2::XMLElement *particle = strand->FirstChildElement();
@@ -403,12 +335,27 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
-			//point = point + translation;
 
 			particles.push_back(point);
 			masses.push_back(1.0f);
 		}
+
+		//generate blending springs
+#ifndef CONSTANT_BLENDING_SPRINGS
+		if(strandCount == 0)
+		{
+			for(int i = 0 ; i < particles.size() ; i++)
+			{
+				float x = (float)i/(particles.size()-1);
+				btSoftBody::Material *blendingSpring = new btSoftBody::Material();
+				blendingSpring->m_kLST = anchorMaterial->m_kLST*abs(
+					BLENDING_QUADRATIC_A*x*x +
+					BLENDING_QUADRATIC_B*x +
+					BLENDING_QUADRATIC_C);
+				m_blendingSpringMaterials.push_back(blendingSpring);
+			}
+		}
+#endif
 
 		//get the root position
 		m_rootPoints.push_back(particles[0]);
@@ -471,7 +418,11 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
 	{
+#ifdef CONSTANT_BLENDING_SPRINGS
 		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),anchorMaterial);
+#else
+		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),m_blendingSpringMaterials[node]);
+#endif
 	}
 #endif
 
@@ -490,12 +441,6 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 		strand->appendLink(node,node+2,bendingMaterial);
 	}
 #endif
-
-	//attach to anchors - 01309193.pdf
-	/*for(int node = 0 ; node < strand->m_nodes.size() ; node++)
-	{
-		strand->appendAnchor(node,anchors[node],true,0.1f);
-	}*/
 
 	//http://bulletphysics.org/Bullet/phpBB3/viewtopic.php?t=7465
 
@@ -977,6 +922,7 @@ void HairModel::generateEdges(bool update)
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
 		std::vector<Ogre::Vector3> screenSpacePoints;
+		//assert(silhouette.size()!=0);
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].first]);
@@ -993,7 +939,6 @@ void HairModel::generateEdges(bool update)
 				{
 					zMin = result.z;
 				}
-
 				screenSpacePoints.push_back(result);
 			}
 			if(i == silhouette.size()-1)
@@ -1060,22 +1005,24 @@ void HairModel::generateEdges(bool update)
 				
 
 				//scale rib base on angle to stop corners being squeezed
-				float scale = abs(rib.length()/(rib.dotProduct(norm)));
-
-				if(scale>2)
-				{
-					scale = 2;
-				}
+				float scale = 1.0f;
+#ifdef ANGLE_SCALING
+				scale = abs(rib.length()/(rib.dotProduct(norm)));
+#endif
 
 				//vertex depth scale factor from artistic-sils-300dpi.pdf
+#ifdef DEPTH_SCALING
 				float scaleFactor = 0.5f;
 				float left = 0.0f;
 				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
 
 				scale*= std::max(left,right);
+#endif
 
-				//apply depth cue scale
-				//scale*= m_fd; //this has been commented out at the moment as it seems sensitive to translation
+				if(scale>2)
+				{
+					scale = 2;
+				}
 
 				//multiply the scale by some value as otherwise 0 to 1 is far too big
 				scale*= 0.02f;

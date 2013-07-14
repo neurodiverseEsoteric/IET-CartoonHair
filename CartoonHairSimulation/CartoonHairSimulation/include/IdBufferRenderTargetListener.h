@@ -2,6 +2,8 @@
 #include "HairModel.h"
 #include "DebugDrawer.h"
 
+//#define IMAGESPACE_SILHOUETTE
+
 //based on http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
 class IdBufferRenderTargetListener : public Ogre::RenderTargetListener
 {

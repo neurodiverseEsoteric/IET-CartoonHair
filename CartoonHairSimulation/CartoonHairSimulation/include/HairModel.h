@@ -7,6 +7,12 @@
 #define TORSION_SPRINGS
 #define ANCHOR_SPRINGS
 #define GHOST_STRAND
+//#define ANGLE_SCALING
+//#define DEPTH_SCALING
+//#define CONSTANT_BLENDING_SPRINGS
+#define BLENDING_QUADRATIC_A 1.0
+#define BLENDING_QUADRATIC_B 0
+#define BLENDING_QUADRATIC_C 0
 
 #define SHIFT_X 0.2f
 #define TOLERANCE 0.000001
@@ -119,7 +125,6 @@ public:
 private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
-	void getClosestPoints(const btVector3 &strand0p0,const btVector3 &strand0p1, const btVector3 &strand1p0, const btVector3 &strand1p1, btVector3 &point0, btVector3 &point1);
 
 	void generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial);
@@ -166,6 +171,7 @@ private:
 	//animation variables
 	btAlignedObjectArray<btVector3> m_rootPoints;
 	btAlignedObjectArray<btVector3> m_anchorPoints;
+	btAlignedObjectArray<btSoftBody::Material *> m_blendingSpringMaterials;
 	std::vector<Ogre::SimpleSpline> m_anchorSplines;
 	btSoftBody *m_anchors;
 	float m_animationTime;
@@ -175,8 +181,6 @@ private:
 	//temporally coherent hatching variables
 
 	//silhouette variables
-	bool m_depthCueCalculated;
-	float m_di,m_dc,m_fd;
 	Ogre::RenderTexture *m_idBuffer;
 	std::vector<Ogre::ColourValue> m_idColours;
 	Ogre::ColourValue m_currentId;

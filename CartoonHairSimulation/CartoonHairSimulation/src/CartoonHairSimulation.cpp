@@ -437,9 +437,9 @@ void CartoonHairSimulation::createScene(void)
 	m_torsionMaterial->m_kLST = TORSION_STIFFNESS;
 	m_anchorMaterial->m_kLST = ANCHOR_STIFFNESS;
 
-	m_aSlider->setCurrentValue(-13.9+m_aSlider->getMaxValue()/2);
-	m_bSlider->setCurrentValue(4.9+m_bSlider->getMaxValue()/2);
-	m_cSlider->setCurrentValue(6.4+m_cSlider->getMaxValue()/2);
+	m_aSlider->setCurrentValue(HAIR_QUADRATIC_A+m_aSlider->getMaxValue()/2);
+	m_bSlider->setCurrentValue(HAIR_QUADRATIC_B+m_bSlider->getMaxValue()/2);
+	m_cSlider->setCurrentValue(HAIR_QUADRATIC_C+m_cSlider->getMaxValue()/2);
 
 	m_characterNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 	//animation code from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Intermediate+Tutorial+1#Setting_up_the_Scene
@@ -453,9 +453,12 @@ void CartoonHairSimulation::createScene(void)
 	m_characterAnimationState->setEnabled(true);
 
 	m_characterNode->attachObject(m_character);
+
+#ifdef SHOW_BONES
 	m_skeletonDrawer = new SkeletonDebug(m_character,mSceneMgr,mCamera);
-	//m_skeletonDrawer->showBones(true);
-	//m_skeletonDrawer->showNames(true);
+	m_skeletonDrawer->showBones(true);
+	m_skeletonDrawer->showNames(true);
+#endif
 
 	m_headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 
@@ -476,8 +479,6 @@ void CartoonHairSimulation::createScene(void)
 	m_idBufferListener = new IdBufferRenderTargetListener(mSceneMgr);
 
 	m_hairModel->getIdBufferTexture()->addListener(m_idBufferListener);
-	//m_hairModel->getHairManualObject()->setVisible(false);
-	//m_hairModel->getEdgeManualObject()->setVisible(false);
 
 	m_idBufferListener->addObjectToID(m_hairModel->getHairManualObject(),"IETCartoonHair/SolidMaterial");
 	m_idBufferListener->addObjectToID(m_hairModel->getEdgeManualObject(),"IETCartoonHair/SolidSilhouetteMaterial");
@@ -500,9 +501,13 @@ void CartoonHairSimulation::createScene(void)
 	m_headRigidBody = new btRigidBody(headConstructionInfo);
 	mWorld->addRigidBody(m_headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
 
+#ifdef DEBUG_VISUALISATION
 	m_headNode->createChildSceneNode("debuglines")->attachObject(m_debugDrawer->getLinesManualObject());
-	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("normals")->attachObject(m_hairModel->getNormalsManualObject());
+	m_headNode->createChildSceneNode("debugedges")->attachObject(m_hairModel->getDebugEdgesManualObject());
+#endif
+
+	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
 
 	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
@@ -513,7 +518,6 @@ void CartoonHairSimulation::createScene(void)
 #ifdef IMAGESPACE_SILHOUETTE
 		Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
 		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
-		m_character->setVisible(false);
 		m_hairModel->getEdgeManualObject()->setVisible(false);
 		Ogre::MaterialManager::getSingleton().addListener(new HairMaterialListener());
 #endif
@@ -552,7 +556,10 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	float timestep = evt.timeSinceLastFrame;
 
+#ifdef SHOW_BONES
 	m_skeletonDrawer->update();
+#endif
+
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding parameters for maxSubstep and fixedTimeStep
 
@@ -587,12 +594,14 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 		m_cSlider->getCurrentValue()-(m_cSlider->getMaxValue()/2)
 		);
 	
+#ifdef DEBUG_VISUALISATION
 	if(m_debugDrawer->getLinesManualObject()->isVisible())
 	{
 		m_debugDrawer->begin();
 		mWorld->debugDrawWorld();
 		m_debugDrawer->end();
 	}
+#endif
 
 	//TO DO: add any methods you would like to be called
 
@@ -722,6 +731,17 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 		else
 		{
 			m_hairModel->getNormalsManualObject()->setVisible(true);
+		}
+	}
+	else if(arg.key == OIS::KC_K)
+	{
+		if(m_hairModel->getDebugEdgesManualObject()->isVisible())
+		{
+			m_hairModel->getDebugEdgesManualObject()->setVisible(false);
+		}
+		else
+		{
+			m_hairModel->getDebugEdgesManualObject()->setVisible(true);
 		}
 	}
 	else if(arg.key == OIS::KC_M)
