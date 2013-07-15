@@ -1,6 +1,9 @@
-//based on http://www.ogre3d.org/tikiwiki/Glow&structure=Cookbook
 #include "stdafx.h"
 
+/*
+This class is used for listening for hair sceme changes in the compositor file. This is necessary for the image space silhouette technique.
+It is based upon http://www.ogre3d.org/tikiwiki/Glow&structure=Cookbook
+*/
 class HairMaterialListener : public Ogre::MaterialManager::Listener
 {
 public:

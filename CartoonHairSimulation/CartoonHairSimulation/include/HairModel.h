@@ -1,72 +1,49 @@
 #include "stdafx.h"
 
-//#define IMAGE_SPACE_HATCHING
-
+//TYPES OF SPRINGS IN THIS BUILD
 #define EDGE_SPRINGS
 #define BENDING_SPRINGS
 #define TORSION_SPRINGS
 #define ANCHOR_SPRINGS
 #define GHOST_STRAND
+
+//TYPES OF STROKE QUAD SCALING
 //#define ANGLE_SCALING
 //#define DEPTH_SCALING
+#define STROKE_SCALE 0.02f
+#define STROKE_LIMIT 2.0f
+
+//ANCHOR BLENDING OPTIONS
 //#define CONSTANT_BLENDING_SPRINGS
 #define BLENDING_QUADRATIC_A 1.0
 #define BLENDING_QUADRATIC_B 0
 #define BLENDING_QUADRATIC_C 0
 
-#define SHIFT_X 0.2f
-#define TOLERANCE 0.000001
+//HATCHING OPTIONS
+//#define IMAGE_SPACE_HATCHING
 
+//ID BUFFER COLOUR INCREMENT BETWEEN NEW IDS
 #define ID_INCREMENT 0.05f
+
+//ANCHOR ANIMATION SPEED SCALE
 #define ANCHOR_FRAME_INCRMENT 0.01f
 
+//HAIR STRAND SETTINGS
 #define NUM_HAIR_SAMPLES 5
 #define NUM_HAIR_SHAPE_SAMPLES 6
 
-//http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Collision_Filtering
+//BULLET PHYSICS collision groups used to limit collisions between certain groups
 #define BODY_GROUP 0x1
 #define HAIR_GROUP 0x2
 #define GHOST_GROUP 0x4
-#define SEGMENT_GROUP 0x8
 
-struct HairParameters
-{
-	std::string directory;
-	std::string animation;
-	Ogre::SceneManager *sceneMgr;
-	btSoftRigidDynamicsWorld *world;
-	btSoftBody::Material *edgeMaterial;
-	btSoftBody::Material *bendingMaterial;
-	btSoftBody::Material *torsionMaterial;
-	btSoftBody::Material *stictionMaterial;
-	Ogre::Camera *camera;
-	Ogre::RenderWindow *window;
-	float a;
-	float b;
-	float c;
-	int maxStictionConnections;
-	float stictionThreshold;
-	float stictionRestLength;
-	float stictionK;
-	btVector3 initialPosition;
-	btQuaternion initialOrientation;
-};
-
-struct HairSegment
-{
-	btSoftBody *strand;
-	btGhostObject *ghostObject;
-	int node0Index;
-	int node1Index;
-	std::vector<btSoftBody*> stictionSprings;
-};
-
+//edge types used by the silhouette detection
 enum EdgeType
 {
 	NOTHING, BORDER, CREASE, SILHOUETTE
 };
 
-//http://stackoverflow.com/questions/2099540/defining-custom-hash-function-and-equality-function-for-unordered-map
+//hash function for silhouette edge hash table
 struct HashFunction
 {
 	std::size_t operator() (const std::pair<int,int>& key) const
@@ -75,6 +52,7 @@ struct HashFunction
 	}
 };
 
+//function used by silhouette edge hash table to determine if entries are identical
 struct EqualFunction
 {
 	bool operator() (const std::pair<int,int>& lhs,const std::pair<int,int>& rhs) const
@@ -88,6 +66,7 @@ struct EqualFunction
 	}
 };
 
+//silhouette edge parameters
 struct Edge
 {
 	Edge()
@@ -99,22 +78,24 @@ struct Edge
 	int edgeCount;
 	int triangle1Indices[3];
 	int triangle2Indices[3];
-	//std::vector<std::pair<int,int>> linkedEdges;
 };
 
-//http://www.fannieliu.com/hairsim/hairsim.html
+/*
+This class is the core of the project application. It is responsible for generating the hair strands, adding them to the physics simulation
+and rendering them.
+*/
 class HairModel
 {
 public:
 	HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
-		btSoftRigidDynamicsWorld *world, float a,float b, float c);//HairParameters &param);
+		btSoftRigidDynamicsWorld *world, float a,float b, float c);
 	~HairModel();
+
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
 	Ogre::ManualObject* getDebugEdgesManualObject();
-
 	Ogre::RenderTexture* getIdBufferTexture();
 
 	void applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation);
@@ -122,10 +103,10 @@ public:
 	void updateAnchors(float timestep);
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
+
 private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
-
 	void generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial);
 	void generateHairMesh(Ogre::SceneManager *sceneMgr);
@@ -156,7 +137,7 @@ private:
 	bool attemptInsert(std::pair<int,int> element, std::deque<std::pair<int,int>> &silhouette);
 
 	//http://stackoverflow.com/questions/13682074/get-2d-screen-point-from-3d-point
-	bool toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera);
+	Ogre::Vector3 toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera);
 	Ogre::Vector3 toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera);
 
 	//variables

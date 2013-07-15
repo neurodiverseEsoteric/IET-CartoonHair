@@ -2,6 +2,28 @@
 #include "HairModel.h"
 #include "tinyxml2.h"
 
+/*
+convenience functions for converting between ogre and bullet variables
+*/
+Ogre::Vector3 bulletToOgreVector(btVector3 &vector)
+{
+	return Ogre::Vector3(vector.x(),vector.y(),vector.z());
+}
+btVector3 ogreToBulletVector(Ogre::Vector3 &vector)
+{
+	return btVector3(vector.x,vector.y,vector.z);
+}
+Ogre::Quaternion bulletToOgreQuaternion(btQuaternion &quaternion)
+{
+	return Ogre::Quaternion(quaternion.x(),quaternion.y(),quaternion.z(),quaternion.w());
+}
+btQuaternion ogreToBulletQuaternion(Ogre::Quaternion &quaternion)
+{
+	return btQuaternion(quaternion.x,quaternion.y,quaternion.z,quaternion.w);
+}
+
+
+
 //based on http://content.gpwiki.org/index.php/OpenGL_Selection_Using_Unique_Color_IDs
 Ogre::ColourValue HairModel::generateUniqueColour()
 {
@@ -129,7 +151,7 @@ void HairModel::applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::
 	m_translationOffset = translation;
 	m_orientationOffset = rotation;
 	Ogre::Vector3 offset = translation;
-	btVector3 bOffset(offset.x,offset.y,offset.z);
+	btVector3 bOffset = ogreToBulletVector(offset);
 	//apply translation offset to roots (and particles if first time) anchors are updated later
 	//roots
 	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
@@ -137,7 +159,7 @@ void HairModel::applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::
 		{
 			Ogre::Vector3 pos(m_rootPoints[strand].x(),m_rootPoints[strand].y(),m_rootPoints[strand].z());
 			pos = m_orientationOffset*pos;
-			m_strandSoftBodies[strand]->m_nodes[0].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
+			m_strandSoftBodies[strand]->m_nodes[0].m_x = ogreToBulletVector(pos) + bOffset;
 		}
 
 		if(first)
@@ -145,18 +167,18 @@ void HairModel::applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::
 			for(int node = 1 ; node < m_strandSoftBodies[strand]->m_nodes.size() ; node++)
 			{
 				btVector3 bPos = m_strandSoftBodies[strand]->m_nodes[node].m_x;
-				Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+				Ogre::Vector3 pos = bulletToOgreVector(bPos);
 				pos = m_orientationOffset*pos;
 
-				m_strandSoftBodies[strand]->m_nodes[node].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
+				m_strandSoftBodies[strand]->m_nodes[node].m_x = ogreToBulletVector(pos) + bOffset;
 			}
 			for(int node = 0 ; node < m_ghostStrandSoftBodies[strand]->m_nodes.size() ; node++)
 			{
 				btVector3 bPos = m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x;
-				Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+				Ogre::Vector3 pos = bulletToOgreVector(bPos);
 				pos = m_orientationOffset*pos;
 
-				m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x = btVector3(pos.x,pos.y,pos.z) + bOffset;
+				m_ghostStrandSoftBodies[strand]->m_nodes[node].m_x = ogreToBulletVector(pos) + bOffset;
 			}
 		}
 		
@@ -192,7 +214,7 @@ void HairModel::updateAnchors(float timestep)
 	for(int anchor = 0 ; anchor < m_anchorSplines.size() ; anchor++)
 	{
 		Ogre::Vector3 pos = m_orientationOffset*m_anchorSplines[anchor].interpolate(m_animationTime) + m_translationOffset;
-		btVector3 bPos(pos.x,pos.y,pos.z);
+		btVector3 bPos = ogreToBulletVector(pos);
 		m_anchors->m_nodes[anchor].m_x = bPos;
 	}
 }
@@ -234,7 +256,7 @@ std::string HairModel::loadAnchorPoints(std::string directory, std::string filen
 		for(int frame = 0 ; frame < points.size() ; frame++)
 		{
 			btVector3 bPos = points[frame][anchor];
-			Ogre::Vector3 pos(bPos.x(),bPos.y(),bPos.z());
+			Ogre::Vector3 pos = bulletToOgreVector(bPos);
 			spline.addPoint(pos);
 		}
 		spline.recalcTangents();
@@ -277,8 +299,6 @@ btAlignedObjectArray<btVector3> HairModel::loadAnchorPositions(std::string filen
 			float z = particle->FloatAttribute("z");
 
 			btVector3 point(x,y,z);
-			//btVector3 translation(m_translationOffset.x,m_translationOffset.y,m_translationOffset.z);
-			//point = point + translation;
 
 			vertices.push_back(point);
 		}
@@ -618,7 +638,7 @@ void HairModel::generateVertices(bool update, int section)
 	for(int node = 0 ; node < body->m_nodes.size() ; node++)
 	{
 		btVector3 pos = body->m_nodes[node].m_x;
-		Ogre::Vector3 position(pos.x(),pos.y(),pos.z());
+		Ogre::Vector3 position = bulletToOgreVector(pos);
 		if(update)
 		{
 			m_hairSplines[section].updatePoint(node,position);
@@ -809,27 +829,6 @@ void HairModel::generateEdgeMap()
 
 		m_edgeMap[pair] = it->second;
 	}
-	//std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator current,link;
-	////link edges together
-	//for(current = m_edgeMap.begin() ; current != m_edgeMap.end() ; current++)
-	//{
-	//	std::pair<int,int> currentEdge = current->first;
-	//	for(link = m_edgeMap.begin() ; link != m_edgeMap.end() ; link++)
-	//	{
-	//		//make sure it is not the same edge
-	//		if(current!=link)
-	//		{
-	//			std::pair<int,int> possibleEdge = link->first;
-	//			if(currentEdge.first == possibleEdge.first ||
-	//				currentEdge.first == possibleEdge.second ||
-	//				currentEdge.second == possibleEdge.first ||
-	//				currentEdge.second == possibleEdge.second)
-	//			{
-	//				current->second.linkedEdges.push_back(possibleEdge);
-	//			}
-	//		}
-	//	}
-	//}
 }
 
 bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
@@ -922,15 +921,31 @@ void HairModel::generateEdges(bool update)
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
 		std::vector<Ogre::Vector3> screenSpacePoints;
-		//assert(silhouette.size()!=0);
+
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].first]);
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].second]);
 
-			Ogre::Vector3 result;
-			if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].first],m_camera))
+			Ogre::Vector3 result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera);
+
+#ifdef DEPTH_SCALING
+			if(result.z>zMax)
 			{
+				zMax = result.z;
+			}
+			if(result.z<zMin)
+			{
+				zMin = result.z;
+			}
+#endif
+			screenSpacePoints.push_back(result);
+
+			if(i == silhouette.size()-1)
+			{
+				result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].second],m_camera);
+
+#ifdef DEPTH_SCALING
 				if(result.z>zMax)
 				{
 					zMax = result.z;
@@ -939,33 +954,19 @@ void HairModel::generateEdges(bool update)
 				{
 					zMin = result.z;
 				}
+#endif
+
 				screenSpacePoints.push_back(result);
-			}
-			if(i == silhouette.size()-1)
-			{
-				if(toDeviceCoordinates(result,m_strandVertices[section][silhouette[i].second],m_camera))
-				{
-					if(result.z>zMax)
-					{
-						zMax = result.z;
-					}
-					if(result.z<zMin)
-					{
-						zMin = result.z;
-					}
-					screenSpacePoints.push_back(result);
-				}
 			}
 		}
 
 		if(screenSpacePoints.size()>0)
 		{
-			//wrap around
-			//screenSpacePoints.push_back(screenSpacePoints[0]);
 			std::vector<Ogre::Vector3> points;
 			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
 			{
 				Ogre::Vector3 edge1,edge2,rib,norm;
+				//if first segment - we need to use the next rather than last point to calculate the rib vectors
 				if(i == 0)
 				{
 					edge1 = screenSpacePoints[1]-screenSpacePoints[0];
@@ -974,6 +975,7 @@ void HairModel::generateEdges(bool update)
 					norm = rib;
 
 				}
+				//if the last segment
 				else if(i == screenSpacePoints.size()-1)
 				{
 					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
@@ -981,6 +983,7 @@ void HairModel::generateEdges(bool update)
 					rib.normalise();
 					norm = rib;
 				}
+				//if all other segments
 				else
 				{
 					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
@@ -1019,13 +1022,13 @@ void HairModel::generateEdges(bool update)
 				scale*= std::max(left,right);
 #endif
 
-				if(scale>2)
+				if(scale>STROKE_LIMIT)
 				{
-					scale = 2;
+					scale = STROKE_LIMIT;
 				}
 
 				//multiply the scale by some value as otherwise 0 to 1 is far too big
-				scale*= 0.02f;
+				scale*= STROKE_SCALE;
 
 				rib *= scale;
 
@@ -1065,28 +1068,21 @@ void HairModel::generateEdges(bool update)
 		m_debugEdges->end();
 	}
 }
-//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
-//http://www.ogre3d.org/forums/viewtopic.php?f=2&t=61872
-//http://webglfactory.blogspot.ie/2011/05/how-to-convert-world-to-screen.html
-//http://www.ogre3d.org/forums/viewtopic.php?f=4&t=7930
-//http://stackoverflow.com/questions/6137426/get-screen-space-coordinates-of-specific-verticies-of-a-3d-model-when-visible
-//http://gamedev.stackexchange.com/questions/50336/problems-projecting-a-point-to-screen?rq=1
-bool HairModel::toDeviceCoordinates(Ogre::Vector3 &result, Ogre::Vector3 &point,Ogre::Camera *camera)
-{
-	/*if(!camera->isVisible(point))
-	{
-		return false;
-	}*/
 
+/*
+based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords and
+http://gamedev.stackexchange.com/questions/50336/problems-projecting-a-point-to-screen?rq=1
+*/
+Ogre::Vector3 HairModel::toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera)
+{
 	Ogre::Vector4 p(point.x,point.y,point.z,1);
 
 	p = camera->getViewMatrix()*p;
 	p = camera->getProjectionMatrix()*p;
 
-	result = Ogre::Vector3(p.x,p.y,p.z);
+	Ogre::Vector3 result(p.x,p.y,p.z);
 	result /= p.w;
-
-	return true;
+	return result;
 }
 
 Ogre::Vector3 HairModel::toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera)
@@ -1206,23 +1202,13 @@ void HairModel::createOrUpdateManualObject(bool update)
 		//vertices + normals
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
-			/*m_hairMesh->position(m_strandVertices[section][vert]);
-			m_hairMesh->normal(m_strandNormals[section][vert]);
-			m_hairMesh->colour(m_idColours[section]);
-			m_hairMesh->textureCoord(m_strandTextureCoordinates[vert]);*/
-
 			m_normalMesh->position(m_strandVertices[section][vert]);
 			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);
 		}
 
 		//indices
-		for(int index = 0 ; index < m_strandIndices.size() ; index++)//index+=3)
+		for(int index = 0 ; index < m_strandIndices.size() ; index++)
 		{
-			/*m_hairMesh->triangle(
-				m_strandIndices[index],
-				m_strandIndices[index+1],
-				m_strandIndices[index+2]);*/
-
 			m_hairMesh->position(m_strandVertices[section][m_strandIndices[index]]);
 			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
 #ifdef IMAGESPACE_SILHOUETTE
@@ -1247,13 +1233,7 @@ void HairModel::setCurveValues(float a, float b, float c)
 
 float HairModel::determineScale(float x)
 {
-	//this uses the technique from A Stylized Cartoon Hair Renderer (a64-shin.pdf)
-	//return Ogre::Math::Sin(((x+SHIFT_X)*Ogre::Math::PI)/(1+SHIFT_X));
-
-	//http://www.mathopenref.com/quadraticexplorer.html
-
 	float func = m_a*x*x + m_b*x + m_c;
-
 	return Ogre::Math::Abs(func);
 }
 

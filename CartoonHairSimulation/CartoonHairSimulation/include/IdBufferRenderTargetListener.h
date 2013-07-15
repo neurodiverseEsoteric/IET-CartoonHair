@@ -2,9 +2,13 @@
 #include "HairModel.h"
 #include "DebugDrawer.h"
 
+//CUSTOM BUILD OPTIONS
 //#define IMAGESPACE_SILHOUETTE
 
-//based on http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
+/*
+This class is responsible for rendering the hair as a flat shaded mesh using id buffer colours rather than the hairs actual colour.
+This is necessary for determining visibility for silhouettes. This is based on http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7#Creating_the_render_textures
+*/
 class IdBufferRenderTargetListener : public Ogre::RenderTargetListener
 {
 public:
