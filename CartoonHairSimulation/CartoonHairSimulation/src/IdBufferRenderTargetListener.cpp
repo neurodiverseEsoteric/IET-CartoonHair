@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "IdBufferRenderTargetListener.h"
+#include "Constants.h"
 
 IdBufferRenderTargetListener::IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr)
 {
@@ -9,8 +10,10 @@ IdBufferRenderTargetListener::IdBufferRenderTargetListener(Ogre::SceneManager *s
 	m_screen->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
 	m_screen->setMaterial("IETCartoonHair/IdBufferMaterial");
 
+#ifdef DEBUG_VISUALISATION
 	m_screenNode = sceneMgr->getRootSceneNode()->createChildSceneNode("screenNode");
 	m_screenNode->attachObject(m_screen);
+#endif DEBUG_VISUALISATION
 }
 
 IdBufferRenderTargetListener::~IdBufferRenderTargetListener()

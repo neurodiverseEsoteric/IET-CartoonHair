@@ -85,7 +85,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -120,6 +120,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="include\CartoonHairSimulation.h" />
+    <ClInclude Include="include\Constants.h" />
     <ClInclude Include="include\DebugDrawer.h" />
     <ClInclude Include="include\HairMaterialListener.h" />
     <ClInclude Include="include\HairModel.h" />

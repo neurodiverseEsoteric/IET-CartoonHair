@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HairModel.h"
 #include "tinyxml2.h"
+#include "Constants.h"
 
 /*
 convenience functions for converting between ogre and bullet variables
@@ -473,7 +474,6 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	return strand;
 }
 
-//http://www.fannieliu.com/hairsim/hairsim.html
 btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial)
 {
@@ -551,7 +551,7 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 void HairModel::generateIndices()
 {
-	int numNodes = NUM_HAIR_SAMPLES;//m_strandSoftBodies[0]->m_nodes.size();
+	int numNodes = NUM_HAIR_SAMPLES;
 	int numVerts = m_hairShape.size();
 
 	//for the normal sides of the strand
@@ -907,7 +907,6 @@ void HairModel::generateEdges(bool update)
 			//add to silhouette vector (should use some sort of insertion sort)
 			if(edge->flag == EdgeType::SILHOUETTE)
 			{
-				//elements.push_back(currentPair);
 				insertSilhouette(currentPair,temp,silhouette);
 			}
 
@@ -1177,7 +1176,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 		if(update)
 		{
 			m_hairMesh->beginUpdate(section);
-			m_normalMesh->beginUpdate(section);
+#ifdef DEBUG_VISUALISATION
+				m_normalMesh->beginUpdate(section);
+#endif
 		}
 		else
 		{
@@ -1186,7 +1187,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 #else
 			m_hairMesh->begin("IETCartoonHair/HairMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 #endif
+#ifdef DEBUG_VISUALISATION
 			m_normalMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
+#endif
 
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
@@ -1196,15 +1199,16 @@ void HairModel::createOrUpdateManualObject(bool update)
 		//generate geometry
 		generateVertices(update,section);
 		generateNormals(update,section);
-
 		
 		//generate manual object
 		//vertices + normals
+#ifdef DEBUG_VISUALISATION
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
 			m_normalMesh->position(m_strandVertices[section][vert]);
 			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);
 		}
+#endif
 
 		//indices
 		for(int index = 0 ; index < m_strandIndices.size() ; index++)
@@ -1220,7 +1224,9 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 		
 		m_hairMesh->end();
+#ifdef DEBUG_VISUALISATION
 		m_normalMesh->end();
+#endif
 	}
 }
 
