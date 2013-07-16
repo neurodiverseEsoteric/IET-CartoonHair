@@ -17,6 +17,11 @@ void main()
 	texCoord.y = texCoord.y*(-1.0);
 	vec4 currentId = texture2D(idTexture,texCoord);
 	vec4 texColour = texture2D(edgeTexture,gl_TexCoord[0].st);
+	texColour.a = min(texColour.a,idColour.a);
+	float intensity = 1-idColour.a;
+	texColour.r = max(texColour.r,intensity);
+	texColour.g = max(texColour.g,intensity);
+	texColour.b = max(texColour.b,intensity);
 	if(idColour.r == currentId.r && idColour.g == currentId.g && idColour.b == currentId.b)
 	{
 		gl_FragColor = texColour;
