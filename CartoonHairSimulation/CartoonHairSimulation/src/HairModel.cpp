@@ -383,12 +383,11 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 
 		//now to create the strand softbody and its ghost nodes
 		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
-		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
-
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
-		world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
-
 		m_strandSoftBodies.push_back(hairStrand);
+
+		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);
+		world->addSoftBody(ghostStrand,GHOST_GROUP,NULL);
 		m_ghostStrandSoftBodies.push_back(ghostStrand);
 
 		//clean up
@@ -862,7 +861,9 @@ void HairModel::generateEdges(bool update)
 		if(update)
 		{
 			m_edgeMesh->beginUpdate(section);
+#ifdef DEBUG_VISUALISATION
 			m_debugEdges->beginUpdate(section);
+#endif
 		}
 		else
 		{
@@ -912,7 +913,7 @@ void HairModel::generateEdges(bool update)
 
 		}
 
-
+		
 		//we now have the silhouettes - now to convert the points to device coordinates
 		//based off of artistic-sils-300dpi.pdf
 		//and
@@ -920,11 +921,46 @@ void HairModel::generateEdges(bool update)
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
 		std::vector<Ogre::Vector3> screenSpacePoints;
+		std::vector<float> silhouetteIntensities;
 
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
+
+#ifdef VARIABLE_SILHOUETTE_INTENSITY
+			float silhouetteIntensity;
+			btVector3 pos1 = ogreToBulletVector(m_strandVertices[section][silhouette[i].first]);
+			btVector3 pos2 = ogreToBulletVector(m_strandVertices[section][silhouette[i].second]);
+			btVector3 pos = (pos1+pos2)/2.0f;
+			btSoftBody *strnd = m_strandSoftBodies[section];
+
+			float minDist = std::numeric_limits<float>::max();
+			float minNode = 0;
+			for(int n = 0 ; n < strnd->m_nodes.size() ; n++)
+			{
+				float length = (strnd->m_nodes[n].m_x - pos).length();
+				if(length < minDist)
+				{
+					minDist = length;
+					minNode = n;
+				}
+			}
+
+			float t = (float)minNode/(strnd->m_nodes.size()-1);
+			silhouetteIntensity = (1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
+			silhouetteIntensities.push_back(silhouetteIntensity);
+#endif
+
+
+#ifdef DEBUG_VISUALISATION
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].first]);
+#ifdef VARIABLE_SILHOUETTE_INTENSITY
+			m_debugEdges->colour(0,silhouetteIntensity,0);
+#endif
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].second]);
+#ifdef VARIABLE_SILHOUETTE_INTENSITY
+			m_debugEdges->colour(0,silhouetteIntensity,0);
+#endif
+#endif
 
 			Ogre::Vector3 result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera);
 
@@ -1030,20 +1066,24 @@ void HairModel::generateEdges(bool update)
 				scale*= STROKE_SCALE;
 
 				rib *= scale;
-
 				points.push_back(toWorldCoordinates(screenSpacePoints[i]-rib,m_camera));
 				points.push_back(toWorldCoordinates(screenSpacePoints[i]+rib,m_camera));
 			}
 
 			for(int i = 0 ; i < points.size()-1 ; i+= 2)
 			{
+				Ogre::ColourValue colour = m_idColours[section];
+#ifdef VARIABLE_SILHOUETTE_INTENSITY
+				colour.a = silhouetteIntensities[i/2];
+#endif
 				m_edgeMesh->position(points[i]);
 				m_edgeMesh->textureCoord(i/2,1);
-				m_edgeMesh->colour(m_idColours[section]);
-
+				m_edgeMesh->colour(colour);
+				
 				m_edgeMesh->position(points[i+1]);
 				m_edgeMesh->textureCoord(i/2,0);
-				m_edgeMesh->colour(m_idColours[section]);
+				m_edgeMesh->colour(colour);
+				
 			}
 		}
 		else
@@ -1064,7 +1104,9 @@ void HairModel::generateEdges(bool update)
 		}
 
 		m_edgeMesh->end();
+#ifdef DEBUG_VISUALISATION
 		m_debugEdges->end();
+#endif
 	}
 }
 

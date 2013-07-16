@@ -639,6 +639,17 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
 			m_hairModel->getHairManualObject()->setVisible(true);
 		}
 	}
+	else if (arg.key == OIS::KC_E)
+	{
+		if(m_hairModel->getEdgeManualObject()->isVisible())
+		{
+			m_hairModel->getEdgeManualObject()->setVisible(false);
+		}
+		else
+		{
+			m_hairModel->getEdgeManualObject()->setVisible(true);
+		}
+	}
     else if (arg.key == OIS::KC_T)   // cycle polygon rendering mode
     {
         Ogre::String newVal;
