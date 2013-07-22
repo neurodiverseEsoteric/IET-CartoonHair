@@ -633,6 +633,13 @@ void HairModel::generateVertices(bool update, int section)
 {
 	btSoftBody* body = m_strandSoftBodies[section];
 
+	//create hair shape copy
+	std::vector<Ogre::Vector3> hairShapeCopy;
+	for(int i = 0 ; i < m_hairShape.size() ; i++)
+	{
+		hairShapeCopy.push_back(m_hairShape[i]);
+	}
+
 	//update spline
 	for(int node = 0 ; node < body->m_nodes.size() ; node++)
 	{
@@ -651,8 +658,8 @@ void HairModel::generateVertices(bool update, int section)
 	m_hairSplines[section].recalcTangents();
 
 	//variables used to create geometry
-	Ogre::Vector3 shapeDir(0,-1,0);
-	Ogre::Quaternion rot;
+	Ogre::Vector3 shapeDir(0,1,0);
+	Ogre::Quaternion rot(0,0,0,1);
 	float scale;
 
 	float increment = 1.0f/NUM_HAIR_SAMPLES;
@@ -665,13 +672,15 @@ void HairModel::generateVertices(bool update, int section)
 		Ogre::Vector3 nodei = m_hairSplines[section].interpolate(t);
 		Ogre::Vector3 nodei_1 = m_hairSplines[section].interpolate(t+increment);
 
+		shapeDir = rot*shapeDir;
 		rot = determineRotation(shapeDir,nodei,nodei_1);
 
 		//generate shape
 		//if usual section of hair
-		for(int i = 0 ; i < m_hairShape.size() ; i++)
+		for(int i = 0 ; i < hairShapeCopy.size() ; i++)
 		{
-			Ogre::Vector3 vert = rot*m_hairShape[i];
+			hairShapeCopy[i] = rot*hairShapeCopy[i];
+			Ogre::Vector3 vert = hairShapeCopy[i];
 			vert = vert*scale;
 
 			vert = Ogre::Vector3(
@@ -1257,6 +1266,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 		{
 			m_hairMesh->position(m_strandVertices[section][m_strandIndices[index]]);
 			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
+			//m_hairMesh->tangent(Ogre::Vector3::UNIT_X);
 #ifdef IMAGESPACE_SILHOUETTE
 			m_hairMesh->colour(1,1,1);
 #else
