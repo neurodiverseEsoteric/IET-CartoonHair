@@ -44,13 +44,14 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 	return result;
 }
 
-HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::Light *light,Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
 {
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
 	m_camera = camera;
+	m_light = light;
 	m_a = a;
 	m_b = b;
 	m_c = c;
@@ -137,6 +138,11 @@ Ogre::ManualObject* HairModel::getEdgeManualObject()
 	return m_edgeMesh;
 }
 
+Ogre::ManualObject* HairModel::getHighlightManualObject()
+{
+	return m_highlightMesh;
+}
+
 Ogre::ManualObject* HairModel::getDebugEdgesManualObject()
 {
 	return m_debugEdges;
@@ -190,6 +196,7 @@ void HairModel::updateManualObject()
 {
 	createOrUpdateManualObject(true);
 	generateEdges(true);
+	generateSpecularHighlights(true);
 }
 
 float HairModel::getSimulationScale()
@@ -420,11 +427,15 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 	m_edgeMesh = sceneMgr->createManualObject("edges");
 	m_edgeMesh->setDynamic(true);
 
+	m_highlightMesh = sceneMgr->createManualObject("highlight");
+	m_highlightMesh->setDynamic(true);
+
 	m_debugEdges = sceneMgr->createManualObject("debugEdges");
 	m_debugEdges->setDynamic(true);
 
 	createOrUpdateManualObject(false);
 	generateEdges(false);
+	generateSpecularHighlights(false);
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
@@ -862,6 +873,74 @@ bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
 	return false;
 }
 
+//based on A Stylized Cartoon Hair Renderer
+void HairModel::generateSpecularHighlights(bool update)
+{
+	/*if(update)
+	{
+		m_highlightMesh->beginUpdate(0);
+	}
+	else
+	{
+		m_edgeMesh->begin("IETCartoonHair/HighlightMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+	}*/
+
+	//find candidates
+	std::vector<Ogre::Vector3> candidates;
+	for(int body = 0 ; body < m_strandSoftBodies.size() ; body++)
+	{
+		btSoftBody *strand = m_strandSoftBodies[body];
+		Ogre::Vector3 point = Ogre::Vector3::ZERO;
+		Ogre::Vector3 lastPoint = Ogre::Vector3::ZERO;
+		for(int node = 0 ; node < strand->m_nodes.size() ; node++)
+		{
+			lastPoint = point;
+			Ogre::Vector3 point = bulletToOgreVector(strand->m_nodes[node].m_x);
+
+			//calculate H vector
+			Ogre::Vector3 h = point-m_translationOffset;
+			h.normalise();
+
+			//calculate tangent vector
+			Ogre::Vector3 tangent;
+			//if we are at the first particle we will just use H as the tangent
+			if(node == 0)
+			{
+				tangent = h;
+			}
+			else
+			{
+				tangent = lastPoint-point;
+				tangent.normalise();
+			}
+
+			//calculate right vector
+			Ogre::Vector3 right = tangent.crossProduct(h);
+			right.normalise();
+
+			//calculate normal
+			Ogre::Vector3 normal = tangent.crossProduct(right);
+			normal.normalise();
+
+			//calculate weight vector
+			Ogre::Vector3 weightVector = normal*SPECULAR_WEIGHT+tangent*(1-SPECULAR_WEIGHT);
+
+			//calculate light vectore
+			Ogre::Vector3 lightDirection = m_light->getPosition()-point;
+
+			//specular value
+			float specular = KS*Ogre::Math::Pow(glm::max(lightDirection.dotProduct(weightVector),0.0f),SHININESS);
+
+			//determine if a candidate or not
+			if(specular >= SPECULAR_THRESHOLD)
+			{
+				candidates.push_back(point);
+			}
+
+		}
+	}
+}
+
 void HairModel::generateEdges(bool update)
 {
 	Ogre::Vector3 eyeVector = m_camera->getDerivedDirection();
@@ -957,6 +1036,12 @@ void HairModel::generateEdges(bool update)
 			float t = (float)minNode/(strnd->m_nodes.size()-1);
 			silhouetteIntensity = (1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
 			silhouetteIntensities.push_back(silhouetteIntensity);
+			//since 2 points are added on the last silhouette - we need to add the last intensity again
+			//or else we will have an index overflow
+			if(i == silhouette.size()-1)
+			{
+				silhouetteIntensities.push_back(silhouetteIntensity);
+			}
 #endif
 
 
@@ -985,6 +1070,7 @@ void HairModel::generateEdges(bool update)
 #endif
 			screenSpacePoints.push_back(result);
 
+			//make sure the last point is added
 			if(i == silhouette.size()-1)
 			{
 				result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].second],m_camera);
@@ -999,7 +1085,6 @@ void HairModel::generateEdges(bool update)
 					zMin = result.z;
 				}
 #endif
-
 				screenSpacePoints.push_back(result);
 			}
 		}
@@ -1079,7 +1164,7 @@ void HairModel::generateEdges(bool update)
 				points.push_back(toWorldCoordinates(screenSpacePoints[i]+rib,m_camera));
 			}
 
-			for(int i = 0 ; i < points.size()-1 ; i+= 2)
+			for(int i = 0 ; i < points.size() ; i+= 2)
 			{
 				Ogre::ColourValue colour = m_idColours[section];
 #ifdef VARIABLE_SILHOUETTE_INTENSITY
@@ -1247,6 +1332,11 @@ void HairModel::createOrUpdateManualObject(bool update)
 			m_hairSplines.push_back(Ogre::SimpleSpline());
 		}
 
+#ifdef BLINN_SPECULAR
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinn",1);
+#else
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinn",0);
+#endif
 		//generate geometry
 		generateVertices(update,section);
 		generateNormals(update,section);

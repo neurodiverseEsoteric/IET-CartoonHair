@@ -404,8 +404,8 @@ bool CartoonHairSimulation::setup(void)
 void CartoonHairSimulation::createScene(void)
 {
 	// Create a light
-	Ogre::Light* l = mSceneMgr->createLight("MainLight");
-	l->setPosition(-19,-2.4,-12);
+	Ogre::Light* light = mSceneMgr->createLight("MainLight");
+	light->setPosition(-19,-2.4,-12);
 
 	//setup debug drawer
 	m_debugDrawer = new DebugDrawer(mSceneMgr);
@@ -462,7 +462,7 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"hairanimation.xml", mCamera,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,m_anchorMaterial,mWorld,
+		"hairanimation.xml", mCamera,light,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,m_anchorMaterial,mWorld,
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C);
 
 	if(skeleton->hasBone("Joint8"))
@@ -503,10 +503,12 @@ void CartoonHairSimulation::createScene(void)
 
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
+	//m_headNode->createChildSceneNode("specular")->attachObject(m_hairModel->getHighlightManualObject());
 
 	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
+	//m_hairModel->getHighlightManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_4,4);
 
 	//setup compositor
 #ifdef IMAGESPACE_SILHOUETTE

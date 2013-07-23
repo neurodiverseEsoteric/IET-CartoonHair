@@ -47,4 +47,11 @@
 //based on http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 #define FIXED_TIMESTEP btScalar(1.0f)/btScalar(60.0f);
 #define MAX_SUB_STEPS 1
+//SPECULAR HIGHLIGHTS settings
+//#define BLINN_SPECULAR
+#define SPECULAR_WEIGHT 0.5f
+#define SHININESS 1.0f
+#define KS 1.0f
+#define SPECULAR_THRESHOLD 5.0f
+#define MIN_MERGING_DISTANCE 1.0f
 

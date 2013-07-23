@@ -50,7 +50,7 @@ and rendering them.
 class HairModel
 {
 public:
-	HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+	HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::Light *light, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c);
 	~HairModel();
@@ -58,6 +58,7 @@ public:
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
+	Ogre::ManualObject* getHighlightManualObject();
 	Ogre::ManualObject* getDebugEdgesManualObject();
 	Ogre::RenderTexture* getIdBufferTexture();
 
@@ -86,9 +87,9 @@ private:
 	void generateIdColours();
 	void generateVertices(bool update, int section);
 	void generateNormals(bool update, int section);
-	void addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
-
 	void generateEdges(bool update);
+	void generateSpecularHighlights(bool update);
+	void addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
 
 	void generateAnchorBody(btSoftRigidDynamicsWorld *world, btSoftBodyWorldInfo &worldInfo, btAlignedObjectArray<btVector3> &points);
 	std::string loadAnchorPoints(std::string directory, std::string filename);
@@ -135,7 +136,7 @@ private:
 	
 	//rendering variables
 	std::vector<Ogre::SimpleSpline> m_hairSplines;
-	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh,*m_debugEdges;
+	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh,*m_highlightMesh,*m_debugEdges;
 	//Ogre::BillboardSet *m_edgeSet;
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
@@ -144,6 +145,7 @@ private:
 	float m_a,m_b,m_c;
 
 	Ogre::Camera *m_camera;
+	Ogre::Light *m_light;
 
 	//edge rendering variables - npar2000_lake_et_al.pdf
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_tempEdgeMap;
