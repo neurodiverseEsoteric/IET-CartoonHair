@@ -1057,11 +1057,15 @@ void HairModel::generateSpecularHighlights(bool update)
 			for(int j = 0 ; j < group.size() ; j++)
 			{
 				float length = (candidates[i]-group[j]).length();
-				if(length < MIN_MERGING_DISTANCE)
+				if(length >= MIN_MERGING_DISTANCE && length <= MAX_MERGING_DISTANCE)
 				{
 					accepted = true;
 					break;
 				}
+			}
+			if(group.size() >= MAX_GROUP_SIZE)
+			{
+				break;
 			}
 			if(accepted)
 			{
@@ -1069,7 +1073,10 @@ void HairModel::generateSpecularHighlights(bool update)
 				candidates.erase(candidates.begin()+i);
 			}
 		}
-		groups.push_back(group);
+		if(group.size() >= MIN_GROUP_SIZE)
+		{
+			groups.push_back(group);
+		}
 	}
 
 	//determin min and max x,y and z
@@ -1107,7 +1114,7 @@ void HairModel::generateSpecularHighlights(bool update)
 		float yRange = Ogre::Math::Abs(maxes[group].y-mins[group].y);
 		float zRange = Ogre::Math::Abs(maxes[group].z-mins[group].z);
 
-		if(xRange > yRange && xRange > zRange)
+		/*if(xRange > yRange && xRange > zRange)
 		{
 			m_candidateSort.sortType = SortType::XSORT;
 		}
@@ -1118,7 +1125,9 @@ void HairModel::generateSpecularHighlights(bool update)
 		else
 		{
 			m_candidateSort.sortType = SortType::ZSORT;
-		}
+		}*/
+
+		m_candidateSort.sortType = SortType::YSORT;
 
 		std::sort(groups[group].begin(),groups[group].end(),m_candidateSort);
 
@@ -1127,7 +1136,8 @@ void HairModel::generateSpecularHighlights(bool update)
 		std::vector<Ogre::Vector3> points;
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
-		for(int p = 0 ; p < groups[group].size() ; p++)
+
+		/*for(int p = 0 ; p < groups[group].size() ; p++)
 		{
 			Ogre::Vector3 result = toDeviceCoordinates(groups[group][p],m_camera);
 			screenSpacePoints.push_back(result);
@@ -1141,34 +1151,61 @@ void HairModel::generateSpecularHighlights(bool update)
 				zMin = result.z;
 			}
 #endif
-			if(group < MAX_GROUP_SECTIONS)
+		}*/
+
+		Ogre::Vector3 result = toDeviceCoordinates(groups[group][0],m_camera);
+		screenSpacePoints.push_back(result);
+#ifdef DEPTH_SCALING
+		if(result.z>zMax)
+		{
+			zMax = result.z;
+		}
+		if(result.z<zMin)
+		{
+			zMin = result.z;
+		}
+#endif
+
+		result = toDeviceCoordinates(groups[group][groups[group].size()-1],m_camera);
+		screenSpacePoints.push_back(result);
+#ifdef DEPTH_SCALING
+		if(result.z>zMax)
+		{
+			zMax = result.z;
+		}
+		if(result.z<zMin)
+		{
+			zMin = result.z;
+		}
+#endif
+
+		if(group < MAX_GROUP_SECTIONS)
+		{
+			generateQuadStrip(screenSpacePoints,points,zMin,zMax,HIGHLIGHT_SCALE);
+			m_highlightMesh->beginUpdate(group);
+		
+		/*	for(int i = 0 ; i < points.size() ; i+=2)
 			{
-				generateQuadStrip(screenSpacePoints,points,zMin,zMax,HIGHLIGHT_SCALE);
-				m_highlightMesh->beginUpdate(group);
+				m_highlightMesh->position(points[i]);
+				m_highlightMesh->textureCoord(i/2,1);
+			
+				m_highlightMesh->position(points[i+1]);
+				m_highlightMesh->textureCoord(i/2,0);
+			}*/
+	
+			m_highlightMesh->position(points[0]);
+			m_highlightMesh->textureCoord(0,1);
+			
+			m_highlightMesh->position(points[1]);
+			m_highlightMesh->textureCoord(0,0);
 
-				/*for(int i = 0 ; i < points.size() ; i+=2)
-				{
-					m_highlightMesh->position(points[i]);
-					m_highlightMesh->textureCoord(i/2,1);
-				
-					m_highlightMesh->position(points[i+1]);
-					m_highlightMesh->textureCoord(i/2,0);
-				}*/
-
-				m_highlightMesh->position(points[0]);
-				m_highlightMesh->textureCoord(0,1);
-				
-				m_highlightMesh->position(points[1]);
-				m_highlightMesh->textureCoord(0,0);
-
-				m_highlightMesh->position(points[points.size()-2]);
-				m_highlightMesh->textureCoord(1,1);
-				
-				m_highlightMesh->position(points[points.size()-1]);
-				m_highlightMesh->textureCoord(1,0);
-
-				m_highlightMesh->end();
-			}
+			m_highlightMesh->position(points[points.size()-2]);
+			m_highlightMesh->textureCoord(1,1);
+			
+			m_highlightMesh->position(points[points.size()-1]);
+			m_highlightMesh->textureCoord(1,0);
+	
+			m_highlightMesh->end();
 		}
 	}
 
