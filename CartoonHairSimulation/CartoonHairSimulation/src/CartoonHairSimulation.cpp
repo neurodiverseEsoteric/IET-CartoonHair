@@ -481,6 +481,10 @@ void CartoonHairSimulation::createScene(void)
 	m_idBufferListener->addObjectToIgnore(m_debugDrawer->getLinesManualObject());
 	m_idBufferListener->addObjectToDarken(m_character);
 
+#ifdef STYLISED_SPECULAR
+	m_idBufferListener->addObjectToIgnore(m_hairModel->getHighlightManualObject());
+#endif
+
 	//if reduce to the correct size in the simulation - the collision becomes inaccurate - instead scaling the simulation
 	//http://www.bulletphysics.org/mediawiki-1.5.8/index.php?title=Scaling_The_World
 	mWorld->setGravity(mWorld->getGravity()*m_hairModel->getSimulationScale());
