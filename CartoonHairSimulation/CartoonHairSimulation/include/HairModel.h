@@ -43,6 +43,29 @@ struct Edge
 	int triangle2Indices[3];
 };
 
+enum SortType {XSORT,YSORT,ZSORT};
+//based on http://www.cplusplus.com/reference/algorithm/sort/
+//i have decided to use x to sort as the highlights are typically seen horizontally
+struct HighlightSort
+{
+	SortType sortType;
+	bool operator() (Ogre::Vector3 i, Ogre::Vector3 j)
+	{
+		if(sortType == SortType::XSORT)
+		{
+			return i.x < j.x;
+		}
+		else if(sortType == SortType::YSORT)
+		{
+			return i.y < j.y;
+		}
+		else
+		{
+			return i.z < j.z;
+		}
+	}
+};
+
 /*
 This class is the core of the project application. It is responsible for generating the hair strands, adding them to the physics simulation
 and rendering them.
@@ -90,6 +113,7 @@ private:
 	void generateEdges(bool update);
 	void generateSpecularHighlights(bool update);
 	void addToTempEdgeMap(std::pair<int,int> key, int index1, int index2, int index3);
+	void generateQuadStrip(std::vector<Ogre::Vector3> &screenSpacePoints,std::vector<Ogre::Vector3> &points, float &zMin, float &zMax, float scaleFactor);
 
 	void generateAnchorBody(btSoftRigidDynamicsWorld *world, btSoftBodyWorldInfo &worldInfo, btAlignedObjectArray<btVector3> &points);
 	std::string loadAnchorPoints(std::string directory, std::string filename);
@@ -150,5 +174,8 @@ private:
 	//edge rendering variables - npar2000_lake_et_al.pdf
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_tempEdgeMap;
 	std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction> m_edgeMap;
+
+	//highlight variables
+	HighlightSort m_candidateSort;
 
 };

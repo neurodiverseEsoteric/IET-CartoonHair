@@ -503,12 +503,16 @@ void CartoonHairSimulation::createScene(void)
 
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
-	//m_headNode->createChildSceneNode("specular")->attachObject(m_hairModel->getHighlightManualObject());
+#ifdef STYLISED_SPECULAR
+	m_headNode->createChildSceneNode("specular")->attachObject(m_hairModel->getHighlightManualObject());
+#endif
 
 	m_character->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_1,1);
 	m_hairModel->getHairManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_2,2);
 	m_hairModel->getEdgeManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_3,3);
-	//m_hairModel->getHighlightManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_4,4);
+#ifdef STYLISED_SPECULAR
+	m_hairModel->getHighlightManualObject()->setRenderQueueGroupAndPriority(Ogre::RENDER_QUEUE_4,4);
+#endif
 
 	//setup compositor
 #ifdef IMAGESPACE_SILHOUETTE

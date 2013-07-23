@@ -196,7 +196,9 @@ void HairModel::updateManualObject()
 {
 	createOrUpdateManualObject(true);
 	generateEdges(true);
+#ifdef STYLISED_SPECULAR
 	generateSpecularHighlights(true);
+#endif
 }
 
 float HairModel::getSimulationScale()
@@ -328,6 +330,81 @@ void HairModel::generateAnchorBody(btSoftRigidDynamicsWorld *world, btSoftBodyWo
 	world->addSoftBody(m_anchors,NULL,NULL);
 }
 
+
+void HairModel::generateQuadStrip(std::vector<Ogre::Vector3> &screenSpacePoints,std::vector<Ogre::Vector3> &points, float &zMin, float &zMax, float scaleFactor)
+{
+	for(int i = 0 ; i < screenSpacePoints.size() ; i++)
+	{
+		Ogre::Vector3 edge1,edge2,rib,norm;
+		//if first segment - we need to use the next rather than last point to calculate the rib vectors
+		if(i == 0)
+		{
+			edge1 = screenSpacePoints[1]-screenSpacePoints[0];
+			rib = Ogre::Vector3(edge1.y,-edge1.x,0);
+			rib.normalise();
+			norm = rib;
+		}
+		//if the last segment
+		else if(i == screenSpacePoints.size()-1)
+		{
+			edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
+			rib = Ogre::Vector3(edge1.y,-edge1.x,0);
+			rib.normalise();
+			norm = rib;
+		}
+		//if all other segments
+		else
+		{
+			edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
+			edge2 = screenSpacePoints[i+1]-screenSpacePoints[i];
+			float temp;
+			temp = edge1.x;
+			edge1.x = edge1.y;
+			edge1.y = -temp;
+			edge1.z = 0;
+			edge1.normalise();
+			norm = edge1;
+
+			temp = edge2.x;
+			edge2.x = edge2.y;
+			edge2.y = -temp;
+			edge2.z = 0;
+			edge2.normalise();
+
+			rib = edge1+edge2;
+			rib.normalise();
+		}
+				
+		//scale rib base on angle to stop corners being squeezed
+		float scale = 1.0f;
+#ifdef ANGLE_SCALING
+		scale = abs(rib.length()/(rib.dotProduct(norm)));
+#endif
+
+		//vertex depth scale factor from artistic-sils-300dpi.pdf
+#ifdef DEPTH_SCALING
+		float scaleF = 0.5f;
+		float left = 0.0f;
+		float right = 1.0f+scaleF*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
+
+		scale*= std::max(left,right);
+#endif
+
+		if(scale>STROKE_LIMIT)
+		{
+			scale = STROKE_LIMIT;
+		}
+
+		//multiply the scale by some value as otherwise 0 to 1 is far too big
+		scale*= scaleFactor;
+
+		rib *= scale;
+		points.push_back(toWorldCoordinates(screenSpacePoints[i]-rib,m_camera));
+		points.push_back(toWorldCoordinates(screenSpacePoints[i]+rib,m_camera));
+	}
+}
+
+
 void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial)
 {
@@ -435,7 +512,9 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 
 	createOrUpdateManualObject(false);
 	generateEdges(false);
+#ifdef STYLISED_SPECULAR
 	generateSpecularHighlights(false);
+#endif
 }
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
@@ -646,6 +725,8 @@ void HairModel::generateVertices(bool update, int section)
 
 	//create hair shape copy
 	std::vector<Ogre::Vector3> hairShapeCopy;
+	hairShapeCopy.reserve(m_hairShape.size());
+
 	for(int i = 0 ; i < m_hairShape.size() ; i++)
 	{
 		hairShapeCopy.push_back(m_hairShape[i]);
@@ -876,17 +957,28 @@ bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
 //based on A Stylized Cartoon Hair Renderer
 void HairModel::generateSpecularHighlights(bool update)
 {
-	/*if(update)
+	if (!update)
 	{
-		m_highlightMesh->beginUpdate(0);
+		//generate a number of sections
+		for(int i = 0 ; i < MAX_GROUP_SECTIONS ; i++)
+		{
+			m_highlightMesh->begin("IETCartoonHair/HighlightMaterial",Ogre::RenderOperation::OT_TRIANGLE_STRIP);
+			//if we don't give texture coordinates - it breaks the texture coordinates of any strands using this section later
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,1);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,0);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(1,1);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,1);
+			m_highlightMesh->end();
+		}
 	}
-	else
-	{
-		m_edgeMesh->begin("IETCartoonHair/HighlightMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
-	}*/
 
 	//find candidates
 	std::vector<Ogre::Vector3> candidates;
+	candidates.reserve(CANDIDATES_RESERVE_SIZE);
 	for(int body = 0 ; body < m_strandSoftBodies.size() ; body++)
 	{
 		btSoftBody *strand = m_strandSoftBodies[body];
@@ -894,6 +986,13 @@ void HairModel::generateSpecularHighlights(bool update)
 		Ogre::Vector3 lastPoint = Ogre::Vector3::ZERO;
 		for(int node = 0 ; node < strand->m_nodes.size() ; node++)
 		{
+			//limit how much of the strand we use
+			float pos = float(node)/(strand->m_nodes.size()-1);
+			if(pos>TIP_EXCLUDE)
+			{
+				break;
+			}
+
 			lastPoint = point;
 			Ogre::Vector3 point = bulletToOgreVector(strand->m_nodes[node].m_x);
 
@@ -934,9 +1033,159 @@ void HairModel::generateSpecularHighlights(bool update)
 			//determine if a candidate or not
 			if(specular >= SPECULAR_THRESHOLD)
 			{
+				//m_highlightMesh->position(point);
 				candidates.push_back(point);
 			}
+		}
+	}
 
+	//time to create groups
+	std::vector<std::vector<Ogre::Vector3>> groups;
+
+	while(!candidates.empty())
+	{
+		std::vector<Ogre::Vector3> group;
+		int index = candidates.size()-1;
+		group.push_back(candidates[index]);
+
+		//remove from candidates
+		candidates.erase(candidates.begin()+(candidates.size()-1));
+
+		for(int i = candidates.size()-1 ; i >= 0 ; i--)
+		{
+			bool accepted = false;
+			for(int j = 0 ; j < group.size() ; j++)
+			{
+				float length = (candidates[i]-group[j]).length();
+				if(length < MIN_MERGING_DISTANCE)
+				{
+					accepted = true;
+					break;
+				}
+			}
+			if(accepted)
+			{
+				group.push_back(candidates[i]);
+				candidates.erase(candidates.begin()+i);
+			}
+		}
+		groups.push_back(group);
+	}
+
+	//determin min and max x,y and z
+	std::vector<Ogre::Vector3> maxes;
+	std::vector<Ogre::Vector3> mins;
+	for(int group = 0 ; group < groups.size() ; group++)
+	{
+		Ogre::Vector3 min,max;
+		min.x = min.y = min.z = std::numeric_limits<float>::max();
+		max.x = max.y = max.z = std::numeric_limits<float>::min();
+		for(int p = 0 ; p < groups[group].size() ; p++)
+		{
+			//find min and maxes
+			if(groups[group][p].x < min.x)
+				min.x = groups[group][p].x;
+			if(groups[group][p].y < min.y)
+				min.y = groups[group][p].y;
+			if(groups[group][p].z < min.z)
+				min.z = groups[group][p].z;
+
+			if(groups[group][p].x > max.x)
+				max.x = groups[group][p].x;
+			if(groups[group][p].y > max.y)
+				max.y = groups[group][p].y;
+			if(groups[group][p].z > max.z)
+				max.z = groups[group][p].z;
+		}
+	}
+
+	for(int group = 0 ; group < groups.size() ; group++)
+	{
+		//we now have the accepted points - time to sort
+		//find biggest range
+		float xRange = Ogre::Math::Abs(maxes[group].x-mins[group].x);
+		float yRange = Ogre::Math::Abs(maxes[group].y-mins[group].y);
+		float zRange = Ogre::Math::Abs(maxes[group].z-mins[group].z);
+
+		if(xRange > yRange && xRange > zRange)
+		{
+			m_candidateSort.sortType = SortType::XSORT;
+		}
+		else if(yRange > xRange && yRange > zRange)
+		{
+			m_candidateSort.sortType = SortType::YSORT;
+		}
+		else
+		{
+			m_candidateSort.sortType = SortType::ZSORT;
+		}
+
+		std::sort(groups[group].begin(),groups[group].end(),m_candidateSort);
+
+		//now to generate the strokes
+		std::vector<Ogre::Vector3> screenSpacePoints;
+		std::vector<Ogre::Vector3> points;
+		float zMin = std::numeric_limits<float>::max();
+		float zMax = std::numeric_limits<float>::min();
+		for(int p = 0 ; p < groups[group].size() ; p++)
+		{
+			Ogre::Vector3 result = toDeviceCoordinates(groups[group][p],m_camera);
+			screenSpacePoints.push_back(result);
+#ifdef DEPTH_SCALING
+			if(result.z>zMax)
+			{
+				zMax = result.z;
+			}
+			if(result.z<zMin)
+			{
+				zMin = result.z;
+			}
+#endif
+			if(group < MAX_GROUP_SECTIONS)
+			{
+				generateQuadStrip(screenSpacePoints,points,zMin,zMax,HIGHLIGHT_SCALE);
+				m_highlightMesh->beginUpdate(group);
+
+				/*for(int i = 0 ; i < points.size() ; i+=2)
+				{
+					m_highlightMesh->position(points[i]);
+					m_highlightMesh->textureCoord(i/2,1);
+				
+					m_highlightMesh->position(points[i+1]);
+					m_highlightMesh->textureCoord(i/2,0);
+				}*/
+
+				m_highlightMesh->position(points[0]);
+				m_highlightMesh->textureCoord(0,1);
+				
+				m_highlightMesh->position(points[1]);
+				m_highlightMesh->textureCoord(0,0);
+
+				m_highlightMesh->position(points[points.size()-2]);
+				m_highlightMesh->textureCoord(1,1);
+				
+				m_highlightMesh->position(points[points.size()-1]);
+				m_highlightMesh->textureCoord(1,0);
+
+				m_highlightMesh->end();
+			}
+		}
+	}
+
+	if(groups.size() < MAX_GROUP_SECTIONS)
+	{
+		for(int i = groups.size() ; i < MAX_GROUP_SECTIONS ; i++)
+		{
+			m_highlightMesh->beginUpdate(i);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,1);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,0);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(1,1);
+			m_highlightMesh->position(Ogre::Vector3(0,0,0));
+			m_highlightMesh->textureCoord(0,1);
+			m_highlightMesh->end();
 		}
 	}
 }
@@ -964,6 +1213,7 @@ void HairModel::generateEdges(bool update)
 
 		std::deque<std::pair<int,int>> silhouette;
 		std::vector<std::pair<int,int>> temp;
+		temp.reserve(TEMP_SILHOUETTE_RESERVE_SIZE);
 
 		std::unordered_map<std::pair<int,int>,Edge,HashFunction,EqualFunction>::iterator it;
 		for(it = m_edgeMap.begin() ; it != m_edgeMap.end() ; it++)
@@ -1009,7 +1259,9 @@ void HairModel::generateEdges(bool update)
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
 		std::vector<Ogre::Vector3> screenSpacePoints;
+		screenSpacePoints.reserve(silhouette.size()+1);
 		std::vector<float> silhouetteIntensities;
+		silhouetteIntensities.reserve(silhouette.size()+1);
 
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
@@ -1092,77 +1344,8 @@ void HairModel::generateEdges(bool update)
 		if(screenSpacePoints.size()>0)
 		{
 			std::vector<Ogre::Vector3> points;
-			for(int i = 0 ; i < screenSpacePoints.size() ; i++)
-			{
-				Ogre::Vector3 edge1,edge2,rib,norm;
-				//if first segment - we need to use the next rather than last point to calculate the rib vectors
-				if(i == 0)
-				{
-					edge1 = screenSpacePoints[1]-screenSpacePoints[0];
-					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
-					rib.normalise();
-					norm = rib;
-
-				}
-				//if the last segment
-				else if(i == screenSpacePoints.size()-1)
-				{
-					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
-					rib = Ogre::Vector3(edge1.y,-edge1.x,0);
-					rib.normalise();
-					norm = rib;
-				}
-				//if all other segments
-				else
-				{
-					edge1 = screenSpacePoints[i]-screenSpacePoints[i-1];
-					edge2 = screenSpacePoints[i+1]-screenSpacePoints[i];
-					float temp;
-					temp = edge1.x;
-					edge1.x = edge1.y;
-					edge1.y = -temp;
-					edge1.z = 0;
-					edge1.normalise();
-					norm = edge1;
-
-					temp = edge2.x;
-					edge2.x = edge2.y;
-					edge2.y = -temp;
-					edge2.z = 0;
-					edge2.normalise();
-
-					rib = edge1+edge2;
-					rib.normalise();
-				}
-				
-
-				//scale rib base on angle to stop corners being squeezed
-				float scale = 1.0f;
-#ifdef ANGLE_SCALING
-				scale = abs(rib.length()/(rib.dotProduct(norm)));
-#endif
-
-				//vertex depth scale factor from artistic-sils-300dpi.pdf
-#ifdef DEPTH_SCALING
-				float scaleFactor = 0.5f;
-				float left = 0.0f;
-				float right = 1.0f+scaleFactor*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
-
-				scale*= std::max(left,right);
-#endif
-
-				if(scale>STROKE_LIMIT)
-				{
-					scale = STROKE_LIMIT;
-				}
-
-				//multiply the scale by some value as otherwise 0 to 1 is far too big
-				scale*= STROKE_SCALE;
-
-				rib *= scale;
-				points.push_back(toWorldCoordinates(screenSpacePoints[i]-rib,m_camera));
-				points.push_back(toWorldCoordinates(screenSpacePoints[i]+rib,m_camera));
-			}
+			points.reserve(screenSpacePoints.size()*2);
+			generateQuadStrip(screenSpacePoints,points,zMin,zMax,STROKE_SCALE);
 
 			for(int i = 0 ; i < points.size() ; i+= 2)
 			{
@@ -1227,6 +1410,7 @@ Ogre::Vector3 HairModel::toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *
 	p = camera->getViewMatrix().inverse()*p;
 	return p;
 }
+
 
 void HairModel::insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette)
 {
