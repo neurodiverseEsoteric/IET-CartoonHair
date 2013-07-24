@@ -1554,10 +1554,17 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 
 #ifdef BLINN_SPECULAR
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinn",1);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",1);
 #else
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinn",0);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",0);
 #endif
+
+#ifdef SPECULAR_TEXTURE
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",1);
+#else
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",0);
+#endif
+
 		//generate geometry
 		generateVertices(update,section);
 		generateNormals(update,section);
@@ -1579,7 +1586,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
 			//m_hairMesh->tangent(Ogre::Vector3::UNIT_X);
 #ifdef IMAGESPACE_SILHOUETTE
-			m_hairMesh->colour(1,1,1);
+			m_hairMesh->colour(0,1,0);
 #else
 			m_hairMesh->colour(m_idColours[section]);
 #endif

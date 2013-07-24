@@ -120,6 +120,7 @@ protected:
 	//hair variables
 	HairModel *m_hairModel;
 	IdBufferRenderTargetListener *m_idBufferListener;
+	HairMaterialListener *m_hairMaterialListener;
 
 	bool m_cameraControl;
 	bool m_physicsEnabled;

@@ -1,0 +1,477 @@
+vertex_program IETCartoonHair/ToonVertexOldHatch glsl
+{
+	source toonimagespace.vert
+}
+
+fragment_program IETCartoonHair/ToonFragmentOldHatch glsl
+{
+	source toonimagespace.frag
+}
+
+vertex_program IETCartoonHair/ToonVertexShader glsl
+{
+	source toon.vert
+}
+
+fragment_program IETCartoonHair/ToonFragmentShader glsl
+{
+	source toon.frag
+}
+
+vertex_program IETCartoonHair/EdgeVertexShader glsl
+{
+	source edge.vert
+}
+
+fragment_program IETCartoonHair/EdgeFragmentShader glsl
+{
+	source edge.frag
+}
+
+vertex_program IETCartoonHair/SolidSilhouetteVertexShader glsl
+{
+	source solidedge.vert
+}
+
+fragment_program IETCartoonHair/SolidSilhouetteFragmentShader glsl
+{
+	source solidedge.frag
+}
+
+vertex_program IETCartoonHair/SobelVertexShader glsl
+{
+	source sobel.vert
+}
+
+fragment_program IETCartoonHair/SobelFragmentShader glsl
+{
+	source sobel.frag
+}
+
+vertex_program IETCartoonHair/DilationVertexShader glsl
+{
+	source dilation.vert
+}
+
+fragment_program IETCartoonHair/DilationFragmentShader glsl
+{
+	source dilation.frag
+}
+
+//http://www.ogre3d.org/tikiwiki/Materials#Solid_colour
+material IETCartoonHair/BlackMaterial
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+			{
+				colour_op_ex source1 src_manual src_current 0 0 0
+			}
+		}
+	}
+}
+
+material IETCartoonHair/OldHatch
+{
+    technique
+    {
+		pass
+		{
+			diffuse 1 0 0 1
+			vertex_program_ref IETCartoonHair/ToonVertexOldHatch
+			{
+				param_named_auto modelViewMatrix worldview_matrix
+				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
+				param_named_auto lightPos light_position 0
+				param_named strokeScale float 2.0
+			}
+			
+			fragment_program_ref IETCartoonHair/ToonFragmentOldHatch
+			{
+				param_named_auto hairColour surface_diffuse_colour
+				param_named cartoonTexture int 0
+				param_named stroke1 int 1
+				param_named stroke2 int 2
+				param_named stroke3 int 3
+				param_named stroke4 int 4
+				param_named stroke5 int 5
+				param_named stroke6 int 6
+			}
+			
+			texture_unit 0
+			{
+				texture cartoon.png 1d
+				tex_address_mode clamp
+				filtering none
+			}
+			texture_unit 1
+			{
+				texture stroke0.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 2
+			{
+				texture stroke1.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 3
+			{
+				texture stroke2.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 4
+			{
+				texture stroke3.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 5
+			{
+				texture stroke4.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			
+			texture_unit 6
+			{
+				texture stroke5.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+		}
+	}
+}
+
+material IETCartoonHair/IdBufferMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			
+			texture_unit
+			{
+				texture idBuffer 2d
+			}
+		}
+	}
+}
+
+material IETCartoonHair/TAMMaterial
+{
+	technique
+	{
+		pass
+		{
+			scene_blend modulate
+			lighting off
+			texture_unit
+			{
+				texture dashedstroke.png 2d
+			}
+		}
+	}
+}
+
+material IETCartoonHair/SolidMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+		}
+	}
+}
+
+material IETCartoonHair/BaseWhiteNoLightingBackFace
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			cull_software anticlockwise
+			cull_hardware anticlockwise
+			diffuse 1 1 1 1
+		}
+	}
+}
+
+material IETCartoonHair/BackgroundMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			diffuse 0.39 0.58 0.92 1
+		}
+	}
+}
+
+material IETCartoonHair/SolidSilhouetteMaterial
+{
+	technique
+	{
+		pass
+		{
+			lighting off
+			scene_blend alpha_blend
+			cull_hardware none
+			cull_software none
+			
+			vertex_program_ref IETCartoonHair/SolidSilhouetteVertexShader
+			{
+				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
+			}
+			
+			fragment_program_ref IETCartoonHair/SolidSilhouetteFragmentShader
+			{
+				param_named edgeTexture int 0
+				param_named textureEnabled int 1
+			}
+			texture_unit 0
+			{
+				texture edge.png 2d
+				tex_address_mode wrap
+				filtering trilinear
+			}
+		}
+	}
+}
+
+material IETCartoonHair/EdgeMaterial
+{
+	//http://www.ogre3d.org/tikiwiki/Materials#Stained_Glass_Window
+	technique
+	{
+		pass
+		{	
+			cull_hardware none
+			cull_software none
+			
+			depth_check off
+			scene_blend modulate
+			
+			vertex_program_ref IETCartoonHair/EdgeVertexShader
+			{
+				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
+				param_named_auto lightPos light_position 0
+			}
+			
+			fragment_program_ref IETCartoonHair/EdgeFragmentShader
+			{
+				param_named edgeTexture int 0
+				param_named idTexture int 1
+				param_named range float 0.045
+			}
+			
+			texture_unit 0
+			{
+				texture edge.png 2d 0
+				tex_address_mode wrap
+				filtering none
+			}
+			
+			texture_unit 1
+			{
+				texture idBuffer 2d
+				filtering none
+			}
+			
+		}
+	}
+}
+
+material IETCartoonHair/Dilation
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref IETCartoonHair/DilationVertexShader
+			{
+			
+			}
+			fragment_program_ref IETCartoonHair/DilationFragmentShader
+			{
+				param_named width float 1024.0
+				param_named height float 768.0
+				param_named dilationX int 3
+				param_named dilationY int 3
+				param_named frameBuffer int 0
+			}
+			
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+		}
+	}
+}
+
+material IETCartoonHair/Sobel
+{
+	technique
+	{
+		pass
+		{
+			vertex_program_ref IETCartoonHair/SobelVertexShader
+			{
+			
+			}
+			fragment_program_ref IETCartoonHair/SobelFragmentShader
+			{
+				param_named width float 1024.0
+				param_named height float 768.0
+				param_named edgeThreshold float 8
+				param_named frameBuffer int 0
+			}
+			
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+		}
+	}
+}
+
+material IETCartoonHair/Composite
+{
+	technique
+	{
+		pass
+		{
+			texture_unit
+	        {
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+	        }
+			texture_unit
+			{
+				tex_coord_set 0
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+}
+
+material IETCartoonHair/HighlightMaterial
+{
+	technique
+	{
+		pass
+		{
+			cull_hardware none
+			cull_software none
+			
+			//depth_check off
+			depth_bias 2000
+			scene_blend alpha_blend
+			
+			texture_unit 0
+			{
+				texture highlight.png 2d
+				tex_address_mode wrap
+				filtering none
+			}
+		}
+	}
+}
+
+material IETCartoonHair/HairMaterial
+{
+    technique
+    {
+		pass
+		{
+			diffuse 1 0 0 1
+			vertex_program_ref IETCartoonHair/ToonVertexShader
+			{
+				param_named_auto modelViewMatrix worldview_matrix
+				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
+				param_named_auto cameraPosition camera_position
+				param_named_auto lightPos light_position 0
+			}
+			
+			fragment_program_ref IETCartoonHair/ToonFragmentShader
+			{
+				param_named_auto hairColour surface_diffuse_colour
+				param_named cartoonTexture int 0
+				param_named stroke1 int 1
+				param_named stroke2 int 2
+				param_named stroke3 int 3
+				param_named stroke4 int 4
+				param_named stroke5 int 5
+				param_named stroke6 int 6
+				param_named specularTexture int 7
+				param_named blinnS float 1
+				param_named specularTextureS float 1
+			}
+			
+			texture_unit 0
+			{
+				texture cartoon2d.png 2d
+				tex_address_mode clamp
+				filtering none
+			}
+			texture_unit 1
+			{
+				texture stroke0.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 2
+			{
+				texture stroke1.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 3
+			{
+				texture stroke2.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 4
+			{
+				texture stroke3.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			texture_unit 5
+			{
+				texture stroke4.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			
+			texture_unit 6
+			{
+				texture stroke5.dds 2d
+				tex_address_mode wrap
+				filtering none
+			}
+			
+			texture_unit 7
+			{
+				texture cartoonSpecular.png
+				tex_address_mode clamp
+				filtering none
+			}
+		}
+	}
+}

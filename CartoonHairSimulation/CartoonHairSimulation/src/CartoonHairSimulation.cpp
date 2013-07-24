@@ -129,6 +129,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	m_headBone = NULL;
 	m_skeletonDrawer = NULL;
 	m_characterAnimationState = NULL;
+	m_hairMaterialListener = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -162,6 +163,11 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 	if(m_idBufferListener)
 	{
 		delete m_idBufferListener;
+	}
+
+	if(m_hairMaterialListener)
+	{
+		delete m_hairMaterialListener;
 	}
 
 	//clean up physics
@@ -475,11 +481,17 @@ void CartoonHairSimulation::createScene(void)
 	m_hairModel->getIdBufferTexture()->addListener(m_idBufferListener);
 
 	m_idBufferListener->addObjectToID(m_hairModel->getHairManualObject(),"IETCartoonHair/SolidMaterial");
+#ifndef OUTER_SILHOUETTE
+	m_idBufferListener->addObjectToIgnore(m_hairModel->getEdgeManualObject());
+#else
 	m_idBufferListener->addObjectToID(m_hairModel->getEdgeManualObject(),"IETCartoonHair/SolidSilhouetteMaterial");
+#endif
 	m_idBufferListener->addObjectToIgnore(m_hairModel->getNormalsManualObject());
 	m_idBufferListener->addObjectToIgnore(m_hairModel->getDebugEdgesManualObject());
 	m_idBufferListener->addObjectToIgnore(m_debugDrawer->getLinesManualObject());
 	m_idBufferListener->addObjectToDarken(m_character);
+
+
 
 #ifdef STYLISED_SPECULAR
 	m_idBufferListener->addObjectToIgnore(m_hairModel->getHighlightManualObject());
@@ -520,10 +532,11 @@ void CartoonHairSimulation::createScene(void)
 
 	//setup compositor
 #ifdef IMAGESPACE_SILHOUETTE
-		Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
-		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
-		m_hairModel->getEdgeManualObject()->setVisible(false);
-		Ogre::MaterialManager::getSingleton().addListener(new HairMaterialListener());
+	m_hairMaterialListener = new HairMaterialListener();
+	Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
+	Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+	m_hairModel->getEdgeManualObject()->setVisible(false);
+	Ogre::MaterialManager::getSingleton().addListener(m_hairMaterialListener);
 #endif
 }
 //-------------------------------------------------------------------------------------
