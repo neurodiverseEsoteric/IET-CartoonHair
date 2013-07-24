@@ -8,10 +8,14 @@ uniform mat4 modelViewProjectionMatrix;
 uniform vec4 cameraPosition;
 uniform vec4 lightPos;
 
+uniform float zMax;
+uniform float zMin;
+
 varying vec3 n;
 varying vec3 l;
 varying vec3 v;
 varying vec3 viewDirection;
+varying float depth;
 
 varying float weight0;
 varying float weight1;
@@ -21,6 +25,8 @@ varying float weight4;
 varying float weight5;
 
 varying float i;
+
+varying float d;
 
 void main()
 {
@@ -65,6 +71,11 @@ void main()
 		weight5 = 1.0 - weight4;
 	}
 	
-    gl_Position = modelViewProjectionMatrix*gl_Vertex;
 	gl_TexCoord[0] = gl_MultiTexCoord0;
+	
+	vec4 pos = modelViewProjectionMatrix*gl_Vertex;
+	
+	d = 1.0-log(pos.z/zMin)/log(zMax/zMin);
+	
+    gl_Position = pos;
 }

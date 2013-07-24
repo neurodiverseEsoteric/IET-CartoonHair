@@ -15,8 +15,10 @@ uniform float blinnS;
 uniform float specularTextureS;
 
 uniform int blinnEnabled;
-uniform int depthCartoonShading;
+uniform int depthAxisEnabled;
 uniform int specularTextureEnabled;
+
+varying float d;
 
 varying vec3 n;
 varying vec3 l;
@@ -61,8 +63,15 @@ void main()
 		specular = specular + texture2D(specularTexture,vec2(i,specIndex),0.0).xyz;
 	}
 	
+	float y = 1;
+	//from x-toon an extended toon shader
+	if(depthAxisEnabled == 1)
+	{
+		y = d;
+	}
+	
 	//cartoon texture
-	vec4 cartoonColour = texture2D(cartoonTexture,vec2(i,1),0.0);
+	vec4 cartoonColour = texture2D(cartoonTexture,vec2(i,y),0.0);
 	
 	
 	gl_FragColor = strokeColour*hairColour*cartoonColour + specular;

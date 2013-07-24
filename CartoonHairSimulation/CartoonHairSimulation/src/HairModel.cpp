@@ -1137,25 +1137,9 @@ void HairModel::generateSpecularHighlights(bool update)
 		float zMin = std::numeric_limits<float>::max();
 		float zMax = std::numeric_limits<float>::min();
 
-		/*for(int p = 0 ; p < groups[group].size() ; p++)
-		{
-			Ogre::Vector3 result = toDeviceCoordinates(groups[group][p],m_camera);
-			screenSpacePoints.push_back(result);
-#ifdef DEPTH_SCALING
-			if(result.z>zMax)
-			{
-				zMax = result.z;
-			}
-			if(result.z<zMin)
-			{
-				zMin = result.z;
-			}
-#endif
-		}*/
-
 		Ogre::Vector3 result = toDeviceCoordinates(groups[group][0],m_camera);
 		screenSpacePoints.push_back(result);
-#ifdef DEPTH_SCALING
+
 		if(result.z>zMax)
 		{
 			zMax = result.z;
@@ -1164,11 +1148,10 @@ void HairModel::generateSpecularHighlights(bool update)
 		{
 			zMin = result.z;
 		}
-#endif
 
 		result = toDeviceCoordinates(groups[group][groups[group].size()-1],m_camera);
 		screenSpacePoints.push_back(result);
-#ifdef DEPTH_SCALING
+
 		if(result.z>zMax)
 		{
 			zMax = result.z;
@@ -1177,7 +1160,6 @@ void HairModel::generateSpecularHighlights(bool update)
 		{
 			zMin = result.z;
 		}
-#endif
 
 		if(group < MAX_GROUP_SECTIONS)
 		{
@@ -1347,7 +1329,6 @@ void HairModel::generateEdges(bool update)
 
 			Ogre::Vector3 result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera);
 
-#ifdef DEPTH_SCALING
 			if(result.z>zMax)
 			{
 				zMax = result.z;
@@ -1356,7 +1337,6 @@ void HairModel::generateEdges(bool update)
 			{
 				zMin = result.z;
 			}
-#endif
 			screenSpacePoints.push_back(result);
 
 			//make sure the last point is added
@@ -1364,7 +1344,6 @@ void HairModel::generateEdges(bool update)
 			{
 				result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].second],m_camera);
 
-#ifdef DEPTH_SCALING
 				if(result.z>zMax)
 				{
 					zMax = result.z;
@@ -1373,7 +1352,6 @@ void HairModel::generateEdges(bool update)
 				{
 					zMin = result.z;
 				}
-#endif
 				screenSpacePoints.push_back(result);
 			}
 		}
@@ -1564,6 +1542,18 @@ void HairModel::createOrUpdateManualObject(bool update)
 #else
 		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",0);
 #endif
+
+#ifdef DEPTH_AXIS_TEXTURE
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",1);
+#else
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",0);
+#endif
+
+		//send the depth values to the hair shader so that we can use it to index the y-axis of the cartoon texture
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMax",ZMIN*R);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMin",ZMIN);
+
+
 
 		//generate geometry
 		generateVertices(update,section);
