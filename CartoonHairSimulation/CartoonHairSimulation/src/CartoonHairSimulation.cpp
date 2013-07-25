@@ -39,6 +39,30 @@ Ogre::Quaternion localToWorldOrientation(Ogre::Bone* bone, Ogre::Entity* entity)
 	return entity->getParentSceneNode()->convertLocalToWorldOrientation(orient);
 }
 
+std::string numberToString(long double value)
+{
+	try
+	{
+		return std::to_string(value);
+	}
+	catch(std::invalid_argument)
+	{
+		return "0";
+	}
+}
+
+float stringToFloat(std::string value)
+{
+	try
+	{
+		return std::stof(value);
+	}
+	catch(std::invalid_argument)
+	{
+		return 0.0f;
+	}
+}
+
 /*
 Convenience function from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
 Convertes mouse button presses to a format compatible with CEGUI
@@ -106,10 +130,9 @@ CartoonHairSimulation::CartoonHairSimulation(void)
     mMouse(0),
     mKeyboard(0),
 	m_cameraControl(true),
-	m_physicsEnabled(false),
-	m_animationEnabled(false),
 	m_firstTransformation(true),
-	m_maxSubSteps(MAX_SUB_STEPS)
+	m_maxSubSteps(MAX_SUB_STEPS),
+	m_imageSpaceSilhouetteEnabled(false)
 {
 	m_fixedTimeStep= FIXED_TIMESTEP;
 	mWorld = NULL;
@@ -277,6 +300,7 @@ void CartoonHairSimulation::createFrameListener(void)
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mMouse, this);
     mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
     mTrayMgr->hideCursor();
+	mTrayMgr->hideTrays();
 
     // create a params panel for displaying sample details
     Ogre::StringVector items;
@@ -426,11 +450,37 @@ void CartoonHairSimulation::createScene(void)
 	CEGUI::WidgetLookManager::setDefaultResourceGroup("LookNFeel");
 	CEGUI::WindowManager::setDefaultResourceGroup("Layouts");
 
-	CEGUI::SchemeManager::getSingleton().create("TaharezLook.scheme");
-	CEGUI::System::getSingleton().setDefaultMouseCursor("TaharezLook","MouseArrow");
+	CEGUI::SchemeManager::getSingleton().create("VanillaSkin.scheme");
 
 	m_guiRoot = CEGUI::WindowManager::getSingleton().loadWindowLayout("cartoonhair.layout"); 
 	CEGUI::System::getSingleton().setGUISheet(m_guiRoot);
+	m_guiRoot->setVisible(false);
+	CEGUI::System::getSingleton().setDefaultMouseCursor("Vanilla-Images","MouseArrow");
+
+	//link gui elements
+	m_blinnSpecularBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//blinnSpecular");
+	m_specularTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//specularTexture");
+	m_backlightingTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//backlighting");
+	m_depthDetailBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//depthAxis");
+
+	m_animateHairBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//anchorAnimate");
+	m_animateSkeletonBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//skeletonAnimate");
+	m_fadeSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//fadeSilhouette");
+	m_sobelSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//sobelSilhouette");
+
+	m_zMinBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zMin");
+	m_zScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zScale");
+
+	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
+	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
+	m_showPhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/physics");
+	m_disablePhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/disableSim");
+	m_showIdBufferBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/idBuffer");
+	m_bonesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/bone");
+	
+	//set values
+	m_zMinBox->setText(numberToString(ZMIN));
+	m_zScaleBox->setText(numberToString(R));
 
 	//setup spring materials
 	m_edgeMaterial = new btSoftBody::Material();
@@ -456,11 +506,7 @@ void CartoonHairSimulation::createScene(void)
 
 	m_characterNode->attachObject(m_character);
 
-#ifdef SHOW_BONES
 	m_skeletonDrawer = new SkeletonDebug(m_character,mSceneMgr,mCamera);
-	m_skeletonDrawer->showBones(true);
-	m_skeletonDrawer->showNames(true);
-#endif
 
 	m_headNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 
@@ -511,11 +557,9 @@ void CartoonHairSimulation::createScene(void)
 	m_headRigidBody = new btRigidBody(headConstructionInfo);
 	mWorld->addRigidBody(m_headRigidBody,BODY_GROUP, BODY_GROUP | HAIR_GROUP);
 
-#ifdef DEBUG_VISUALISATION
 	m_headNode->createChildSceneNode("debuglines")->attachObject(m_debugDrawer->getLinesManualObject());
 	m_headNode->createChildSceneNode("normals")->attachObject(m_hairModel->getNormalsManualObject());
 	m_headNode->createChildSceneNode("debugedges")->attachObject(m_hairModel->getDebugEdgesManualObject());
-#endif
 
 	m_headNode->createChildSceneNode("hair")->attachObject(m_hairModel->getHairManualObject());
 	m_headNode->createChildSceneNode("silhouettes")->attachObject(m_hairModel->getEdgeManualObject());
@@ -531,13 +575,9 @@ void CartoonHairSimulation::createScene(void)
 #endif
 
 	//setup compositor
-#ifdef IMAGESPACE_SILHOUETTE
 	m_hairMaterialListener = new HairMaterialListener();
 	Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
-	Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
-	m_hairModel->getEdgeManualObject()->setVisible(false);
 	Ogre::MaterialManager::getSingleton().addListener(m_hairMaterialListener);
-#endif
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -573,16 +613,50 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	float timestep = evt.timeSinceLastFrame;
 
-#ifdef SHOW_BONES
-	m_skeletonDrawer->update();
-#endif
+	if(m_bonesBox->isSelected())
+	{
+		m_skeletonDrawer->update();
+	};
+
+	m_skeletonDrawer->showBones(m_bonesBox->isSelected());
+	m_skeletonDrawer->showNames(m_bonesBox->isSelected());
+	m_skeletonDrawer->showAxes(m_bonesBox->isSelected());
+
+	//toggle silhouette modes
+	m_hairModel->enableSobel(m_sobelSilhouetteBox->isSelected());
+	if(m_sobelSilhouetteBox->isSelected())
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+		m_hairModel->getEdgeManualObject()->setVisible(false);
+	}
+	else
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",false);
+		m_hairModel->getEdgeManualObject()->setVisible(true);
+	}
+
+	//toggle debug visibility
+	m_hairModel->getDebugEdgesManualObject()->setVisible(m_debugEdgesBox->isSelected());
+	m_hairModel->getNormalsManualObject()->setVisible(m_normalsBox->isSelected());
+	m_debugDrawer->getLinesManualObject()->setVisible(m_showPhysicsBox->isSelected());
+
+	m_hairModel->enableBlinnSpecular(m_blinnSpecularBox->isSelected());
+	m_hairModel->enableSpecularTexture(m_specularTextureBox->isSelected());
+	m_hairModel->enableBacklightingTexture(m_backlightingTextureBox->isSelected());
+	m_hairModel->enableDepthDetailAxis(m_depthDetailBox->isSelected());
+	m_hairModel->enableVariableSilhouetteIntensity(m_fadeSilhouetteBox->isSelected());
+
+	m_hairModel->setZMin(stringToFloat(m_zMinBox->getText().c_str()));
+	m_hairModel->setZScale(stringToFloat(m_zScaleBox->getText().c_str()));
+
+	m_idBufferListener->setVisible(m_showIdBufferBox->isSelected());
 
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding parameters for maxSubstep and fixedTimeStep
 
-	if(m_physicsEnabled)
+	if(!m_disablePhysicsBox->isSelected())
 	{
-		if(m_animationEnabled && m_characterAnimationState)
+		if(m_animateSkeletonBox->isSelected() && m_characterAnimationState)
 		{
 			m_characterAnimationState->addTime(timestep*ANIMATION_SPEED);
 		}
@@ -597,9 +671,13 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			btQuaternion bBoneOrientation(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
 
 			m_headRigidBody->setWorldTransform(btTransform(bBoneOrientation,bBonePosition));
+			m_hairModel->updateAnchors(timestep);
 			m_firstTransformation = false;
 		}
-		m_hairModel->updateAnchors(timestep);
+		if(m_animateHairBox->isSelected())
+		{
+			m_hairModel->updateAnchors(timestep);
+		}
 
 		//ensure we aren't losing time http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 		if(timestep > m_maxSubSteps*m_fixedTimeStep)
@@ -612,15 +690,13 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	}
 
 	m_hairModel->updateManualObject();
-	
-#ifdef DEBUG_VISUALISATION
+
 	if(m_debugDrawer->getLinesManualObject()->isVisible())
 	{
 		m_debugDrawer->begin();
 		mWorld->debugDrawWorld();
 		m_debugDrawer->end();
 	}
-#endif
 
 	//TO DO: add any methods you would like to be called
 
@@ -642,7 +718,7 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
     {
         if (mDetailsPanel->getTrayLocation() == OgreBites::TL_NONE)
         {
-            mTrayMgr->moveWidgetToTray(mDetailsPanel, OgreBites::TL_TOPRIGHT, 0);
+            mTrayMgr->moveWidgetToTray(mDetailsPanel, OgreBites::TL_TOPLEFT, 0);
             mDetailsPanel->show();
         }
         else
@@ -741,59 +817,20 @@ bool CartoonHairSimulation::keyPressed( const OIS::KeyEvent &arg )
     {
         mShutDown = true;
     }
-	else if (arg.key == OIS::KC_P)
-	{
-		if(m_debugDrawer->getLinesManualObject()->isVisible())
-		{
-			m_debugDrawer->getLinesManualObject()->setVisible(false);
-		}
-		else
-		{
-			m_debugDrawer->getLinesManualObject()->setVisible(true);
-		}
-	}
-	else if(arg.key == OIS::KC_N)
-	{
-		if(m_hairModel->getNormalsManualObject()->isVisible())
-		{
-			m_hairModel->getNormalsManualObject()->setVisible(false);
-		}
-		else
-		{
-			m_hairModel->getNormalsManualObject()->setVisible(true);
-		}
-	}
-	else if(arg.key == OIS::KC_K)
-	{
-		if(m_hairModel->getDebugEdgesManualObject()->isVisible())
-		{
-			m_hairModel->getDebugEdgesManualObject()->setVisible(false);
-		}
-		else
-		{
-			m_hairModel->getDebugEdgesManualObject()->setVisible(true);
-		}
-	}
 	else if(arg.key == OIS::KC_M)
 	{
 		if(m_cameraControl)
 		{
 			m_cameraControl = false;
-			//mTrayMgr->showCursor();
+			m_guiRoot->setVisible(true);
+			mTrayMgr->showTrays();
 		}
 		else
 		{
 			m_cameraControl = true;
-			//mTrayMgr->hideCursor();
+			m_guiRoot->setVisible(false);
+			mTrayMgr->hideTrays();
 		}
-	}
-	else if(arg.key == OIS::KC_L)
-	{
-		m_physicsEnabled = !m_physicsEnabled;
-	}
-	else if(arg.key == OIS::KC_V)
-	{
-		m_animationEnabled = !m_animationEnabled;
 	}
 
 	if(m_cameraControl)

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<GUILayout >
+    <Window Type="DefaultWindow" Name="Root" >
+        <Property Name="UnifiedAreaRect" Value="{{0.00292831,0},{0.00309599,0},{1.00293,0},{1.0031,0}}" />
+        <Window Type="Vanilla/FrameWindow" Name="Root/" >
+            <Property Name="Font" Value="DejaVuSans-10" />
+            <Property Name="Text" Value="Effects" />
+            <Property Name="TitlebarFont" Value="DejaVuSans-10" />
+            <Property Name="TitlebarEnabled" Value="True" />
+            <Property Name="UnifiedAreaRect" Value="{{0.775078,0},{0.00940003,0},{0.988154,0},{0.710857,0}}" />
+            <Window Type="Vanilla/Checkbox" Name="Root//blinnSpecular" >
+                <Property Name="Font" Value="DejaVuSans-10" />
+                <Property Name="Text" Value="Blinn Specular" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0126491,0},{0.00352412,0},{0.997825,0},{0.0585501,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//backlighting" >
+                <Property Name="Text" Value="Backlighting" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0112658,0},{0.0646029,0},{0.996442,0},{0.115411,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//specularTexture" >
+                <Property Name="Text" Value="Specular Texture" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0129844,0},{0.111995,0},{0.998157,0},{0.167021,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//depthAxis" >
+                <Property Name="Text" Value="Depth detail" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0149513,0},{0.162682,0},{1.00012,0},{0.217708,0}}" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root//zMin" >
+                <Property Name="Font" Value="DejaVuSans-10" />
+                <Property Name="Text" >
+</Property>
+                <Property Name="Tooltip" Value="zMin" />
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0253418,0},{0.227242,0},{0.457868,0},{0.302942,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root//label" >
+                <Property Name="Font" Value="DejaVuSans-10" />
+                <Property Name="Text" Value="Z Min" />
+                <Property Name="HorzExtent" Value="48" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.227311,0},{0.951739,0},{0.303011,0}}" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root//zScale" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="Tooltip" Value="zMin" />
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0273087,0},{0.311324,0},{0.459835,0},{0.387023,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root//label1" >
+                <Property Name="Text" Value="Z Scale" />
+                <Property Name="HorzExtent" Value="65" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.482754,0},{0.310317,0},{0.953706,0},{0.386016,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//anchorAnimate" >
+                <Property Name="Text" Value="Animate Hair" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0265248,0},{0.398263,0},{1.0117,0},{0.453289,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//skeletonAnimate" >
+                <Property Name="Text" Value="Animate Skeleton" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0239085,0},{0.450372,0},{1.00908,0},{0.505398,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//fadeSilhouette" >
+                <Property Name="Text" Value="Fade Silhouette" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0234937,0},{0.502481,0},{1.00867,0},{0.557507,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root//sobelSilhouette" >
+                <Property Name="Text" Value="Sobel Silhouette" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0226641,0},{0.556086,0},{1.00784,0},{0.611112,0}}" />
+            </Window>
+        </Window>
+        <Window Type="Vanilla/FrameWindow" Name="Root/Debug" >
+            <Property Name="Font" Value="DejaVuSans-10" />
+            <Property Name="Text" Value="Debug" />
+            <Property Name="TitlebarFont" Value="DejaVuSans-10" />
+            <Property Name="TitlebarEnabled" Value="True" />
+            <Property Name="UnifiedAreaRect" Value="{{0.493359,0},{0.660946,0},{0.743359,0},{0.987869,0}}" />
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/normals" >
+                <Property Name="Font" Value="DejaVuSans-10" />
+                <Property Name="Text" Value="Show Normals" />
+                <Property Name="UnifiedAreaRect" Value="{{0.00937622,0},{0.0192148,0},{0.954687,0},{0.169668,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/debugEdges" >
+                <Property Name="Text" Value="Highlight Edges" />
+                <Property Name="UnifiedAreaRect" Value="{{0.00859512,0},{0.165977,0},{0.953905,0},{0.271182,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/physics" >
+                <Property Name="Text" Value="Show Physics" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0117203,0},{0.267491,0},{0.95703,0},{0.408894,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/disableSim" >
+                <Property Name="Text" Value="Disable Simulation" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0109392,0},{0.403811,0},{0.956249,0},{0.527115,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/idBuffer" >
+                <Property Name="Text" Value="Show ID Buffer" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0179705,0},{0.5189,0},{0.96328,0},{0.651254,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Debug/bone" >
+                <Property Name="Text" Value="Show Bones" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0171894,0},{0.645822,0},{0.962499,0},{0.778176,0}}" />
+            </Window>
+        </Window>
+    </Window>
+</GUILayout>

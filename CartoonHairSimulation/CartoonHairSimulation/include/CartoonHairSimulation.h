@@ -74,6 +74,11 @@ protected:
 	//gui variables
 	CEGUI::OgreRenderer* m_renderer;
 	CEGUI::Window *m_guiRoot;
+	CEGUI::Checkbox *m_blinnSpecularBox, *m_specularTextureBox, *m_backlightingTextureBox, *m_depthDetailBox;
+	CEGUI::Checkbox *m_animateHairBox, *m_animateSkeletonBox, *m_fadeSilhouetteBox, *m_sobelSilhouetteBox;
+	CEGUI::Checkbox *m_normalsBox, *m_debugEdgesBox, *m_showPhysicsBox, *m_disablePhysicsBox, *m_showIdBufferBox;
+	CEGUI::Checkbox *m_bonesBox;
+	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox;
 
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;
@@ -123,9 +128,8 @@ protected:
 	HairMaterialListener *m_hairMaterialListener;
 
 	bool m_cameraControl;
-	bool m_physicsEnabled;
-	bool m_animationEnabled;
 	bool m_firstTransformation;
+	bool m_imageSpaceSilhouetteEnabled;
 
 };
 

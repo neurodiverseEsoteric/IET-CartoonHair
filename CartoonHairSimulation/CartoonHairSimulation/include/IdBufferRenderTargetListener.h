@@ -12,6 +12,8 @@ public:
 	IdBufferRenderTargetListener(Ogre::SceneManager *sceneMgr);
 	virtual ~IdBufferRenderTargetListener();
 
+	void setVisible(bool value);
+
 	void addObjectToID(Ogre::ManualObject *manualObject, Ogre::String idMaterial);
 	void addObjectToID(Ogre::Entity *entity, Ogre::String idMaterial);
 	void addObjectToIgnore(Ogre::MovableObject *movableObject);
@@ -40,4 +42,6 @@ private:
 
 	Ogre::SceneNode *m_screenNode;
 	Ogre::Rectangle2D *m_screen;
+
+	bool m_screenVisible;
 };

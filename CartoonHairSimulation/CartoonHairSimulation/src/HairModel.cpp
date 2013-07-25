@@ -48,6 +48,16 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
 		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
 {
+
+	m_blinnSpecularEnabled = false;
+	m_specularTextureEnabled = false;
+	m_backlightingTextureEnabled = false;
+	m_depthDetailAxisEnabled = false;
+	m_variableSilhouetteIntensity = false;
+
+	m_zMin = ZMIN;
+	m_zScale = R;
+
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
 	m_camera = camera;
@@ -1217,9 +1227,7 @@ void HairModel::generateEdges(bool update)
 		if(update)
 		{
 			m_edgeMesh->beginUpdate(section);
-#ifdef DEBUG_VISUALISATION
 			m_debugEdges->beginUpdate(section);
-#endif
 		}
 		else
 		{
@@ -1284,48 +1292,44 @@ void HairModel::generateEdges(bool update)
 
 		for(int i = 0 ; i < silhouette.size() ; i++)
 		{
-
-#ifdef VARIABLE_SILHOUETTE_INTENSITY
 			float silhouetteIntensity;
-			btVector3 pos1 = ogreToBulletVector(m_strandVertices[section][silhouette[i].first]);
-			btVector3 pos2 = ogreToBulletVector(m_strandVertices[section][silhouette[i].second]);
-			btVector3 pos = (pos1+pos2)/2.0f;
-			btSoftBody *strnd = m_strandSoftBodies[section];
-
-			float minDist = std::numeric_limits<float>::max();
-			float minNode = 0;
-			for(int n = 0 ; n < strnd->m_nodes.size() ; n++)
+			if(m_variableSilhouetteIntensity)
 			{
-				float length = (strnd->m_nodes[n].m_x - pos).length();
-				if(length < minDist)
+				btVector3 pos1 = ogreToBulletVector(m_strandVertices[section][silhouette[i].first]);
+				btVector3 pos2 = ogreToBulletVector(m_strandVertices[section][silhouette[i].second]);
+				btVector3 pos = (pos1+pos2)/2.0f;
+				btSoftBody *strnd = m_strandSoftBodies[section];
+
+				float minDist = std::numeric_limits<float>::max();
+				float minNode = 0;
+				for(int n = 0 ; n < strnd->m_nodes.size() ; n++)
 				{
-					minDist = length;
-					minNode = n;
+					float length = (strnd->m_nodes[n].m_x - pos).length();
+					if(length < minDist)
+					{
+						minDist = length;
+						minNode = n;
+					}
+				}
+
+				float t = (float)minNode/(strnd->m_nodes.size()-1);
+				silhouetteIntensity = (1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
+				silhouetteIntensities.push_back(silhouetteIntensity);
+				//since 2 points are added on the last silhouette - we need to add the last intensity again
+				//or else we will have an index overflow
+				if(i == silhouette.size()-1)
+				{
+					silhouetteIntensities.push_back(silhouetteIntensity);
 				}
 			}
 
-			float t = (float)minNode/(strnd->m_nodes.size()-1);
-			silhouetteIntensity = (1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
-			silhouetteIntensities.push_back(silhouetteIntensity);
-			//since 2 points are added on the last silhouette - we need to add the last intensity again
-			//or else we will have an index overflow
-			if(i == silhouette.size()-1)
-			{
-				silhouetteIntensities.push_back(silhouetteIntensity);
-			}
-#endif
 
-
-#ifdef DEBUG_VISUALISATION
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].first]);
-#ifdef VARIABLE_SILHOUETTE_INTENSITY
-			m_debugEdges->colour(0,silhouetteIntensity,0);
-#endif
+			if(m_variableSilhouetteIntensity)
+			{
+				m_debugEdges->colour(0,silhouetteIntensity,0);
+			}
 			m_debugEdges->position(m_strandVertices[section][silhouette[i].second]);
-#ifdef VARIABLE_SILHOUETTE_INTENSITY
-			m_debugEdges->colour(0,silhouetteIntensity,0);
-#endif
-#endif
 
 			Ogre::Vector3 result = toDeviceCoordinates(m_strandVertices[section][silhouette[i].first],m_camera);
 
@@ -1365,9 +1369,11 @@ void HairModel::generateEdges(bool update)
 			for(int i = 0 ; i < points.size() ; i+= 2)
 			{
 				Ogre::ColourValue colour = m_idColours[section];
-#ifdef VARIABLE_SILHOUETTE_INTENSITY
-				colour.a = silhouetteIntensities[i/2];
-#endif
+				if(m_variableSilhouetteIntensity)
+				{
+					colour.a = silhouetteIntensities[i/2];
+				}
+
 				m_edgeMesh->position(points[i]);
 				m_edgeMesh->textureCoord(i/2,1);
 				m_edgeMesh->colour(colour);
@@ -1396,9 +1402,7 @@ void HairModel::generateEdges(bool update)
 		}
 
 		m_edgeMesh->end();
-#ifdef DEBUG_VISUALISATION
 		m_debugEdges->end();
-#endif
 	}
 }
 
@@ -1511,9 +1515,7 @@ void HairModel::createOrUpdateManualObject(bool update)
 		if(update)
 		{
 			m_hairMesh->beginUpdate(section);
-#ifdef DEBUG_VISUALISATION
-				m_normalMesh->beginUpdate(section);
-#endif
+			m_normalMesh->beginUpdate(section);
 		}
 		else
 		{
@@ -1522,44 +1524,52 @@ void HairModel::createOrUpdateManualObject(bool update)
 #else
 			m_hairMesh->begin("IETCartoonHair/HairMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
 #endif
-#ifdef DEBUG_VISUALISATION
 			m_normalMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
-#endif
 
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
 			m_hairSplines.push_back(Ogre::SimpleSpline());
 		}
 
-#ifdef BLINN_SPECULAR
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",1);
-#else
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",0);
-#endif
+		if(m_blinnSpecularEnabled)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnEnabled",0);
+		}
+		
+		if(m_specularTextureEnabled)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",0);
+		}
 
-#ifdef SPECULAR_TEXTURE
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",1);
-#else
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureEnabled",0);
-#endif
+		if(m_backlightingTextureEnabled)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",0);
+		}
 
-#ifdef DEPTH_AXIS_TEXTURE
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",1);
-#else
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",0);
-#endif
-
-#ifdef BACKLIGHTING_TEXTURE
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",1);
-#else
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",0);
-#endif
+		if(m_depthDetailAxisEnabled)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",0);
+		}
 
 		//send the depth values to the hair shader so that we can use it to index the y-axis of the cartoon texture
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMax",ZMIN*R);
-		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMin",ZMIN);
-
-
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMax",m_zMin*m_zScale);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMin",m_zMin);
 
 		//generate geometry
 		generateVertices(update,section);
@@ -1567,13 +1577,11 @@ void HairModel::createOrUpdateManualObject(bool update)
 		
 		//generate manual object
 		//vertices + normals
-#ifdef DEBUG_VISUALISATION
 		for(int vert = 0 ; vert < m_strandVertices[section].size() ; vert++)
 		{
 			m_normalMesh->position(m_strandVertices[section][vert]);
 			m_normalMesh->position(m_strandVertices[section][vert]+m_strandNormals[section][vert]);
 		}
-#endif
 
 		//indices
 		for(int index = 0 ; index < m_strandIndices.size() ; index++)
@@ -1581,18 +1589,19 @@ void HairModel::createOrUpdateManualObject(bool update)
 			m_hairMesh->position(m_strandVertices[section][m_strandIndices[index]]);
 			m_hairMesh->normal(m_strandNormals[section][m_strandIndices[index]]);
 			//m_hairMesh->tangent(Ogre::Vector3::UNIT_X);
-#ifdef IMAGESPACE_SILHOUETTE
-			m_hairMesh->colour(0,1,0);
-#else
-			m_hairMesh->colour(m_idColours[section]);
-#endif
+			if(m_sobelEnabled)
+			{
+				m_hairMesh->colour(0,1,0);
+			}
+			else
+			{
+				m_hairMesh->colour(m_idColours[section]);
+			}
 			m_hairMesh->textureCoord(m_strandTextureCoordinates[index]);
 		}
 		
 		m_hairMesh->end();
-#ifdef DEBUG_VISUALISATION
 		m_normalMesh->end();
-#endif
 	}
 }
 
@@ -1613,4 +1622,44 @@ Ogre::Quaternion HairModel::determineRotation(Ogre::Vector3 up, Ogre::Vector3 no
 {
 	Ogre::Vector3 dir = node1 - node0;
 	return up.getRotationTo(dir);
+}
+
+void HairModel::enableBlinnSpecular(bool value)
+{
+	m_blinnSpecularEnabled = value;
+}
+
+void HairModel::enableSpecularTexture(bool value)
+{
+	m_specularTextureEnabled = value;
+}
+
+void HairModel::enableBacklightingTexture(bool value)
+{
+	m_backlightingTextureEnabled = value;
+}
+
+void HairModel::enableDepthDetailAxis(bool value)
+{
+	m_depthDetailAxisEnabled = value;
+}
+
+void HairModel::enableVariableSilhouetteIntensity(bool value)
+{
+	m_variableSilhouetteIntensity = value;
+}
+
+void HairModel::enableSobel(bool value)
+{
+	m_sobelEnabled = value;
+}
+
+void HairModel::setZMin(float value)
+{
+	m_zMin = value;
+}
+
+void HairModel::setZScale(float value)
+{
+	m_zScale = value;
 }

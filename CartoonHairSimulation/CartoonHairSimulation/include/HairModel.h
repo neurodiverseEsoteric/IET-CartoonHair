@@ -91,6 +91,15 @@ public:
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
 
+	void enableBlinnSpecular(bool value);
+	void enableSpecularTexture(bool value);
+	void enableBacklightingTexture(bool value);
+	void enableDepthDetailAxis(bool value);
+	void enableVariableSilhouetteIntensity(bool value);
+	void enableSobel(bool value);
+	void setZMin(float value);
+	void setZScale(float value);
+
 private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
@@ -129,7 +138,6 @@ private:
 	Ogre::Vector3 toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera);
 
 	//variables
-
 	//physics variables
 	float m_simulationScale;
 	std::vector<btSoftBody*> m_strandSoftBodies;
@@ -177,5 +185,10 @@ private:
 
 	//highlight variables
 	HighlightSort m_candidateSort;
+
+	//effects variables
+	bool m_blinnSpecularEnabled,m_specularTextureEnabled,m_backlightingTextureEnabled,m_depthDetailAxisEnabled;
+	bool m_variableSilhouetteIntensity, m_sobelEnabled;
+	float m_zMin,m_zScale;
 
 };

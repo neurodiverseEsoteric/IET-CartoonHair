@@ -10,10 +10,10 @@ IdBufferRenderTargetListener::IdBufferRenderTargetListener(Ogre::SceneManager *s
 	m_screen->setBoundingBox(Ogre::AxisAlignedBox(-100000.0f * Ogre::Vector3::UNIT_SCALE, 100000.0f * Ogre::Vector3::UNIT_SCALE));
 	m_screen->setMaterial("IETCartoonHair/IdBufferMaterial");
 
-#ifdef DEBUG_VISUALISATION
 	m_screenNode = sceneMgr->getRootSceneNode()->createChildSceneNode("screenNode");
 	m_screenNode->attachObject(m_screen);
-#endif DEBUG_VISUALISATION
+	m_screenNode->setVisible(false);
+	m_screenVisible = false;
 }
 
 IdBufferRenderTargetListener::~IdBufferRenderTargetListener()
@@ -30,6 +30,12 @@ IdBufferRenderTargetListener::~IdBufferRenderTargetListener()
 	m_darkenedEntities.clear();
 	m_darkenedManualObjectsMaterials.clear();
 	m_darkenedEntityMaterials.clear();
+}
+
+void IdBufferRenderTargetListener::setVisible(bool value)
+{
+	m_screenVisible = value;
+	m_screenNode->setVisible(value);
 }
 
 void IdBufferRenderTargetListener::addObjectToID(Ogre::ManualObject *manualObject, Ogre::String idMaterial)
@@ -76,7 +82,10 @@ bool IdBufferRenderTargetListener::frameRenderingQueued(const Ogre::FrameEvent& 
 
 void IdBufferRenderTargetListener::preRenderTargetUpdate(const Ogre::RenderTargetEvent& evt)
 {
-	m_screen->setVisible(false);
+	if(m_screenVisible)
+	{
+		m_screenNode->setVisible(false);
+	}
 	//setup id objects
 	for(int idIndex = 0 ; idIndex < m_idEntities.size() ; idIndex++)
 	{
@@ -115,7 +124,10 @@ void IdBufferRenderTargetListener::preRenderTargetUpdate(const Ogre::RenderTarge
 
 void IdBufferRenderTargetListener::postRenderTargetUpdate(const Ogre::RenderTargetEvent& evt)
 {
-	m_screen->setVisible(true);
+	if(m_screenVisible)
+	{
+		m_screenNode->setVisible(true);
+	}
 	//replace id object materials with originals
 	for(int idIndex = 0 ; idIndex < m_idEntities.size() ; idIndex++)
 	{
