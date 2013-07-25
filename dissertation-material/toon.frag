@@ -9,14 +9,17 @@ uniform sampler2D stroke4;
 uniform sampler2D stroke5;
 uniform sampler2D stroke6;
 uniform sampler2D specularTexture;
+uniform sampler2D backlightingTexture;
 
 uniform vec4 hairColour;
 uniform float blinnS;
 uniform float specularTextureS;
+uniform float backlightingS;
 
 uniform int blinnEnabled;
 uniform int depthAxisEnabled;
 uniform int specularTextureEnabled;
+uniform int backlightingEnabled;
 
 varying float d;
 
@@ -68,6 +71,12 @@ void main()
 	if(depthAxisEnabled == 1)
 	{
 		y = d;
+	}
+	
+	if(backlightingEnabled == 1)
+	{
+		float backlightingIndex = pow(abs(dot(n,viewDirection)),backlightingS);
+		specular = specular + texture2D(backlightingTexture,vec2(i,backlightingIndex),0.0).xyz;
 	}
 	
 	//cartoon texture

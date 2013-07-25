@@ -418,8 +418,10 @@ material IETCartoonHair/HairMaterial
 				param_named stroke5 int 5
 				param_named stroke6 int 6
 				param_named specularTexture int 7
+				param_named backlightingTexture int 8
 				param_named blinnS float 1
 				param_named specularTextureS float 1
+				param_named backlightingS float 1
 			}
 			
 			texture_unit 0
@@ -468,7 +470,14 @@ material IETCartoonHair/HairMaterial
 			
 			texture_unit 7
 			{
-				texture cartoonSpecular.png
+				texture cartoonSpecular.png 2d
+				tex_address_mode clamp
+				filtering none
+			}
+			
+			texture_unit 8
+			{
+				texture cartoonBacklighting.png
 				tex_address_mode clamp
 				filtering none
 			}

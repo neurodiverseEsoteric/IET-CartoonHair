@@ -1549,6 +1549,12 @@ void HairModel::createOrUpdateManualObject(bool update)
 		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("depthAxisEnabled",0);
 #endif
 
+#ifdef BACKLIGHTING_TEXTURE
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",1);
+#else
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingEnabled",0);
+#endif
+
 		//send the depth values to the hair shader so that we can use it to index the y-axis of the cartoon texture
 		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMax",ZMIN*R);
 		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("zMin",ZMIN);
