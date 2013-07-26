@@ -77,8 +77,9 @@ protected:
 	CEGUI::Checkbox *m_blinnSpecularBox, *m_specularTextureBox, *m_backlightingTextureBox, *m_depthDetailBox;
 	CEGUI::Checkbox *m_animateHairBox, *m_animateSkeletonBox, *m_fadeSilhouetteBox, *m_sobelSilhouetteBox;
 	CEGUI::Checkbox *m_normalsBox, *m_debugEdgesBox, *m_showPhysicsBox, *m_disablePhysicsBox, *m_showIdBufferBox;
-	CEGUI::Checkbox *m_bonesBox;
-	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox;
+	CEGUI::Checkbox *m_bonesBox, *m_hatchingBox, *m_simpleHatchingBox;
+	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox, *m_blinnSBox, *m_specTexSBox, *m_backlightSBox, *m_strokeScaleBox;
+	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox;
 
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;

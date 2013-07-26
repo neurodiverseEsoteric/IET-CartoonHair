@@ -20,6 +20,8 @@ uniform int blinnEnabled;
 uniform int depthAxisEnabled;
 uniform int specularTextureEnabled;
 uniform int backlightingEnabled;
+uniform int hatchingEnabled;
+uniform int simpleHatching;
 
 varying float d;
 
@@ -27,6 +29,7 @@ varying vec3 n;
 varying vec3 l;
 varying vec3 v;
 varying vec3 viewDirection;
+varying vec3 proj;
 
 varying float weight0;
 varying float weight1;
@@ -39,15 +42,51 @@ varying float i;
 
 void main()
 { 
-	vec4 colour0 = texture2D(stroke1,gl_TexCoord[0].st)*weight0;
-	vec4 colour1 = texture2D(stroke2,gl_TexCoord[0].st)*weight1;
-	vec4 colour2 = texture2D(stroke3,gl_TexCoord[0].st)*weight2;
-	vec4 colour3 = texture2D(stroke4,gl_TexCoord[0].st)*weight3;
-	vec4 colour4 = texture2D(stroke5,gl_TexCoord[0].st)*weight4;
-	vec4 colour5 = texture2D(stroke6,gl_TexCoord[0].st)*weight5;
+
+	vec4 strokeColour = vec4(1);
 	
-	vec4 strokeColour = colour0 + colour1 + colour2 + colour3 + colour4 + colour5;
-	strokeColour.a = 1;
+	if(hatchingEnabled == 1)
+	{
+		if(simpleHatching == 1)
+		{
+			if(i < 0.16)
+			{
+				strokeColour = strokeColour*texture2DProj(stroke6,proj);
+			}
+			else if(i < 0.33)
+			{
+				strokeColour = strokeColour*texture2DProj(stroke5,proj);
+			}
+			else if(i < 0.49)
+			{
+				strokeColour = strokeColour*texture2DProj(stroke4,proj);
+			}
+			else if(i < 0.65)
+			{
+				strokeColour = strokeColour*texture2DProj(stroke3,proj);
+			}
+			else if(i < 0.81)
+			{
+				strokeColour = strokeColour*texture2DProj(stroke2,proj);
+			}
+			else
+			{
+				strokeColour = strokeColour*texture2DProj(stroke1,proj);
+			}
+		}
+		else
+		{
+			vec4 colour0 = texture2D(stroke1,gl_TexCoord[0].st)*weight0;
+			vec4 colour1 = texture2D(stroke2,gl_TexCoord[0].st)*weight1;
+			vec4 colour2 = texture2D(stroke3,gl_TexCoord[0].st)*weight2;
+			vec4 colour3 = texture2D(stroke4,gl_TexCoord[0].st)*weight3;
+			vec4 colour4 = texture2D(stroke5,gl_TexCoord[0].st)*weight4;
+			vec4 colour5 = texture2D(stroke6,gl_TexCoord[0].st)*weight5;
+			
+			strokeColour = colour0 + colour1 + colour2 + colour3 + colour4 + colour5;
+			strokeColour.a = 1;
+		}
+	}
 	
 	//Blinn Specular - https://code.google.com/p/glslang-library/source/browse/trunk/trunk/glslang/shaders/material/blinn.frag.glsl?r=7
 	vec3 h = normalize(l+v);
@@ -55,7 +94,7 @@ void main()
 	vec3 specular = vec3(0,0,0);
 	if(blinnEnabled == 1)
 	{
-		specular = vec3(1,1,1)*pow(max(dot(n,h),0.0),blinnS);
+		specular = vec3(1)*pow(max(dot(n,h),0.0),blinnS);
 	}
 	
 	//based on Brennan Rusnell - X-Toon an extended toon shader

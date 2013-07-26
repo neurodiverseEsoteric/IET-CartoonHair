@@ -97,9 +97,16 @@ public:
 	void enableDepthDetailAxis(bool value);
 	void enableVariableSilhouetteIntensity(bool value);
 	void enableSobel(bool value);
+	void enableHatching(bool value);
+	void enableSimpleHatching(bool value);
 	void setZMin(float value);
 	void setZScale(float value);
-
+	void setBlinnS(float value);
+	void setSpecularTextureS(float value);
+	void setBacklightingS(float value);
+	void setHairColour(Ogre::Vector4 value);
+	void setStrokeScale(float value);
+	
 private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
@@ -188,7 +195,8 @@ private:
 
 	//effects variables
 	bool m_blinnSpecularEnabled,m_specularTextureEnabled,m_backlightingTextureEnabled,m_depthDetailAxisEnabled;
-	bool m_variableSilhouetteIntensity, m_sobelEnabled;
-	float m_zMin,m_zScale;
+	bool m_variableSilhouetteIntensity, m_sobelEnabled, m_hatchingEnabled, m_simpleHatching;
+	float m_zMin,m_zScale, m_blinnS, m_specTexS, m_backlightS, m_strokeScale;
+	Ogre::Vector4 m_hairColour;
 
 };

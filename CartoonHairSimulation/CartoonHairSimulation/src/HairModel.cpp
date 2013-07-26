@@ -54,9 +54,17 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 	m_backlightingTextureEnabled = false;
 	m_depthDetailAxisEnabled = false;
 	m_variableSilhouetteIntensity = false;
+	m_hatchingEnabled = false;
+	m_simpleHatching = false;
 
 	m_zMin = ZMIN;
 	m_zScale = R;
+	m_blinnS = BLINN_S;
+	m_specTexS = SPECULAR_TEXTURE_S;
+	m_backlightS = BACKLIGHTING_TEXTURE_S;
+	m_strokeScale = HATCHING_STROKE_SCALE;
+
+	m_hairColour = Ogre::Vector3(RED,GREEN,BLUE);
 
 	m_currentId = Ogre::ColourValue(0.01,0.0,0.0,1.0);
 
@@ -1519,16 +1527,36 @@ void HairModel::createOrUpdateManualObject(bool update)
 		}
 		else
 		{
-#ifdef IMAGE_SPACE_HATCHING
-			m_hairMesh->begin("IETCartoonHair/OldHatch",Ogre::RenderOperation::OT_TRIANGLE_LIST);
-#else
 			m_hairMesh->begin("IETCartoonHair/HairMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
-#endif
 			m_normalMesh->begin("BaseWhiteNoLighting",Ogre::RenderOperation::OT_LINE_LIST);
 
 			m_strandVertices.push_back(std::vector<Ogre::Vector3>());
 			m_strandNormals.push_back(std::vector<Ogre::Vector3>());
 			m_hairSplines.push_back(Ogre::SimpleSpline());
+		}
+
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("blinnS",m_blinnS);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("specularTextureS",m_specTexS);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("backlightingS",m_backlightS);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("hairColour",m_hairColour);
+		m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getVertexProgramParameters()->setNamedConstant("strokeScale",m_strokeScale);
+
+		if(m_hatchingEnabled)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("hatchingEnabled",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("hatchingEnabled",0);
+		}
+
+		if(m_simpleHatching)
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("simpleHatching",1);
+		}
+		else
+		{
+			m_hairMesh->getSection(section)->getMaterial()->getTechnique(0)->getPass(0)->getFragmentProgramParameters()->setNamedConstant("simpleHatching",0);
 		}
 
 		if(m_blinnSpecularEnabled)
@@ -1654,6 +1682,16 @@ void HairModel::enableSobel(bool value)
 	m_sobelEnabled = value;
 }
 
+void HairModel::enableHatching(bool value)
+{
+	m_hatchingEnabled = value;
+}
+
+void HairModel::enableSimpleHatching(bool value)
+{
+	m_simpleHatching = value;
+}
+
 void HairModel::setZMin(float value)
 {
 	m_zMin = value;
@@ -1662,4 +1700,28 @@ void HairModel::setZMin(float value)
 void HairModel::setZScale(float value)
 {
 	m_zScale = value;
+}
+
+void HairModel::setBlinnS(float value)
+{
+	m_blinnS = value;
+}
+void HairModel::setSpecularTextureS(float value)
+{
+	m_specTexS = value;
+}
+
+void HairModel::setBacklightingS(float value)
+{
+	m_backlightS = value;
+}
+
+void HairModel::setHairColour(Ogre::Vector4 value)
+{
+	m_hairColour = value;
+}
+
+void HairModel::setStrokeScale(float value)
+{
+	m_strokeScale = value;
 }

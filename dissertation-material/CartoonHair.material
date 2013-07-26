@@ -398,18 +398,17 @@ material IETCartoonHair/HairMaterial
     {
 		pass
 		{
-			diffuse 1 0 0 1
 			vertex_program_ref IETCartoonHair/ToonVertexShader
 			{
 				param_named_auto modelViewMatrix worldview_matrix
 				param_named_auto modelViewProjectionMatrix worldviewproj_matrix
 				param_named_auto cameraPosition camera_position
 				param_named_auto lightPos light_position 0
+				param_named strokeS
 			}
 			
 			fragment_program_ref IETCartoonHair/ToonFragmentShader
 			{
-				param_named_auto hairColour surface_diffuse_colour
 				param_named cartoonTexture int 0
 				param_named stroke1 int 1
 				param_named stroke2 int 2
@@ -419,9 +418,6 @@ material IETCartoonHair/HairMaterial
 				param_named stroke6 int 6
 				param_named specularTexture int 7
 				param_named backlightingTexture int 8
-				param_named blinnS float 1
-				param_named specularTextureS float 1
-				param_named backlightingS float 1
 			}
 			
 			texture_unit 0

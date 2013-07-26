@@ -467,9 +467,19 @@ void CartoonHairSimulation::createScene(void)
 	m_animateSkeletonBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//skeletonAnimate");
 	m_fadeSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//fadeSilhouette");
 	m_sobelSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//sobelSilhouette");
+	m_hatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//hatching");
+	m_simpleHatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//simpleHatching");
 
 	m_zMinBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zMin");
 	m_zScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zScale");
+	m_blinnSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//blinnS");
+	m_specTexSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//specTexS");
+	m_backlightSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//backlightS");
+	m_strokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//strokeScale");
+
+	m_redBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/red");
+	m_greenBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/green");
+	m_blueBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/blue");
 
 	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
 	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
@@ -481,6 +491,13 @@ void CartoonHairSimulation::createScene(void)
 	//set values
 	m_zMinBox->setText(numberToString(ZMIN));
 	m_zScaleBox->setText(numberToString(R));
+	m_blinnSBox->setText(numberToString(BLINN_S));
+	m_specTexSBox->setText(numberToString(SPECULAR_TEXTURE_S));
+	m_backlightSBox->setText(numberToString(BACKLIGHTING_TEXTURE_S));
+	m_strokeScaleBox->setText(numberToString(HATCHING_STROKE_SCALE));
+	m_redBox->setText(numberToString(RED));
+	m_greenBox->setText(numberToString(GREEN));
+	m_blueBox->setText(numberToString(BLUE));
 
 	//setup spring materials
 	m_edgeMaterial = new btSoftBody::Material();
@@ -640,14 +657,27 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	m_hairModel->getNormalsManualObject()->setVisible(m_normalsBox->isSelected());
 	m_debugDrawer->getLinesManualObject()->setVisible(m_showPhysicsBox->isSelected());
 
+	m_hairModel->enableSimpleHatching(m_simpleHatchingBox->isSelected());
 	m_hairModel->enableBlinnSpecular(m_blinnSpecularBox->isSelected());
 	m_hairModel->enableSpecularTexture(m_specularTextureBox->isSelected());
 	m_hairModel->enableBacklightingTexture(m_backlightingTextureBox->isSelected());
 	m_hairModel->enableDepthDetailAxis(m_depthDetailBox->isSelected());
 	m_hairModel->enableVariableSilhouetteIntensity(m_fadeSilhouetteBox->isSelected());
+	m_hairModel->enableHatching(m_hatchingBox->isSelected());
 
 	m_hairModel->setZMin(stringToFloat(m_zMinBox->getText().c_str()));
 	m_hairModel->setZScale(stringToFloat(m_zScaleBox->getText().c_str()));
+	m_hairModel->setBlinnS(stringToFloat(m_blinnSBox->getText().c_str()));
+	m_hairModel->setSpecularTextureS(stringToFloat(m_specTexSBox->getText().c_str()));
+	m_hairModel->setBacklightingS(stringToFloat(m_backlightSBox->getText().c_str()));
+	m_hairModel->setStrokeScale(stringToFloat(m_strokeScaleBox->getText().c_str()));
+
+	m_hairModel->setHairColour(Ogre::Vector4(
+		stringToFloat(m_redBox->getText().c_str()),
+		stringToFloat(m_greenBox->getText().c_str()),
+		stringToFloat(m_blueBox->getText().c_str()),
+		1.0f
+		));
 
 	m_idBufferListener->setVisible(m_showIdBufferBox->isSelected());
 

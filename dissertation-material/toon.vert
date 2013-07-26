@@ -10,7 +10,9 @@ uniform vec4 lightPos;
 
 uniform float zMax;
 uniform float zMin;
+uniform float strokeScale;
 
+varying vec3 proj;
 varying vec3 n;
 varying vec3 l;
 varying vec3 v;
@@ -71,7 +73,11 @@ void main()
 		weight5 = 1.0 - weight4;
 	}
 	
-	gl_TexCoord[0] = gl_MultiTexCoord0;
+	proj = vec4(modelViewProjectionMatrix*gl_Vertex).xyz;
+	proj.s = proj.s*strokeScale;
+	proj.t = proj.t*strokeScale;
+	
+	gl_TexCoord[0] = gl_MultiTexCoord0*(1.0f/strokeScale);
 	
 	vec4 pos = modelViewProjectionMatrix*gl_Vertex;
 	
