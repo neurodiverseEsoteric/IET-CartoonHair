@@ -232,6 +232,164 @@ bool CartoonHairSimulation::alterMarginsPressed(const CEGUI::EventArgs& e)
 	return true;
 }
 
+bool CartoonHairSimulation::blinnSpecularEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableBlinnSpecular(m_blinnSpecularBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::backlightingEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableBacklightingTexture(m_backlightingTextureBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::specularTextureEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableSpecularTexture(m_specularTextureBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::hatchingEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableHatching(m_hatchingBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::simpleHatchingEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableSimpleHatching(m_simpleHatchingBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::depthDetailEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableDepthDetailAxis(m_depthDetailBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::fadeSilhouetteEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableVariableSilhouetteIntensity(m_fadeSilhouetteBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::sobelSilhouetteEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->enableSobel(m_sobelSilhouetteBox->isSelected());
+	if(m_sobelSilhouetteBox->isSelected())
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+		m_hairModel->getEdgeManualObject()->setVisible(false);
+	}
+	else
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",false);
+		m_hairModel->getEdgeManualObject()->setVisible(true);
+	}
+	return true;
+}
+bool CartoonHairSimulation::showNormalsEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->getNormalsManualObject()->setVisible(m_normalsBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::showHighlightEdgesEnabled(const CEGUI::EventArgs& e)
+{
+	m_hairModel->getDebugEdgesManualObject()->setVisible(m_debugEdgesBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::showPhysicsEnabled(const CEGUI::EventArgs& e)
+{
+	m_debugDrawer->getLinesManualObject()->setVisible(m_showPhysicsBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::showIDBufferEnabled(const CEGUI::EventArgs& e)
+{
+	m_idBufferListener->setVisible(m_showIdBufferBox->isSelected());
+	return true;
+}
+bool CartoonHairSimulation::showBonesEnabled(const CEGUI::EventArgs& e)
+{
+	m_skeletonDrawer->showBones(m_bonesBox->isSelected());
+	m_skeletonDrawer->showNames(m_bonesBox->isSelected());
+	m_skeletonDrawer->showAxes(m_bonesBox->isSelected());
+	return true;
+}
+
+bool CartoonHairSimulation::blinnSChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setBlinnS(stringToFloat(m_blinnSBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::specularTextureSChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setSpecularTextureS(stringToFloat(m_specTexSBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::backlightSChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setBacklightingS(stringToFloat(m_backlightSBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::hatchingScaleChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setStrokeScale(stringToFloat(m_strokeScaleBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::zMinChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setZMin(stringToFloat(m_zMinBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::zScaleChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setZScale(stringToFloat(m_zScaleBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::colourChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setHairColour(Ogre::Vector4(
+		stringToFloat(m_redBox->getText().c_str()),
+		stringToFloat(m_greenBox->getText().c_str()),
+		stringToFloat(m_blueBox->getText().c_str()),
+		1.0f
+		));
+	return true;
+}
+bool CartoonHairSimulation::edgeStiffnessChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setEdgeSpringStiffness(stringToFloat(m_edgeStiffBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::bendingStiffnessChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setBendingSpringStiffness(stringToFloat(m_bendStiffBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::torsionStiffnessChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setTorsionSpringStiffness(stringToFloat(m_torsionStiffBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::anchorStiffnessChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setBlendingSpringStiffness(stringToFloat(m_anchorStiffBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::hairCurveChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setCurveValues(
+		stringToFloat(m_hairABox->getText().c_str()),
+		stringToFloat(m_hairBBox->getText().c_str()),
+		stringToFloat(m_hairCBox->getText().c_str())
+		);
+	return true;
+}
+bool CartoonHairSimulation::springCurveChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setBlendingCurve(
+		stringToFloat(m_springABox->getText().c_str()),
+		stringToFloat(m_springBBox->getText().c_str()),
+		stringToFloat(m_springCBox->getText().c_str())
+		);
+	m_hairModel->setBlendingSpringStiffness(stringToFloat(m_anchorStiffBox->getText().c_str()));
+	return true;
+}
+
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::configure(void)
 {
@@ -466,56 +624,6 @@ void CartoonHairSimulation::createScene(void)
 	m_guiRoot->setVisible(false);
 	CEGUI::System::getSingleton().setDefaultMouseCursor("Vanilla-Images","MouseArrow");
 
-	//link gui elements
-	m_blinnSpecularBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//blinnSpecular");
-	m_specularTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//specularTexture");
-	m_backlightingTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//backlighting");
-	m_depthDetailBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//depthAxis");
-
-	m_animateHairBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//anchorAnimate");
-	m_animateSkeletonBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//skeletonAnimate");
-	m_fadeSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//fadeSilhouette");
-	m_sobelSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//sobelSilhouette");
-	m_hatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//hatching");
-	m_simpleHatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//simpleHatching");
-
-	m_zMinBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zMin");
-	m_zScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zScale");
-	m_blinnSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//blinnS");
-	m_specTexSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//specTexS");
-	m_backlightSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//backlightS");
-	m_strokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//strokeScale");
-	m_minMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//minMargin");
-	m_maxMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//maxMargin");
-
-	m_alterMargins = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root//alterMargins");
-	m_alterMargins->subscribeEvent(CEGUI::PushButton::EventClicked,
-		CEGUI::Event::Subscriber(&CartoonHairSimulation::alterMarginsPressed,this));
-
-	m_redBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/red");
-	m_greenBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/green");
-	m_blueBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/blue");
-
-	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
-	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
-	m_showPhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/physics");
-	m_disablePhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/disableSim");
-	m_showIdBufferBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/idBuffer");
-	m_bonesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/bone");
-	
-	//set values
-	m_zMinBox->setText(numberToString(ZMIN));
-	m_zScaleBox->setText(numberToString(R));
-	m_blinnSBox->setText(numberToString(BLINN_S));
-	m_specTexSBox->setText(numberToString(SPECULAR_TEXTURE_S));
-	m_backlightSBox->setText(numberToString(BACKLIGHTING_TEXTURE_S));
-	m_strokeScaleBox->setText(numberToString(HATCHING_STROKE_SCALE));
-	m_redBox->setText(numberToString(RED));
-	m_greenBox->setText(numberToString(GREEN));
-	m_blueBox->setText(numberToString(BLUE));
-	m_minMarginBox->setText(numberToString(MIN_MARGIN));
-	m_maxMarginBox->setText(numberToString(MAX_MARGIN));
-
 	//setup spring materials
 	m_edgeMaterial = new btSoftBody::Material();
 	m_bendingMaterial = new btSoftBody::Material();
@@ -548,8 +656,9 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"hairanimation.xml", mCamera,light,mWindow,mSceneMgr,m_edgeMaterial,m_torsionMaterial,m_bendingMaterial,m_anchorMaterial,mWorld,
-		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C);
+		"hairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
+		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
+		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 
 	if(skeleton->hasBone("Joint8"))
 	{
@@ -570,8 +679,6 @@ void CartoonHairSimulation::createScene(void)
 	m_idBufferListener->addObjectToIgnore(m_hairModel->getDebugEdgesManualObject());
 	m_idBufferListener->addObjectToIgnore(m_debugDrawer->getLinesManualObject());
 	m_idBufferListener->addObjectToDarken(m_character);
-
-
 
 #ifdef STYLISED_SPECULAR
 	m_idBufferListener->addObjectToIgnore(m_hairModel->getHighlightManualObject());
@@ -612,6 +719,160 @@ void CartoonHairSimulation::createScene(void)
 	m_hairMaterialListener = new HairMaterialListener();
 	Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
 	Ogre::MaterialManager::getSingleton().addListener(m_hairMaterialListener);
+
+	//link gui elements
+	m_blinnSpecularBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//blinnSpecular");
+	m_specularTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//specularTexture");
+	m_backlightingTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//backlighting");
+	m_depthDetailBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//depthAxis");
+
+	m_animateHairBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//anchorAnimate");
+	m_animateSkeletonBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//skeletonAnimate");
+	m_fadeSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//fadeSilhouette");
+	m_sobelSilhouetteBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//sobelSilhouette");
+	m_hatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//hatching");
+	m_simpleHatchingBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//simpleHatching");
+
+	m_zMinBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zMin");
+	m_zScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//zScale");
+	m_blinnSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//blinnS");
+	m_specTexSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//specTexS");
+	m_backlightSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//backlightS");
+	m_strokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//strokeScale");
+	m_minMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//minMargin");
+	m_maxMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//maxMargin");
+
+	m_redBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/red");
+	m_greenBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/green");
+	m_blueBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/blue");
+	m_edgeStiffBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/edgeStiffness");
+	m_bendStiffBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/bendStiffness");
+	m_torsionStiffBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/torsionStiffness");
+	m_anchorStiffBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/anchorStiffness");
+	m_hairABox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/hairA");
+	m_hairBBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/hairB");
+	m_hairCBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/hairC");
+	m_springABox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springA");
+	m_springBBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springB");
+	m_springCBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springC");
+
+	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
+	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
+	m_showPhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/physics");
+	m_disablePhysicsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/disableSim");
+	m_showIdBufferBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/idBuffer");
+	m_bonesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/bone");
+
+	m_alterMargins = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root//alterMargins");
+	
+	//set values
+	m_zMinBox->setText(numberToString(ZMIN));
+	m_zScaleBox->setText(numberToString(R));
+	m_blinnSBox->setText(numberToString(BLINN_S));
+	m_specTexSBox->setText(numberToString(SPECULAR_TEXTURE_S));
+	m_backlightSBox->setText(numberToString(BACKLIGHTING_TEXTURE_S));
+	m_strokeScaleBox->setText(numberToString(HATCHING_STROKE_SCALE));
+	m_redBox->setText(numberToString(RED));
+	m_greenBox->setText(numberToString(GREEN));
+	m_blueBox->setText(numberToString(BLUE));
+	m_minMarginBox->setText(numberToString(MIN_MARGIN));
+	m_maxMarginBox->setText(numberToString(MAX_MARGIN));
+	m_edgeStiffBox->setText(numberToString(EDGE_STIFFNESS));
+	m_bendStiffBox->setText(numberToString(BENDING_STIFFNESS));
+	m_torsionStiffBox->setText(numberToString(TORSION_STIFFNESS));
+	m_anchorStiffBox->setText(numberToString(ANCHOR_STIFFNESS));
+	m_hairABox->setText(numberToString(HAIR_QUADRATIC_A));
+	m_hairBBox->setText(numberToString(HAIR_QUADRATIC_B));
+	m_hairCBox->setText(numberToString(HAIR_QUADRATIC_C));
+	m_springABox->setText(numberToString(BLENDING_QUADRATIC_A));
+	m_springBBox->setText(numberToString(BLENDING_QUADRATIC_B));
+	m_springCBox->setText(numberToString(BLENDING_QUADRATIC_C));
+
+	//add event handler
+	m_alterMargins->subscribeEvent(CEGUI::PushButton::EventClicked,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::alterMarginsPressed,this));
+
+	m_blinnSpecularBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::blinnSpecularEnabled,this));
+	m_backlightingTextureBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::backlightingEnabled,this));
+	m_specularTextureBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::specularTextureEnabled,this));
+	m_hatchingBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::hatchingEnabled,this));
+	m_simpleHatchingBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::simpleHatchingEnabled,this));
+	m_depthDetailBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::depthDetailEnabled,this));
+	m_fadeSilhouetteBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::fadeSilhouetteEnabled,this));
+	m_sobelSilhouetteBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::sobelSilhouetteEnabled,this));
+	m_normalsBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::showNormalsEnabled,this));
+	m_debugEdgesBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::showHighlightEdgesEnabled,this));
+	m_showPhysicsBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::showPhysicsEnabled,this));
+	m_showIdBufferBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::showIDBufferEnabled,this));
+	m_bonesBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::showBonesEnabled,this));
+
+	m_blinnSBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::blinnSChanged,this));
+	m_specTexSBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::specularTextureSChanged,this));
+	m_backlightSBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::backlightSChanged,this));
+	m_strokeScaleBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::hatchingScaleChanged,this));
+	m_zMinBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::zMinChanged,this));
+	m_zScaleBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::zScaleChanged,this));
+	m_redBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::colourChanged,this));
+	m_greenBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::colourChanged,this));
+	m_blueBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::colourChanged,this));
+	m_edgeStiffBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::edgeStiffnessChanged,this));
+	m_bendStiffBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::bendingStiffnessChanged,this));
+	m_torsionStiffBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::torsionStiffnessChanged,this));
+	m_anchorStiffBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::anchorStiffnessChanged,this));
+	m_hairABox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::hairCurveChanged,this));
+	m_hairBBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::hairCurveChanged,this));
+	m_hairCBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::hairCurveChanged,this));
+	m_springABox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::springCurveChanged,this));
+	m_springBBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::springCurveChanged,this));
+	m_springCBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::springCurveChanged,this));
+
+	//hide some of the debug manual objects
+	m_debugDrawer->getLinesManualObject()->setVisible(m_debugEdgesBox->isSelected());
+	m_hairModel->getNormalsManualObject()->setVisible(m_normalsBox->isSelected());
+	m_hairModel->getDebugEdgesManualObject()->setVisible(m_debugEdgesBox->isSelected());
+	m_hairModel->enableSobel(m_sobelSilhouetteBox->isSelected());
+	if(m_sobelSilhouetteBox->isSelected())
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+		m_hairModel->getEdgeManualObject()->setVisible(false);
+	}
+	else
+	{
+		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",false);
+		m_hairModel->getEdgeManualObject()->setVisible(true);
+	}
 }
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
@@ -647,57 +908,6 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
 	float timestep = evt.timeSinceLastFrame;
 
-	if(m_bonesBox->isSelected())
-	{
-		m_skeletonDrawer->update();
-	};
-
-	m_skeletonDrawer->showBones(m_bonesBox->isSelected());
-	m_skeletonDrawer->showNames(m_bonesBox->isSelected());
-	m_skeletonDrawer->showAxes(m_bonesBox->isSelected());
-
-	//toggle silhouette modes
-	m_hairModel->enableSobel(m_sobelSilhouetteBox->isSelected());
-	if(m_sobelSilhouetteBox->isSelected())
-	{
-		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
-		m_hairModel->getEdgeManualObject()->setVisible(false);
-	}
-	else
-	{
-		Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",false);
-		m_hairModel->getEdgeManualObject()->setVisible(true);
-	}
-
-	//toggle debug visibility
-	m_hairModel->getDebugEdgesManualObject()->setVisible(m_debugEdgesBox->isSelected());
-	m_hairModel->getNormalsManualObject()->setVisible(m_normalsBox->isSelected());
-	m_debugDrawer->getLinesManualObject()->setVisible(m_showPhysicsBox->isSelected());
-
-	m_hairModel->enableSimpleHatching(m_simpleHatchingBox->isSelected());
-	m_hairModel->enableBlinnSpecular(m_blinnSpecularBox->isSelected());
-	m_hairModel->enableSpecularTexture(m_specularTextureBox->isSelected());
-	m_hairModel->enableBacklightingTexture(m_backlightingTextureBox->isSelected());
-	m_hairModel->enableDepthDetailAxis(m_depthDetailBox->isSelected());
-	m_hairModel->enableVariableSilhouetteIntensity(m_fadeSilhouetteBox->isSelected());
-	m_hairModel->enableHatching(m_hatchingBox->isSelected());
-
-	m_hairModel->setZMin(stringToFloat(m_zMinBox->getText().c_str()));
-	m_hairModel->setZScale(stringToFloat(m_zScaleBox->getText().c_str()));
-	m_hairModel->setBlinnS(stringToFloat(m_blinnSBox->getText().c_str()));
-	m_hairModel->setSpecularTextureS(stringToFloat(m_specTexSBox->getText().c_str()));
-	m_hairModel->setBacklightingS(stringToFloat(m_backlightSBox->getText().c_str()));
-	m_hairModel->setStrokeScale(stringToFloat(m_strokeScaleBox->getText().c_str()));
-
-	m_hairModel->setHairColour(Ogre::Vector4(
-		stringToFloat(m_redBox->getText().c_str()),
-		stringToFloat(m_greenBox->getText().c_str()),
-		stringToFloat(m_blueBox->getText().c_str()),
-		1.0f
-		));
-
-	m_idBufferListener->setVisible(m_showIdBufferBox->isSelected());
-
 	//physics update - note:  must (timeStep < maxSubSteps*fixedTimeStep) == true according to http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 	//if odd physics problems arise - consider adding parameters for maxSubstep and fixedTimeStep
 
@@ -712,7 +922,7 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			//based on code from http://linode.ogre3d.org/forums/viewtopic.php?f=2&t=29717
 			Ogre::Vector3 bonePosition = localToWorldPosition(m_headBone,m_character);
 			Ogre::Quaternion boneOrientation = localToWorldOrientation(m_headBone,m_character);
-			boneOrientation = INITIAL_ORIENTATION*boneOrientation;
+			boneOrientation = boneOrientation;
 			m_hairModel->applyHeadTransform(m_firstTransformation,bonePosition,boneOrientation);
 			btVector3 bBonePosition(bonePosition.x,bonePosition.y,bonePosition.z);
 			btQuaternion bBoneOrientation(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
@@ -737,6 +947,11 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	}
 
 	m_hairModel->updateManualObject();
+
+	if(m_bonesBox->isSelected())
+	{
+		m_skeletonDrawer->update();
+	};
 
 	if(m_debugDrawer->getLinesManualObject()->isVisible())
 	{

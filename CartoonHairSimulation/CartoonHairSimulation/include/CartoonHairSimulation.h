@@ -33,6 +33,35 @@ public:
     void go(void);
 	bool alterMarginsPressed(const CEGUI::EventArgs& e);
 
+	bool blinnSpecularEnabled(const CEGUI::EventArgs& e);
+	bool backlightingEnabled(const CEGUI::EventArgs& e);
+	bool specularTextureEnabled(const CEGUI::EventArgs& e);
+	bool hatchingEnabled(const CEGUI::EventArgs& e);
+	bool simpleHatchingEnabled(const CEGUI::EventArgs& e);
+	bool depthDetailEnabled(const CEGUI::EventArgs& e);
+	bool fadeSilhouetteEnabled(const CEGUI::EventArgs& e);
+	bool sobelSilhouetteEnabled(const CEGUI::EventArgs& e);
+	bool showNormalsEnabled(const CEGUI::EventArgs& e);
+	bool showHighlightEdgesEnabled(const CEGUI::EventArgs& e);
+	bool showPhysicsEnabled(const CEGUI::EventArgs& e);
+	bool showIDBufferEnabled(const CEGUI::EventArgs& e);
+	bool showBonesEnabled(const CEGUI::EventArgs& e);
+
+	bool blinnSChanged(const CEGUI::EventArgs& e);
+	bool specularTextureSChanged(const CEGUI::EventArgs& e);
+	bool backlightSChanged(const CEGUI::EventArgs& e);
+	bool hatchingScaleChanged(const CEGUI::EventArgs& e);
+	bool zMinChanged(const CEGUI::EventArgs& e);
+	bool zScaleChanged(const CEGUI::EventArgs& e);
+	bool colourChanged(const CEGUI::EventArgs& e);
+	bool edgeStiffnessChanged(const CEGUI::EventArgs& e);
+	bool bendingStiffnessChanged(const CEGUI::EventArgs& e);
+	bool torsionStiffnessChanged(const CEGUI::EventArgs& e);
+	bool anchorStiffnessChanged(const CEGUI::EventArgs& e);
+	bool hairCurveChanged(const CEGUI::EventArgs& e);
+	bool springCurveChanged(const CEGUI::EventArgs& e);
+
+
 protected:
     bool setup();
     bool configure(void);
@@ -81,6 +110,8 @@ protected:
 	CEGUI::Checkbox *m_bonesBox, *m_hatchingBox, *m_simpleHatchingBox;
 	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox, *m_blinnSBox, *m_specTexSBox, *m_backlightSBox, *m_strokeScaleBox;
 	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox, *m_minMarginBox, *m_maxMarginBox;
+	CEGUI::MultiLineEditbox *m_edgeStiffBox, *m_bendStiffBox, *m_torsionStiffBox, *m_anchorStiffBox;
+	CEGUI::MultiLineEditbox *m_hairABox, *m_hairBBox, *m_hairCBox, *m_springABox, *m_springBBox, *m_springCBox;
 	CEGUI::ButtonBase *m_alterMargins;
 
     // OgreBites

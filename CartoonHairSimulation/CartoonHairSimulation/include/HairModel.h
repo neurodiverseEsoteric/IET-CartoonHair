@@ -74,8 +74,8 @@ class HairModel
 {
 public:
 	HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::Light *light, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
-		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
-		btSoftRigidDynamicsWorld *world, float a,float b, float c);
+		btSoftRigidDynamicsWorld *world, float hairA,float hairB, float hairC, float blendingA, float blendingB, float blendingC,
+		float edgeStiffness, float bendingStiffness, float torsionStiffness, float anchorStiffness);
 	~HairModel();
 
 	Ogre::ManualObject* getHairManualObject();
@@ -107,21 +107,27 @@ public:
 	void setBacklightingS(float value);
 	void setHairColour(Ogre::Vector4 value);
 	void setStrokeScale(float value);
+	void setEdgeSpringStiffness(float value);
+	void setBendingSpringStiffness(float value);
+	void setTorsionSpringStiffness(float value);
+	void setBlendingSpringStiffness(float value);
+	void setBlendingCurve(float a,float b, float);
 	
 private:
 	//methods
 	Ogre::ColourValue generateUniqueColour();
 	void generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial);
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,float anchorStiffness);
 	void generateHairMesh(Ogre::SceneManager *sceneMgr);
 	float determineScale(float x);
 	Ogre::Quaternion determineRotation(Ogre::Vector3 up, Ogre::Vector3 node0, Ogre::Vector3 node1);
 	void createOrUpdateManualObject(bool update);
 	btSoftBody *createHairStrand(int strandIndex, btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial);
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 
+	void updateLinks();
 	void generateIndices();
 	void generateEdgeMap();
 	void generateIdColours();
@@ -147,11 +153,12 @@ private:
 
 	//variables
 	//physics variables
-	float m_simulationScale;
+	float m_simulationScale, m_blendingA, m_blendingB, m_blendingC;
 	std::vector<btSoftBody*> m_strandSoftBodies;
 	std::vector<btSoftBody*> m_ghostStrandSoftBodies;
 	std::vector<Ogre::Vector3> m_hairShape;
 	btSoftRigidDynamicsWorld *m_world;
+	btSoftBody::Material *m_edgeMaterial, *m_torsionMaterial, *m_bendingMaterial;
 
 	//animation variables
 	btAlignedObjectArray<btVector3> m_rootPoints;

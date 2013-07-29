@@ -44,9 +44,9 @@ Ogre::ColourValue HairModel::generateUniqueColour()
 	return result;
 }
 
-HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::Light *light,Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
-		btSoftBody::Material *edgeMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *bendingMaterial,btSoftBody::Material *anchorMaterial,
-		btSoftRigidDynamicsWorld *world, float a,float b, float c)//HairParameters &param)
+HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera *camera, Ogre::Light *light, Ogre::RenderWindow *window, Ogre::SceneManager *sceneMgr,
+		btSoftRigidDynamicsWorld *world, float hairA,float hairB, float hairC, float blendingA, float blendingB, float blendingC,
+		float edgeStiffness, float bendingStiffness, float torsionStiffness, float anchorStiffness)
 {
 
 	m_blinnSpecularEnabled = false;
@@ -70,10 +70,22 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 
 	m_camera = camera;
 	m_light = light;
-	m_a = a;
-	m_b = b;
-	m_c = c;
+	m_a = hairA;
+	m_b = hairB;
+	m_c = hairC;
+	m_blendingA = blendingA;
+	m_blendingB = blendingB;
+	m_blendingC = blendingC;
 	m_world = world;
+
+	m_edgeMaterial = new btSoftBody::Material();
+	m_edgeMaterial->m_kLST = edgeStiffness;
+
+	m_bendingMaterial = new btSoftBody::Material();
+	m_bendingMaterial->m_kLST = bendingStiffness;
+
+	m_torsionMaterial = new btSoftBody::Material();
+	m_torsionMaterial->m_kLST = torsionStiffness;
 
 	m_translationOffset = Ogre::Vector3(0,0,0);
 	m_orientationOffset = Ogre::Quaternion(0,0,0,1);
@@ -97,7 +109,7 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 
 	std::string hairFrame = loadAnchorPoints(directory,animation);
 	generateAnchorBody(world,world->getWorldInfo(), m_anchorPoints);
-	generateHairStrands(directory+hairFrame,world,edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
+	generateHairStrands(directory+hairFrame,world,m_edgeMaterial,m_bendingMaterial,m_torsionMaterial,anchorStiffness);
 	generateHairMesh(sceneMgr);
 }
 
@@ -132,6 +144,10 @@ HairModel::~HairModel()
 		delete m_blendingSpringMaterials[i];
 	}
 	m_blendingSpringMaterials.clear();
+
+	delete m_edgeMaterial;
+	delete m_bendingMaterial;
+	delete m_torsionMaterial;
 
 	m_anchorPoints.clear();
 	m_anchorSplines.clear();
@@ -433,7 +449,7 @@ void HairModel::generateQuadStrip(std::vector<Ogre::Vector3> &screenSpacePoints,
 
 
 void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorld *world,
-		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,btSoftBody::Material *anchorMaterial)
+		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial,float anchorStiffness)
 {
 	tinyxml2::XMLDocument doc;
 
@@ -473,27 +489,25 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 		}
 
 		//generate blending springs
-#ifndef CONSTANT_BLENDING_SPRINGS
 		if(strandCount == 0)
 		{
 			for(int i = 0 ; i < particles.size() ; i++)
 			{
 				float x = (float)i/(particles.size()-1);
 				btSoftBody::Material *blendingSpring = new btSoftBody::Material();
-				blendingSpring->m_kLST = anchorMaterial->m_kLST*abs(
-					BLENDING_QUADRATIC_A*x*x +
-					BLENDING_QUADRATIC_B*x +
-					BLENDING_QUADRATIC_C);
+				blendingSpring->m_kLST = anchorStiffness*abs(
+					m_blendingA*x*x +
+					m_blendingB*x +
+					m_blendingC);
 				m_blendingSpringMaterials.push_back(blendingSpring);
 			}
 		}
-#endif
 
 		//get the root position
 		m_rootPoints.push_back(particles[0]);
 
 		//now to create the strand softbody and its ghost nodes
-		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
+		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial);
 		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP | HAIR_GROUP);
 		m_strandSoftBodies.push_back(hairStrand);
 
@@ -546,7 +560,7 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 
 //based upon lines 508 to 536 of btSoftBodyHelpers.cpp
 btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorld *world, btAlignedObjectArray<btVector3> &particles, std::vector<float> &masses, btSoftBodyWorldInfo &worldInfo,
-	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial, btSoftBody::Material *torsionMaterial, btSoftBody::Material *anchorMaterial)
+	btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial, btSoftBody::Material *torsionMaterial)
 {
 	//create softbody
 	btSoftBody *strand = new btSoftBody(&worldInfo,particles.size(),&particles[0],&masses[0]);
@@ -555,11 +569,7 @@ btSoftBody* HairModel::createHairStrand(int strandIndex, btSoftRigidDynamicsWorl
 	//attach anchor points
 	for(int node = 0 ; node < particles.size() ; node++)
 	{
-#ifdef CONSTANT_BLENDING_SPRINGS
-		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),anchorMaterial);
-#else
 		strand->appendLink(&(strand->m_nodes[node]),&(m_anchors->m_nodes[strandIndex*particles.size()+node]),m_blendingSpringMaterials[node]);
-#endif
 	}
 #endif
 
@@ -1733,4 +1743,52 @@ void HairModel::setHairColour(Ogre::Vector4 value)
 void HairModel::setStrokeScale(float value)
 {
 	m_strokeScale = value;
+}
+
+void HairModel::setEdgeSpringStiffness(float value)
+{
+	m_edgeMaterial->m_kLST = value;
+	updateLinks();
+}
+void HairModel::setBendingSpringStiffness(float value)
+{
+	m_bendingMaterial->m_kLST = value;
+	updateLinks();
+}
+void HairModel::setTorsionSpringStiffness(float value)
+{
+	m_torsionMaterial->m_kLST = value;
+	updateLinks();
+}
+void HairModel::setBlendingSpringStiffness(float value)
+{
+	for(int spring = 0 ; spring < m_blendingSpringMaterials.size() ; spring++)
+	{
+		float x = (float)spring/(m_blendingSpringMaterials.size()-1);
+		m_blendingSpringMaterials[spring]->m_kLST = 
+			value*abs(
+			m_blendingA*x*x +
+			m_blendingB*x +
+			m_blendingC);
+	}
+	updateLinks();
+}
+void HairModel::setBlendingCurve(float a,float b, float c)
+{
+	m_blendingA = a;
+	m_blendingB = b;
+	m_blendingC = c;
+}
+
+void HairModel::updateLinks()
+{
+	for(int strand = 0 ; strand < m_strandSoftBodies.size() ; strand++)
+	{
+		m_strandSoftBodies[strand]->updateLinkConstants();
+	}
+	for(int strand = 0 ; strand < m_ghostStrandSoftBodies.size() ; strand++)
+	{
+		m_ghostStrandSoftBodies[strand]->updateLinkConstants();
+	}
+	m_anchors->updateLinkConstants();
 }

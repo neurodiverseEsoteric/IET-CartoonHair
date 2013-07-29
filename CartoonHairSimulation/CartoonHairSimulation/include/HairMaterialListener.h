@@ -18,6 +18,7 @@ public:
 		{
 			return m_solidMaterial->getTechnique(0);
 		}
+		return originalMaterial->getTechnique(0);
 	}
 private:
 	Ogre::MaterialPtr m_solidMaterial;
