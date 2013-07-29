@@ -88,6 +88,7 @@ public:
 	void applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation);
 	void updateManualObject();
 	void updateAnchors(float timestep);
+	void updateCollisionMargins(float min,float max);
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
 

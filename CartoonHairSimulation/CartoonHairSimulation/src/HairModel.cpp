@@ -224,6 +224,15 @@ float HairModel::getSimulationScale()
 	return m_simulationScale;
 }
 
+void HairModel::updateCollisionMargins(float min,float max)
+{
+	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
+	{
+		btSoftBody *strand = m_strandSoftBodies[section];
+		strand->getCollisionShape()->setMargin(Ogre::Math::RangeRandom(min,max));
+	}
+}
+
 void HairModel::updateAnchors(float timestep)
 {
 	float increment = timestep*m_animationSpeed;
@@ -485,7 +494,7 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 
 		//now to create the strand softbody and its ghost nodes
 		btSoftBody *hairStrand = createHairStrand(strandCount,world,particles,masses,world->getWorldInfo(),edgeMaterial,bendingMaterial,torsionMaterial,anchorMaterial);
-		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP);
+		world->addSoftBody(hairStrand,HAIR_GROUP, BODY_GROUP | HAIR_GROUP);
 		m_strandSoftBodies.push_back(hairStrand);
 
 		btSoftBody *ghostStrand = createAndLinkGhostStrand(hairStrand,edgeMaterial,bendingMaterial,torsionMaterial);

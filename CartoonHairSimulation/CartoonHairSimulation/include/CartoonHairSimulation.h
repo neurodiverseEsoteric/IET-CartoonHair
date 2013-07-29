@@ -31,6 +31,7 @@ public:
     virtual ~CartoonHairSimulation(void);
 
     void go(void);
+	bool alterMarginsPressed(const CEGUI::EventArgs& e);
 
 protected:
     bool setup();
@@ -79,7 +80,8 @@ protected:
 	CEGUI::Checkbox *m_normalsBox, *m_debugEdgesBox, *m_showPhysicsBox, *m_disablePhysicsBox, *m_showIdBufferBox;
 	CEGUI::Checkbox *m_bonesBox, *m_hatchingBox, *m_simpleHatchingBox;
 	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox, *m_blinnSBox, *m_specTexSBox, *m_backlightSBox, *m_strokeScaleBox;
-	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox;
+	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox, *m_minMarginBox, *m_maxMarginBox;
+	CEGUI::ButtonBase *m_alterMargins;
 
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;

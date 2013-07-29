@@ -223,6 +223,15 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 	//TO DO: add any clean up you need here
 }
 
+bool CartoonHairSimulation::alterMarginsPressed(const CEGUI::EventArgs& e)
+{
+	m_hairModel->updateCollisionMargins(
+		stringToFloat(m_minMarginBox->getText().c_str()),
+		stringToFloat(m_maxMarginBox->getText().c_str())
+		);
+	return true;
+}
+
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::configure(void)
 {
@@ -476,6 +485,12 @@ void CartoonHairSimulation::createScene(void)
 	m_specTexSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//specTexS");
 	m_backlightSBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//backlightS");
 	m_strokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//strokeScale");
+	m_minMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//minMargin");
+	m_maxMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//maxMargin");
+
+	m_alterMargins = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root//alterMargins");
+	m_alterMargins->subscribeEvent(CEGUI::PushButton::EventClicked,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::alterMarginsPressed,this));
 
 	m_redBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/red");
 	m_greenBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/green");
@@ -498,6 +513,8 @@ void CartoonHairSimulation::createScene(void)
 	m_redBox->setText(numberToString(RED));
 	m_greenBox->setText(numberToString(GREEN));
 	m_blueBox->setText(numberToString(BLUE));
+	m_minMarginBox->setText(numberToString(MIN_MARGIN));
+	m_maxMarginBox->setText(numberToString(MAX_MARGIN));
 
 	//setup spring materials
 	m_edgeMaterial = new btSoftBody::Material();

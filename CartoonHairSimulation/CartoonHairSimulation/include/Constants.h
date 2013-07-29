@@ -43,6 +43,8 @@
 #define BODY_GROUP 0x1
 #define HAIR_GROUP 0x2
 #define GHOST_GROUP 0x4
+#define MIN_MARGIN 0.25f
+#define MAX_MARGIN 0.25f
 //based on http://bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
 #define FIXED_TIMESTEP btScalar(1.0f)/btScalar(60.0f);
 #define MAX_SUB_STEPS 1
