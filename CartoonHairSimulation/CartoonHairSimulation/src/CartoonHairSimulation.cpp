@@ -677,7 +677,7 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"hairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
+		"windhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
 		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 
@@ -956,7 +956,10 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			btQuaternion bBoneOrientation(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
 
 			m_headRigidBody->setWorldTransform(btTransform(bBoneOrientation,bBonePosition));
-			m_hairModel->updateAnchors(timestep);
+			if(m_firstTransformation)
+			{
+				m_hairModel->updateAnchors(timestep);
+			}
 			m_firstTransformation = false;
 		}
 		if(m_animateHairBox->isSelected())
