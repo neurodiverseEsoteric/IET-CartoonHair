@@ -112,6 +112,7 @@ public:
 	void setTorsionSpringStiffness(float value);
 	void setBlendingSpringStiffness(float value);
 	void setBlendingCurve(float a,float b, float);
+	void rebuildMesh(int hairResolution, int shapeResolution);
 	
 private:
 	//methods
@@ -127,6 +128,7 @@ private:
 	btSoftBody *createAndLinkGhostStrand(btSoftBody *strand,
 		btSoftBody::Material *edgeMaterial,btSoftBody::Material *bendingMaterial,btSoftBody::Material *torsionMaterial);
 
+	void generateHairShape();
 	void updateLinks();
 	void generateIndices();
 	void generateEdgeMap();
@@ -206,5 +208,6 @@ private:
 	bool m_variableSilhouetteIntensity, m_sobelEnabled, m_hatchingEnabled, m_simpleHatching;
 	float m_zMin,m_zScale, m_blinnS, m_specTexS, m_backlightS, m_strokeScale;
 	Ogre::Vector4 m_hairColour;
+	int m_hairResolution, m_shapeResolution;
 
 };

@@ -63,6 +63,8 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 	m_specTexS = SPECULAR_TEXTURE_S;
 	m_backlightS = BACKLIGHTING_TEXTURE_S;
 	m_strokeScale = HATCHING_STROKE_SCALE;
+	m_hairResolution = NUM_HAIR_SAMPLES;
+	m_shapeResolution = NUM_HAIR_SHAPE_SAMPLES;
 
 	m_hairColour = Ogre::Vector3(RED,GREEN,BLUE);
 
@@ -525,16 +527,6 @@ void HairModel::generateHairStrands(std::string filename,btSoftRigidDynamicsWorl
 
 void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 {
-	//create hair shape
-	Ogre::Vector3 vertex(0,0,-0.1);
-	Ogre::Radian rad(Ogre::Degree(-360.0f/NUM_HAIR_SHAPE_SAMPLES));
-	m_hairShape.push_back(vertex);
-	for(int sample = 1 ; sample < NUM_HAIR_SHAPE_SAMPLES ; sample++)
-	{
-		vertex = Ogre::Quaternion(rad,Ogre::Vector3::UNIT_Y)*vertex;
-		m_hairShape.push_back(vertex);
-	}
-
 	//create manual hair object
 	m_hairMesh = sceneMgr->createManualObject("hair");
 	m_hairMesh->setDynamic(true);
@@ -551,6 +543,7 @@ void HairModel::generateHairMesh(Ogre::SceneManager *sceneMgr)
 	m_debugEdges = sceneMgr->createManualObject("debugEdges");
 	m_debugEdges->setDynamic(true);
 
+	generateHairShape();
 	createOrUpdateManualObject(false);
 	generateEdges(false);
 #ifdef STYLISED_SPECULAR
@@ -677,7 +670,7 @@ btSoftBody* HairModel::createAndLinkGhostStrand(btSoftBody *strand,
 
 void HairModel::generateIndices()
 {
-	int numNodes = NUM_HAIR_SAMPLES;
+	int numNodes = m_hairResolution;
 	int numVerts = m_hairShape.size();
 
 	//for the normal sides of the strand
@@ -791,9 +784,9 @@ void HairModel::generateVertices(bool update, int section)
 	Ogre::Quaternion rot(0,0,0,1);
 	float scale;
 
-	float increment = 1.0f/NUM_HAIR_SAMPLES;
+	float increment = 1.0f/m_hairResolution;
 
-	for(int node = 0 ; node < NUM_HAIR_SAMPLES-1 ; node++)
+	for(int node = 0 ; node < m_hairResolution-1 ; node++)
 	{
 		float t = node*increment;
 		scale = determineScale(t);
@@ -839,7 +832,7 @@ void HairModel::generateVertices(bool update, int section)
 
 	if(update)
 	{
-		int index = (NUM_HAIR_SAMPLES-1)*m_hairShape.size();
+		int index = (m_hairResolution-1)*m_hairShape.size();
 		m_strandVertices[section][index] = start;
 		m_strandVertices[section][index+1] = end;
 	}
@@ -966,6 +959,8 @@ void HairModel::generateEdgeMap()
 
 		m_edgeMap[pair] = it->second;
 	}
+
+	m_tempEdgeMap.clear();
 }
 
 bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
@@ -1791,4 +1786,48 @@ void HairModel::updateLinks()
 		m_ghostStrandSoftBodies[strand]->updateLinkConstants();
 	}
 	m_anchors->updateLinkConstants();
+}
+
+void HairModel::rebuildMesh(int hairResolution, int shapeResolution)
+{
+	m_hairResolution = hairResolution;
+	m_shapeResolution = shapeResolution;
+
+	//rebuild hair shape
+	m_hairShape.clear();
+	generateHairShape();
+
+	//rebuild indices
+	m_strandIndices.clear();
+	m_strandTextureCoordinates.clear();
+	generateIndices();
+
+	//rebuild edge map
+	m_edgeMap.clear();
+	generateEdgeMap();
+
+	//rebuild vertices + normals
+	m_hairSplines.clear();
+	for(int section = 0 ; section < m_strandSoftBodies.size() ; section++)
+	{
+		m_hairSplines.push_back(Ogre::SimpleSpline());
+		m_strandVertices[section].clear();
+		m_strandNormals[section].clear();
+		generateVertices(false,section);
+		generateNormals(false,section);
+	}
+
+}
+
+void HairModel::generateHairShape()
+{
+	//create hair shape
+	Ogre::Vector3 vertex(0,0,-0.1);
+	Ogre::Radian rad(Ogre::Degree(-360.0f/m_shapeResolution));
+	m_hairShape.push_back(vertex);
+	for(int sample = 1 ; sample < m_shapeResolution ; sample++)
+	{
+		vertex = Ogre::Quaternion(rad,Ogre::Vector3::UNIT_Y)*vertex;
+		m_hairShape.push_back(vertex);
+	}
 }

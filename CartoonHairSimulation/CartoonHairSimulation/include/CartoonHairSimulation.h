@@ -32,6 +32,7 @@ public:
 
     void go(void);
 	bool alterMarginsPressed(const CEGUI::EventArgs& e);
+	bool rebuildMeshPressed(const CEGUI::EventArgs& e);
 
 	bool blinnSpecularEnabled(const CEGUI::EventArgs& e);
 	bool backlightingEnabled(const CEGUI::EventArgs& e);
@@ -112,7 +113,8 @@ protected:
 	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox, *m_minMarginBox, *m_maxMarginBox;
 	CEGUI::MultiLineEditbox *m_edgeStiffBox, *m_bendStiffBox, *m_torsionStiffBox, *m_anchorStiffBox;
 	CEGUI::MultiLineEditbox *m_hairABox, *m_hairBBox, *m_hairCBox, *m_springABox, *m_springBBox, *m_springCBox;
-	CEGUI::ButtonBase *m_alterMargins;
+	CEGUI::MultiLineEditbox *m_hairResolutionBox, *m_shapeResolutionBox;
+	CEGUI::ButtonBase *m_alterMarginsButton, *m_rebuildMeshButton;
 
     // OgreBites
     OgreBites::SdkTrayManager* mTrayMgr;

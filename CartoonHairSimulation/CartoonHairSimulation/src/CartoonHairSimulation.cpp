@@ -63,6 +63,18 @@ float stringToFloat(std::string value)
 	}
 }
 
+int stringToInt(std::string value)
+{
+	try
+	{
+		return std::stoi(value);
+	}
+	catch(std::invalid_argument)
+	{
+		return 0;
+	}
+}
+
 /*
 Convenience function from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
 Convertes mouse button presses to a format compatible with CEGUI
@@ -228,6 +240,15 @@ bool CartoonHairSimulation::alterMarginsPressed(const CEGUI::EventArgs& e)
 	m_hairModel->updateCollisionMargins(
 		stringToFloat(m_minMarginBox->getText().c_str()),
 		stringToFloat(m_maxMarginBox->getText().c_str())
+		);
+	return true;
+}
+
+bool CartoonHairSimulation::rebuildMeshPressed(const CEGUI::EventArgs& e)
+{
+	m_hairModel->rebuildMesh(
+		stringToInt(m_hairResolutionBox->getText().c_str()),
+		stringToInt(m_shapeResolutionBox->getText().c_str())
 		);
 	return true;
 }
@@ -755,6 +776,8 @@ void CartoonHairSimulation::createScene(void)
 	m_springABox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springA");
 	m_springBBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springB");
 	m_springCBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/springC");
+	m_hairResolutionBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/hairResolution");
+	m_shapeResolutionBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/shapeResolution");
 
 	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
 	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
@@ -763,7 +786,8 @@ void CartoonHairSimulation::createScene(void)
 	m_showIdBufferBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/idBuffer");
 	m_bonesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/bone");
 
-	m_alterMargins = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root//alterMargins");
+	m_alterMarginsButton = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root//alterMargins");
+	m_rebuildMeshButton = (CEGUI::PushButton*) m_guiRoot->getChildRecursive("Root/Hair/rebuildMesh");
 	
 	//set values
 	m_zMinBox->setText(numberToString(ZMIN));
@@ -787,10 +811,14 @@ void CartoonHairSimulation::createScene(void)
 	m_springABox->setText(numberToString(BLENDING_QUADRATIC_A));
 	m_springBBox->setText(numberToString(BLENDING_QUADRATIC_B));
 	m_springCBox->setText(numberToString(BLENDING_QUADRATIC_C));
+	m_hairResolutionBox->setText(numberToString(NUM_HAIR_SAMPLES));
+	m_shapeResolutionBox->setText(numberToString(NUM_HAIR_SHAPE_SAMPLES));
 
 	//add event handler
-	m_alterMargins->subscribeEvent(CEGUI::PushButton::EventClicked,
+	m_alterMarginsButton->subscribeEvent(CEGUI::PushButton::EventClicked,
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::alterMarginsPressed,this));
+	m_rebuildMeshButton->subscribeEvent(CEGUI::PushButton::EventClicked,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::rebuildMeshPressed,this));
 
 	m_blinnSpecularBox->subscribeEvent(CEGUI::Checkbox::EventCheckStateChanged,
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::blinnSpecularEnabled,this));
