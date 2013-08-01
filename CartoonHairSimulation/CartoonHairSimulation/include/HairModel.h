@@ -100,6 +100,10 @@ public:
 	void enableSobel(bool value);
 	void enableHatching(bool value);
 	void enableSimpleHatching(bool value);
+	void enableAngleScaling(bool value);
+	void enableDepthScaling(bool value);
+	void setSilhouetteStrokeScale(float value);
+	void setSilhouetteStrokeLimit(float value);
 	void setZMin(float value);
 	void setZScale(float value);
 	void setBlinnS(float value);
@@ -206,7 +210,8 @@ private:
 	//effects variables
 	bool m_blinnSpecularEnabled,m_specularTextureEnabled,m_backlightingTextureEnabled,m_depthDetailAxisEnabled;
 	bool m_variableSilhouetteIntensity, m_sobelEnabled, m_hatchingEnabled, m_simpleHatching;
-	float m_zMin,m_zScale, m_blinnS, m_specTexS, m_backlightS, m_strokeScale;
+	bool m_angleScalingEnabled, m_depthScalingEnabled;
+	float m_zMin,m_zScale, m_blinnS, m_specTexS, m_backlightS, m_strokeScale, m_silhouetteStrokeScale, m_silhouetteStrokeLimit;
 	Ogre::Vector4 m_hairColour;
 	int m_hairResolution, m_shapeResolution;
 

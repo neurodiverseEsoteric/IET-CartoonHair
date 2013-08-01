@@ -48,6 +48,8 @@ public:
 	bool showPhysicsEnabled(const CEGUI::EventArgs& e);
 	bool showIDBufferEnabled(const CEGUI::EventArgs& e);
 	bool showBonesEnabled(const CEGUI::EventArgs& e);
+	bool angleScalingEnabled(const CEGUI::EventArgs& e);
+	bool depthScalingEnabled(const CEGUI::EventArgs& e);
 
 	bool blinnSChanged(const CEGUI::EventArgs& e);
 	bool specularTextureSChanged(const CEGUI::EventArgs& e);
@@ -64,6 +66,8 @@ public:
 	bool springCurveChanged(const CEGUI::EventArgs& e);
 	bool edgeThresholdChanged(const CEGUI::EventArgs& e);
 	bool dilationValuesChanged(const CEGUI::EventArgs& e);
+	bool silhouetteStrokeScaleChanged(const CEGUI::EventArgs& e);
+	bool silhouetteStrokeLimitChanged(const CEGUI::EventArgs& e);
 
 
 protected:
@@ -112,12 +116,13 @@ protected:
 	CEGUI::Checkbox *m_blinnSpecularBox, *m_specularTextureBox, *m_backlightingTextureBox, *m_depthDetailBox;
 	CEGUI::Checkbox *m_animateHairBox, *m_animateSkeletonBox, *m_fadeSilhouetteBox, *m_sobelSilhouetteBox;
 	CEGUI::Checkbox *m_normalsBox, *m_debugEdgesBox, *m_showPhysicsBox, *m_disablePhysicsBox, *m_showIdBufferBox;
-	CEGUI::Checkbox *m_bonesBox, *m_hatchingBox, *m_simpleHatchingBox;
+	CEGUI::Checkbox *m_bonesBox, *m_hatchingBox, *m_simpleHatchingBox, *m_angleScalingBox, *m_depthScalingBox;
 	CEGUI::MultiLineEditbox *m_zMinBox, *m_zScaleBox, *m_blinnSBox, *m_specTexSBox, *m_backlightSBox, *m_strokeScaleBox;
 	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox, *m_minMarginBox, *m_maxMarginBox;
 	CEGUI::MultiLineEditbox *m_edgeStiffBox, *m_bendStiffBox, *m_torsionStiffBox, *m_anchorStiffBox;
 	CEGUI::MultiLineEditbox *m_hairABox, *m_hairBBox, *m_hairCBox, *m_springABox, *m_springBBox, *m_springCBox;
 	CEGUI::MultiLineEditbox *m_hairResolutionBox, *m_shapeResolutionBox , *m_edgeThresholdBox, *m_xDilationBox, *m_yDilationBox;
+	CEGUI::MultiLineEditbox *m_silhouetteStrokeLimitBox, *m_silhouetteStrokeScaleBox;
 	CEGUI::ButtonBase *m_alterMarginsButton, *m_rebuildMeshButton;
 
     // OgreBites

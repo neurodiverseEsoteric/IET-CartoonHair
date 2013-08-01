@@ -65,6 +65,8 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 	m_strokeScale = HATCHING_STROKE_SCALE;
 	m_hairResolution = NUM_HAIR_SAMPLES;
 	m_shapeResolution = NUM_HAIR_SHAPE_SAMPLES;
+	m_silhouetteStrokeLimit = STROKE_LIMIT;
+	m_silhouetteStrokeScale = STROKE_SCALE;
 
 	m_hairColour = Ogre::Vector3(RED,GREEN,BLUE);
 
@@ -422,22 +424,23 @@ void HairModel::generateQuadStrip(std::vector<Ogre::Vector3> &screenSpacePoints,
 				
 		//scale rib base on angle to stop corners being squeezed
 		float scale = 1.0f;
-#ifdef ANGLE_SCALING
-		scale = abs(rib.length()/(rib.dotProduct(norm)));
-#endif
+		if(m_angleScalingEnabled)
+		{
+			scale = abs(rib.length()/(rib.dotProduct(norm)));
+		}
 
 		//vertex depth scale factor from artistic-sils-300dpi.pdf
-#ifdef DEPTH_SCALING
-		float scaleF = 0.5f;
-		float left = 0.0f;
-		float right = 1.0f+scaleF*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
-
-		scale*= std::max(left,right);
-#endif
-
-		if(scale>STROKE_LIMIT)
+		if(m_depthScalingEnabled)
 		{
-			scale = STROKE_LIMIT;
+			float scaleF = 0.5f;
+			float left = 0.0f;
+			float right = 1.0f+scaleF*((zMax+zMin-2*screenSpacePoints[i].z)/(zMax-zMin));
+			scale*= std::max(left,right);
+		}
+
+		if(scale>m_silhouetteStrokeLimit)
+		{
+			scale = m_silhouetteStrokeLimit;
 		}
 
 		//multiply the scale by some value as otherwise 0 to 1 is far too big
@@ -1704,6 +1707,26 @@ void HairModel::enableHatching(bool value)
 void HairModel::enableSimpleHatching(bool value)
 {
 	m_simpleHatching = value;
+}
+
+void HairModel::enableAngleScaling(bool value)
+{
+	m_angleScalingEnabled = value;
+}
+
+void HairModel::enableDepthScaling(bool value)
+{
+	m_depthScalingEnabled = value;
+}
+
+void HairModel::setSilhouetteStrokeScale(float value)
+{
+	m_silhouetteStrokeScale = value;
+}
+
+void HairModel::setSilhouetteStrokeLimit(float value)
+{
+	m_silhouetteStrokeLimit = value;
 }
 
 void HairModel::setZMin(float value)
