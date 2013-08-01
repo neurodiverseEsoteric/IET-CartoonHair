@@ -122,6 +122,7 @@
     <ClInclude Include="include\CartoonHairSimulation.h" />
     <ClInclude Include="include\Constants.h" />
     <ClInclude Include="include\DebugDrawer.h" />
+    <ClInclude Include="include\HairCompositorListener.h" />
     <ClInclude Include="include\HairMaterialListener.h" />
     <ClInclude Include="include\HairModel.h" />
     <ClInclude Include="include\IdBufferRenderTargetListener.h" />

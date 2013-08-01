@@ -14,7 +14,7 @@ public:
 	}
 	virtual Ogre::Technique *handleSchemeNotFound(unsigned short schemeIndex, const Ogre::String &schemeName, Ogre::Material *originalMaterial, unsigned short lodIndex, const Ogre::Renderable *rend)
 	{
-		if(schemeName == "solid")
+		if(schemeName.compare("solid") == 0)
 		{
 			return m_solidMaterial->getTechnique(0);
 		}

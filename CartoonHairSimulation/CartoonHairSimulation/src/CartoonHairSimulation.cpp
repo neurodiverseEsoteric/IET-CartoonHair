@@ -165,6 +165,7 @@ CartoonHairSimulation::CartoonHairSimulation(void)
 	m_skeletonDrawer = NULL;
 	m_characterAnimationState = NULL;
 	m_hairMaterialListener = NULL;
+	m_compositorChain = NULL;
 }
 
 //-------------------------------------------------------------------------------------
@@ -203,6 +204,11 @@ CartoonHairSimulation::~CartoonHairSimulation(void)
 	if(m_hairMaterialListener)
 	{
 		delete m_hairMaterialListener;
+	}
+
+	if(m_hairCompositorListener)
+	{
+		delete m_hairCompositorListener;
 	}
 
 	//clean up physics
@@ -408,6 +414,17 @@ bool CartoonHairSimulation::springCurveChanged(const CEGUI::EventArgs& e)
 		stringToFloat(m_springCBox->getText().c_str())
 		);
 	m_hairModel->setBlendingSpringStiffness(stringToFloat(m_anchorStiffBox->getText().c_str()));
+	return true;
+}
+
+bool CartoonHairSimulation::edgeThresholdChanged(const CEGUI::EventArgs& e)
+{
+	m_hairCompositorListener->setEdgeThreshold(stringToFloat(m_edgeThresholdBox->getText().c_str()));
+	return true;
+}
+bool CartoonHairSimulation::dilationValuesChanged(const CEGUI::EventArgs& e)
+{
+	m_hairCompositorListener->setDilationValues(stringToInt(m_xDilationBox->getText().c_str()),stringToInt(m_yDilationBox->getText().c_str()));
 	return true;
 }
 
@@ -677,7 +694,7 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"windhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
+		"standardhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
 		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 
@@ -741,6 +758,13 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::CompositorManager::getSingleton().addCompositor(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor");
 	Ogre::MaterialManager::getSingleton().addListener(m_hairMaterialListener);
 
+	m_compositorChain = Ogre::CompositorManager::getSingleton().getCompositorChain(mWindow->getViewport(0));
+	m_hairCompositorListener = new HairCompositorListener(mWindow->getWidth(),mWindow->getHeight(),
+		EDGE_THRESHOLD,X_DILATION,Y_DILATION);
+	Ogre::CompositorInstance *compositor  = m_compositorChain->getCompositor("IETCartoonHair/SilhouetteCompositor");
+	compositor->addListener(m_hairCompositorListener);
+	Ogre::CompositorManager::getSingleton().setCompositorEnabled(mWindow->getViewport(0),"IETCartoonHair/SilhouetteCompositor",true);
+
 	//link gui elements
 	m_blinnSpecularBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//blinnSpecular");
 	m_specularTextureBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root//specularTexture");
@@ -762,6 +786,9 @@ void CartoonHairSimulation::createScene(void)
 	m_strokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//strokeScale");
 	m_minMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//minMargin");
 	m_maxMarginBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//maxMargin");
+	m_edgeThresholdBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//edgeThreshold");
+	m_xDilationBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//xDilation");
+	m_yDilationBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root//yDilation");
 
 	m_redBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/red");
 	m_greenBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/green");
@@ -813,6 +840,9 @@ void CartoonHairSimulation::createScene(void)
 	m_springCBox->setText(numberToString(BLENDING_QUADRATIC_C));
 	m_hairResolutionBox->setText(numberToString(NUM_HAIR_SAMPLES));
 	m_shapeResolutionBox->setText(numberToString(NUM_HAIR_SHAPE_SAMPLES));
+	m_edgeThresholdBox->setText(numberToString(EDGE_THRESHOLD));
+	m_xDilationBox->setText(numberToString(X_DILATION));
+	m_yDilationBox->setText(numberToString(Y_DILATION));
 
 	//add event handler
 	m_alterMarginsButton->subscribeEvent(CEGUI::PushButton::EventClicked,
@@ -885,6 +915,12 @@ void CartoonHairSimulation::createScene(void)
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::springCurveChanged,this));
 	m_springCBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::springCurveChanged,this));
+	m_edgeThresholdBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::edgeThresholdChanged,this));
+	m_xDilationBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::dilationValuesChanged,this));
+	m_yDilationBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::dilationValuesChanged,this));
 
 	//hide some of the debug manual objects
 	m_debugDrawer->getLinesManualObject()->setVisible(m_debugEdgesBox->isSelected());

@@ -192,10 +192,6 @@ material IETCartoonHair/Dilation
 			}
 			fragment_program_ref IETCartoonHair/DilationFragmentShader
 			{
-				param_named width float 1024.0
-				param_named height float 768.0
-				param_named dilationX int 3
-				param_named dilationY int 3
 				param_named frameBuffer int 0
 			}
 			
@@ -221,9 +217,6 @@ material IETCartoonHair/Sobel
 			}
 			fragment_program_ref IETCartoonHair/SobelFragmentShader
 			{
-				param_named width float 1024.0
-				param_named height float 768.0
-				param_named edgeThreshold float 8
 				param_named frameBuffer int 0
 			}
 			
