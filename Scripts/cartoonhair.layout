@@ -2,29 +2,29 @@
 
 <GUILayout >
     <Window Type="DefaultWindow" Name="Root" >
-        <Property Name="UnifiedAreaRect" Value="{{-0.000977941,0},{0.00013734,0},{0.999024,0},{1.00014,0}}" />
+        <Property Name="UnifiedAreaRect" Value="{{0.000975184,0},{0.00013734,0},{1.00098,0},{1.00014,0}}" />
         <Window Type="Vanilla/FrameWindow" Name="Root/" >
             <Property Name="Font" Value="DejaVuSans-10" />
             <Property Name="Text" Value="Effects" />
             <Property Name="TitlebarFont" Value="DejaVuSans-10" />
             <Property Name="TitlebarEnabled" Value="True" />
-            <Property Name="UnifiedAreaRect" Value="{{0.773125,0},{0.163246,0},{0.986201,0},{0.965296,0}}" />
+            <Property Name="UnifiedAreaRect" Value="{{0.771172,0},{0.0419446,0},{0.984248,0},{0.965295,0}}" />
             <Window Type="Vanilla/Checkbox" Name="Root//blinnSpecular" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Blinn Specular" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0126491,0},{0.00352412,0},{0.997825,0},{0.0317514,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0126491,0},{0.00352412,0},{0.997825,0},{0.0285472,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//backlighting" >
                 <Property Name="Text" Value="Backlighting" />
-                <Property Name="UnifiedAreaRect" Value="{{0.015849,0},{0.0428486,0},{1.00103,0},{0.0708726,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.015849,0},{0.0364403,0},{1.00103,0},{0.0612601,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//specularTexture" >
                 <Property Name="Text" Value="Specular Texture" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0129844,0},{0.0808559,0},{0.998157,0},{0.108757,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0129844,0},{0.0680392,0},{0.998157,0},{0.0959403,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//depthAxis" >
                 <Property Name="Text" Value="Depth detail" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0195345,0},{0.469534,0},{1.0047,0},{0.50145,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0195345,0},{0.38943,0},{1.0047,0},{0.418142,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//zMin" >
                 <Property Name="Font" Value="DejaVuSans-10" />
@@ -32,147 +32,190 @@
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0253418,0},{0.504962,0},{0.457868,0},{0.56927,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0253418,0},{0.420052,0},{0.457868,0},{0.474747,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Z Min" />
                 <Property Name="HorzExtent" Value="48" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.509046,0},{0.951739,0},{0.565324,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.417727,0},{0.951739,0},{0.470801,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//zScale" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0227255,0},{0.567778,0},{0.455252,0},{0.632085,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0227255,0},{0.471653,0},{0.455252,0},{0.526348,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label1" >
                 <Property Name="Text" Value="Z Scale" />
                 <Property Name="HorzExtent" Value="65" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.482754,0},{0.572304,0},{0.953706,0},{0.628908,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.482754,0},{0.471373,0},{0.953706,0},{0.527977,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//anchorAnimate" >
                 <Property Name="Text" Value="Animate Hair" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0265248,0},{0.638496,0},{1.0117,0},{0.674427,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0265248,0},{0.52635,0},{1.0117,0},{0.559077,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//skeletonAnimate" >
                 <Property Name="Text" Value="Animate Skeleton" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0239085,0},{0.677206,0},{1.00908,0},{0.709122,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0239085,0},{0.561856,0},{1.00908,0},{0.587364,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//fadeSilhouette" >
                 <Property Name="Text" Value="Fade Silhouette" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0234937,0},{0.71559,0},{1.00867,0},{0.747831,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0234937,0},{0.593831,0},{1.00867,0},{0.622868,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//sobelSilhouette" >
                 <Property Name="Text" Value="Sobel Silhouette" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0318304,0},{0.751781,0},{1.01701,0},{0.787711,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0318304,0},{0.623614,0},{1.01701,0},{0.653136,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//blinnS" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0295102,0},{0.120912,0},{0.462036,0},{0.18522,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0295102,0},{0.100085,0},{0.462036,0},{0.15478,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label2" >
                 <Property Name="Text" >Blinn S
 </Property>
                 <Property Name="HorzExtent" Value="60" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.121269,0},{0.951739,0},{0.181562,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.100442,0},{0.951739,0},{0.151122,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//specTexS" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.189186,0},{0.466204,0},{0.253494,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.15394,0},{0.466204,0},{0.208636,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label21" >
                 <Property Name="Text" >STex S
 </Property>
                 <Property Name="HorzExtent" Value="59" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.190216,0},{0.951739,0},{0.246821,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.480787,0},{0.151766,0},{0.951739,0},{0.208371,0}}" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label211" >
                 <Property Name="Text" >Backl S
 </Property>
                 <Property Name="HorzExtent" Value="64" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.484955,0},{0.252693,0},{0.955907,0},{0.312987,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.484955,0},{0.207835,0},{0.955907,0},{0.258516,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//backlightS" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.255965,0},{0.466205,0},{0.320272,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.204698,0},{0.466205,0},{0.259393,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//hatching" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Enable Hatching" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0212569,0},{0.322216,0},{0.977063,0},{0.359511,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0212569,0},{0.262939,0},{0.977063,0},{0.290621,0}}" />
             </Window>
             <Window Type="Vanilla/Checkbox" Name="Root//simpleHatching" >
                 <Property Name="Text" Value="Simple Hatching" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0208421,0},{0.359448,0},{0.976648,0},{0.396418,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0208421,0},{0.295365,0},{0.976648,0},{0.325926,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//strokeScale" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0286807,0},{0.396892,0},{0.461207,0},{0.461199,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0286807,0},{0.332809,0},{0.461207,0},{0.387503,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label2111" >
                 <Property Name="Text" >HScale
 </Property>
                 <Property Name="HorzExtent" Value="61" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.484955,0},{0.397654,0},{0.955907,0},{0.457947,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.484955,0},{0.333571,0},{0.955907,0},{0.384251,0}}" />
             </Window>
             <Window Type="Vanilla/Button" Name="Root//alterMargins" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Alter Margins" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0625053,0},{0.79389,0},{0.963313,0},{0.844698,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0625053,0},{0.833942,0},{0.963313,0},{0.88475,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//minMargin" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0661755,0},{0.851907,0},{0.498702,0},{0.916215,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0661755,0},{0.887153,0},{0.498702,0},{0.941848,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label3" >
                 <Property Name="Text" Value="M min" />
                 <Property Name="HorzExtent" Value="53" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.517452,0},{0.855789,0},{0.988404,0},{0.912068,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.517452,0},{0.887831,0},{0.988404,0},{0.937701,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root//maxMargin" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="Tooltip" Value="zMin" />
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0657608,0},{0.916662,0},{0.498287,0},{0.980971,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0657608,0},{0.942295,0},{0.498287,0},{0.996992,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root//label31" >
                 <Property Name="Text" Value="M max" />
                 <Property Name="HorzExtent" Value="58" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.517452,0},{0.916653,0},{0.988404,0},{0.972932,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.517452,0},{0.942286,0},{0.988404,0},{0.992157,0}}" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root//edgeThreshold" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="Tooltip" Value="zMin" />
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.659548,0},{0.466204,0},{0.714243,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root//label22" >
+                <Property Name="Text" >Edge T
+</Property>
+                <Property Name="HorzExtent" Value="60" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.508286,0},{0.657967,0},{0.979238,0},{0.708648,0}}" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root//label221" >
+                <Property Name="Text" Value="X Dilat" />
+                <Property Name="HorzExtent" Value="60" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.512454,0},{0.711171,0},{0.983406,0},{0.761851,0}}" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root//xDilation" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="Tooltip" Value="zMin" />
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0336786,0},{0.712417,0},{0.466205,0},{0.767112,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root//yDilation" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="Tooltip" Value="zMin" />
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.037847,0},{0.765621,0},{0.470373,0},{0.820317,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root//label2211" >
+                <Property Name="Text" Value="Y Dilat" />
+                <Property Name="HorzExtent" Value="58" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.512454,0},{0.76404,0},{0.983406,0},{0.81472,0}}" />
             </Window>
         </Window>
         <Window Type="Vanilla/FrameWindow" Name="Root/Debug" >
@@ -212,172 +255,207 @@
             <Property Name="Text" Value="Hair Properties" />
             <Property Name="TitlebarFont" Value="DejaVuSans-10" />
             <Property Name="TitlebarEnabled" Value="True" />
-            <Property Name="UnifiedAreaRect" Value="{{0.429297,0},{0.411164,0},{0.763281,0},{0.966567,0}}" />
+            <Property Name="UnifiedAreaRect" Value="{{0.429297,0},{0.307614,0},{0.763281,0},{0.966566,0}}" />
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/red" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.384375,0},{0.00465356,0},{0.579687,0},{0.10526,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.384375,0},{0.00465356,0},{0.579687,0},{0.086718,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/green" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.597657,0},{0.00697974,0},{0.785157,0},{0.107586,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.597657,0},{0.00697974,0},{0.785157,0},{0.089044,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/blue" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.8,0},{0.00581725,0},{0.995313,0},{0.106423,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.8,0},{0.00581725,0},{0.995313,0},{0.087881,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Colour" />
                 <Property Name="HorzExtent" Value="58" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0265627,0},{0.0162807,0},{0.346875,0},{0.100759,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0265627,0},{0.0162807,0},{0.346875,0},{0.082217,0}}" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label1" >
                 <Property Name="Text" Value="Edge Stiff " />
                 <Property Name="HorzExtent" Value="92" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0218752,0},{0.105547,0},{0.576563,0},{0.193968,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0218752,0},{0.087005,0},{0.576563,0},{0.161519,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/edgeStiffness" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.103146,0},{0.993751,0},{0.198393,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.084604,0},{0.993751,0},{0.165945,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label12" >
                 <Property Name="Text" Value="Bend Stiff " />
                 <Property Name="HorzExtent" Value="93" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.024219,0},{0.19663,0},{0.578906,0},{0.284087,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.024219,0},{0.164181,0},{0.578906,0},{0.237732,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/bendStiffness" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.193141,0},{0.99375,0},{0.288891,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.160692,0},{0.99375,0},{0.242536,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label121" >
                 <Property Name="Text" Value="Torsion Stiff " />
                 <Property Name="HorzExtent" Value="114" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.027344,0},{0.280104,0},{0.582031,0},{0.368931,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.027344,0},{0.236067,0},{0.582031,0},{0.310987,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/torsionStiffness" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.279952,0},{0.99375,0},{0.375702,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.235915,0},{0.99375,0},{0.317758,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label1211" >
                 <Property Name="Text" Value="Anchor Stiff " />
                 <Property Name="HorzExtent" Value="111" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0343752,0},{0.371154,0},{0.589063,0},{0.459672,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0343752,0},{0.317846,0},{0.589063,0},{0.392457,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/anchorStiffness" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.370199,0},{0.99375,0},{0.465445,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.610937,0},{0.316891,0},{0.99375,0},{0.39823,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label12111" >
                 <Property Name="Text" Value="H Curve" />
                 <Property Name="HorzExtent" Value="70" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0353886,0},{0.46639,0},{0.353589,0},{0.547118,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0353886,0},{0.406129,0},{0.353589,0},{0.47295,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/hairA" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.383699,0},{0.456791,0},{0.579011,0},{0.55204,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.383699,0},{0.39653,0},{0.579011,0},{0.477872,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/hairB" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.594279,0},{0.459305,0},{0.781779,0},{0.554552,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.594279,0},{0.399044,0},{0.781779,0},{0.480384,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/hairC" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.793243,0},{0.458122,0},{0.988556,0},{0.553369,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.793243,0},{0.39786,0},{0.988556,0},{0.479201,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/springA" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.383023,0},{0.549571,0},{0.578335,0},{0.644819,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.383023,0},{0.480039,0},{0.578335,0},{0.56138,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/springB" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.594278,0},{0.548887,0},{0.781778,0},{0.644135,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.594278,0},{0.479355,0},{0.781778,0},{0.560696,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/springC" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.793243,0},{0.547888,0},{0.988556,0},{0.643133,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.793243,0},{0.478356,0},{0.988556,0},{0.559694,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label121111" >
                 <Property Name="Text" Value="S Curve" />
                 <Property Name="HorzExtent" Value="68" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0439392,0},{0.547766,0},{0.36214,0},{0.641084,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0439392,0},{0.478234,0},{0.36214,0},{0.557645,0}}" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label11" >
                 <Property Name="Text" Value="Hair Resolution" />
                 <Property Name="HorzExtent" Value="136" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0397115,0},{0.645707,0},{0.594399,0},{0.734128,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0397115,0},{0.55995,0},{0.594399,0},{0.634465,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/hairResolution" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.608013,0},{0.643126,0},{0.990827,0},{0.738372,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.608013,0},{0.557369,0},{0.990827,0},{0.638709,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/StaticText" Name="Root/Hair/label111" >
                 <Property Name="Text" Value="Shape Resolution" />
                 <Property Name="HorzExtent" Value="155" />
-                <Property Name="VertExtent" Value="17.37" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0429279,0},{0.738576,0},{0.597615,0},{0.826997,0}}" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0429279,0},{0.638913,0},{0.597615,0},{0.713427,0}}" />
             </Window>
             <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/shapeResolution" >
                 <Property Name="Text" >
 </Property>
                 <Property Name="MaxTextLength" Value="1073741823" />
-                <Property Name="UnifiedAreaRect" Value="{{0.608013,0},{0.734222,0},{0.990827,0},{0.829469,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.608013,0},{0.634559,0},{0.990827,0},{0.715899,0}}" />
                 <Property Name="TextParsingEnabled" Value="False" />
             </Window>
             <Window Type="Vanilla/Button" Name="Root/Hair/rebuildMesh" >
                 <Property Name="Font" Value="DejaVuSans-10" />
                 <Property Name="Text" Value="Rebuild Mesh" />
-                <Property Name="UnifiedAreaRect" Value="{{0.0374271,0},{0.834047,0},{0.983333,0},{0.934006,0}}" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0374271,0},{0.718159,0},{0.983333,0},{0.790305,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Hair/angleScaling" >
+                <Property Name="Font" Value="DejaVuSans-10" />
+                <Property Name="Text" Value="Angle Scale" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0497079,0},{0.796673,0},{0.527779,0},{0.851981,0}}" />
+            </Window>
+            <Window Type="Vanilla/Checkbox" Name="Root/Hair/depthScaling" >
+                <Property Name="Text" Value="Depth Scale" />
+                <Property Name="UnifiedAreaRect" Value="{{0.497368,0},{0.800318,0},{0.975439,0},{0.855626,0}}" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root/Hair/label1111" >
+                <Property Name="Text" Value="Stroke Scale" />
+                <Property Name="HorzExtent" Value="112" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0402964,0},{0.855791,0},{0.594983,0},{0.925816,0}}" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/strokeScale" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.608013,0},{0.85011,0},{0.990827,0},{0.931451,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/MultiLineEditbox" Name="Root/Hair/strokeLimit" >
+                <Property Name="Text" >
+</Property>
+                <Property Name="MaxTextLength" Value="1073741823" />
+                <Property Name="UnifiedAreaRect" Value="{{0.608598,0},{0.926932,0},{0.991412,0},{1.00827,0}}" />
+                <Property Name="TextParsingEnabled" Value="False" />
+            </Window>
+            <Window Type="Vanilla/StaticText" Name="Root/Hair/label11112" >
+                <Property Name="Text" Value="Stroke Limit" />
+                <Property Name="HorzExtent" Value="109" />
+                <Property Name="VertExtent" Value="17.4791" />
+                <Property Name="UnifiedAreaRect" Value="{{0.0432204,0},{0.932277,0},{0.597907,0},{1.00679,0}}" />
             </Window>
         </Window>
     </Window>
