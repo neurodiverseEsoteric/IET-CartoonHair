@@ -115,7 +115,8 @@ public:
 	void setBendingSpringStiffness(float value);
 	void setTorsionSpringStiffness(float value);
 	void setBlendingSpringStiffness(float value);
-	void setBlendingCurve(float a,float b, float);
+	void setBlendingCurve(float a,float b, float c);
+	void setSilhouetteCurve(float a, float b, float c);
 	void rebuildMesh(int hairResolution, int shapeResolution);
 	
 private:
@@ -212,6 +213,7 @@ private:
 	bool m_variableSilhouetteIntensity, m_sobelEnabled, m_hatchingEnabled, m_simpleHatching;
 	bool m_angleScalingEnabled, m_depthScalingEnabled;
 	float m_zMin,m_zScale, m_blinnS, m_specTexS, m_backlightS, m_strokeScale, m_silhouetteStrokeScale, m_silhouetteStrokeLimit;
+	float m_silhouetteA,m_silhouetteB,m_silhouetteC;
 	Ogre::Vector4 m_hairColour;
 	int m_hairResolution, m_shapeResolution;
 

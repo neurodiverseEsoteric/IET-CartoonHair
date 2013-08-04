@@ -67,6 +67,9 @@ HairModel::HairModel(std::string directory, std::string animation, Ogre::Camera 
 	m_shapeResolution = NUM_HAIR_SHAPE_SAMPLES;
 	m_silhouetteStrokeLimit = STROKE_LIMIT;
 	m_silhouetteStrokeScale = STROKE_SCALE;
+	m_silhouetteA = SILHOUETTE_A;
+	m_silhouetteB = SILHOUETTE_B;
+	m_silhouetteC = SILHOUETTE_C;
 
 	m_hairColour = Ogre::Vector3(RED,GREEN,BLUE);
 
@@ -1338,7 +1341,7 @@ void HairModel::generateEdges(bool update)
 				}
 
 				float t = (float)minNode/(strnd->m_nodes.size()-1);
-				silhouetteIntensity = (1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
+				silhouetteIntensity = Ogre::Math::Abs(m_silhouetteA*t*t + m_silhouetteB*t + m_silhouetteC);//(1.0f-Ogre::Math::Cos(t*Ogre::Math::PI))*0.5f;
 				silhouetteIntensities.push_back(silhouetteIntensity);
 				//since 2 points are added on the last silhouette - we need to add the last intensity again
 				//or else we will have an index overflow
@@ -1796,6 +1799,13 @@ void HairModel::setBlendingCurve(float a,float b, float c)
 	m_blendingA = a;
 	m_blendingB = b;
 	m_blendingC = c;
+}
+
+void HairModel::setSilhouetteCurve(float a, float b, float c)
+{
+	m_silhouetteA = a;
+	m_silhouetteB = b;
+	m_silhouetteC = c;
 }
 
 void HairModel::updateLinks()

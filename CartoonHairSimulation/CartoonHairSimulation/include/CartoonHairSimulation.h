@@ -68,6 +68,7 @@ public:
 	bool dilationValuesChanged(const CEGUI::EventArgs& e);
 	bool silhouetteStrokeScaleChanged(const CEGUI::EventArgs& e);
 	bool silhouetteStrokeLimitChanged(const CEGUI::EventArgs& e);
+	bool silhouetteCurveChanged(const CEGUI::EventArgs& e);
 
 
 protected:
@@ -121,6 +122,7 @@ protected:
 	CEGUI::MultiLineEditbox *m_redBox, *m_greenBox, *m_blueBox, *m_minMarginBox, *m_maxMarginBox;
 	CEGUI::MultiLineEditbox *m_edgeStiffBox, *m_bendStiffBox, *m_torsionStiffBox, *m_anchorStiffBox;
 	CEGUI::MultiLineEditbox *m_hairABox, *m_hairBBox, *m_hairCBox, *m_springABox, *m_springBBox, *m_springCBox;
+	CEGUI::MultiLineEditbox *m_silhouetteABox, *m_silhouetteBBox, *m_silhouetteCBox;
 	CEGUI::MultiLineEditbox *m_hairResolutionBox, *m_shapeResolutionBox , *m_edgeThresholdBox, *m_xDilationBox, *m_yDilationBox;
 	CEGUI::MultiLineEditbox *m_silhouetteStrokeLimitBox, *m_silhouetteStrokeScaleBox;
 	CEGUI::ButtonBase *m_alterMarginsButton, *m_rebuildMeshButton;

@@ -89,7 +89,7 @@ material IETCartoonHair/TAMMaterial
 			lighting off
 			texture_unit
 			{
-				texture dashedstroke.png 2d
+				texture edge2.png 2d
 			}
 		}
 	}
@@ -125,11 +125,11 @@ material IETCartoonHair/SolidSilhouetteMaterial
 			fragment_program_ref IETCartoonHair/SolidSilhouetteFragmentShader
 			{
 				param_named edgeTexture int 0
-				param_named textureEnabled int 1
+				param_named textureEnabled int 0
 			}
 			texture_unit 0
 			{
-				texture edge.png 2d
+				texture finaledge2.png 2d
 				tex_address_mode wrap
 				filtering trilinear
 			}
@@ -160,12 +160,12 @@ material IETCartoonHair/EdgeMaterial
 			{
 				param_named edgeTexture int 0
 				param_named idTexture int 1
-				param_named range float 0.045
+				param_named range float 0.005
 			}
 			
 			texture_unit 0
 			{
-				texture edge.png 2d 0
+				texture finaledge2.png 2d 0
 				tex_address_mode wrap
 				filtering none
 			}

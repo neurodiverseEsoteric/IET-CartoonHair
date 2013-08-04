@@ -67,7 +67,7 @@ void main()
 		specular = specular + texture2D(specularTexture,vec2(i,specIndex),0.0).xyz;
 	}
 	
-	vec4 backlighting = vec4(1);
+	vec4 backlighting = vec4(0);
 	if(backlightingEnabled == 1)
 	{
 		float backlightingIndex = pow(abs(dot(n,viewDirection)),backlightingS);
@@ -159,5 +159,5 @@ void main()
 		}
 	}
 	
-	gl_FragColor = strokeColour*hairColour*cartoonColour*backlighting + specular;
+	gl_FragColor = strokeColour*hairColour*cartoonColour + backlighting + specular;
 }

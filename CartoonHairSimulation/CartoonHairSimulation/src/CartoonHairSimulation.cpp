@@ -452,6 +452,16 @@ bool CartoonHairSimulation::silhouetteStrokeLimitChanged(const CEGUI::EventArgs&
 	return true;
 }
 
+bool CartoonHairSimulation::silhouetteCurveChanged(const CEGUI::EventArgs& e)
+{
+	m_hairModel->setSilhouetteCurve(
+		stringToFloat(m_silhouetteABox->getText().c_str()),
+		stringToFloat(m_silhouetteBBox->getText().c_str()),
+		stringToFloat(m_silhouetteCBox->getText().c_str())
+		);
+	return true;
+}
+
 //-------------------------------------------------------------------------------------
 bool CartoonHairSimulation::configure(void)
 {
@@ -834,6 +844,9 @@ void CartoonHairSimulation::createScene(void)
 	m_shapeResolutionBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/shapeResolution");
 	m_silhouetteStrokeScaleBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/strokeScale");
 	m_silhouetteStrokeLimitBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/strokeLimit");
+	m_silhouetteABox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/silhouetteA");
+	m_silhouetteBBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/silhouetteB");
+	m_silhouetteCBox = (CEGUI::MultiLineEditbox*) m_guiRoot->getChildRecursive("Root/Hair/silhouetteC");
 
 	m_normalsBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/normals");
 	m_debugEdgesBox = (CEGUI::Checkbox*) m_guiRoot->getChildRecursive("Root/Debug/debugEdges");
@@ -874,6 +887,9 @@ void CartoonHairSimulation::createScene(void)
 	m_yDilationBox->setText(numberToString(Y_DILATION));
 	m_silhouetteStrokeLimitBox->setText(numberToString(STROKE_LIMIT));
 	m_silhouetteStrokeScaleBox->setText(numberToString(STROKE_SCALE));
+	m_silhouetteABox->setText(numberToString(SILHOUETTE_A));
+	m_silhouetteBBox->setText(numberToString(SILHOUETTE_B));
+	m_silhouetteCBox->setText(numberToString(SILHOUETTE_C));
 
 	//add event handler
 	m_alterMarginsButton->subscribeEvent(CEGUI::PushButton::EventClicked,
@@ -960,6 +976,12 @@ void CartoonHairSimulation::createScene(void)
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::silhouetteStrokeScaleChanged,this));
 	m_silhouetteStrokeLimitBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
 		CEGUI::Event::Subscriber(&CartoonHairSimulation::silhouetteStrokeLimitChanged,this));
+	m_silhouetteABox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::silhouetteCurveChanged,this));
+	m_silhouetteBBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::silhouetteCurveChanged,this));
+	m_silhouetteCBox->subscribeEvent(CEGUI::MultiLineEditbox::EventTextChanged,
+		CEGUI::Event::Subscriber(&CartoonHairSimulation::silhouetteCurveChanged,this));
 
 	//hide some of the debug manual objects
 	m_debugDrawer->getLinesManualObject()->setVisible(m_debugEdgesBox->isSelected());
