@@ -94,10 +94,10 @@ void TAMGenerator::createCamera(void)
     mCamera = mSceneMgr->createCamera("PlayerCam");
 
 	mCamera->setProjectionType(Ogre::ProjectionType::PT_ORTHOGRAPHIC);
-    mCamera->setPosition(Ogre::Vector3(0,0,50));
+    mCamera->setPosition(Ogre::Vector3(0,0,0.1));
     // Look back along -Z
-    mCamera->lookAt(Ogre::Vector3(0,0,-300));
-	mCamera->setOrthoWindow(TEX_SIDE,TEX_SIDE);
+    mCamera->lookAt(Ogre::Vector3(0,0,-1));
+	mCamera->setOrthoWindow(TEX_SIDE+MARGIN,TEX_SIDE+MARGIN);
 
     mCamera->setNearClipDistance(0.1);
 	mCamera->setFarClipDistance(1000);
@@ -269,6 +269,35 @@ float TAMGenerator::getAverageTone(Ogre::PixelBox &pixels)
 	return sum/(pixels.getWidth()*pixels.getHeight());
 }
 
+Ogre::ManualObject* TAMGenerator::createStroke()
+{
+	Ogre::ManualObject *strokeQuad = mSceneMgr->createManualObject();
+	strokeQuad->setDynamic(true);
+	strokeQuad->begin("IETCartoonHair/TAMMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
+		
+	Ogre::Vector3 topLeft(-STROKE_WIDTH/2.0f,STROKE_HEIGHT/2.0f,0);
+	Ogre::Vector3 topRight(STROKE_WIDTH/2.0f,STROKE_HEIGHT/2.0f,0);
+	Ogre::Vector3 bottomLeft(-STROKE_WIDTH/2.0f,-STROKE_HEIGHT/2.0f,0);
+	Ogre::Vector3 bottomRight(STROKE_WIDTH/2.0f,-STROKE_HEIGHT/2.0f,0);
+
+	strokeQuad->position(topLeft);
+	strokeQuad->textureCoord(0,1);
+
+	strokeQuad->position(bottomLeft);
+	strokeQuad->textureCoord(0,0);
+
+	strokeQuad->position(bottomRight);
+	strokeQuad->textureCoord(1,0);
+
+	strokeQuad->position(topRight);
+	strokeQuad->textureCoord(1,1);
+
+	strokeQuad->quad(0,1,2,3);
+	strokeQuad->end();
+
+	return strokeQuad;
+}
+
 //-------------------------------------------------------------------------------------
 void TAMGenerator::createScene(void)
 {
@@ -277,42 +306,28 @@ void TAMGenerator::createScene(void)
 
 	for(int stroke = 0 ; stroke < NUM_STROKES ; stroke++)
 	{
-		Ogre::ManualObject *strokeQuad = mSceneMgr->createManualObject();
+		Ogre::ManualObject *strokeQuad = createStroke();
+		Ogre::ManualObject *overlapStrokeQuad = createStroke();
 		m_strokes.push_back(strokeQuad);
-		strokeQuad->setDynamic(true);
-		strokeQuad->begin("IETCartoonHair/TAMMaterial",Ogre::RenderOperation::OT_TRIANGLE_LIST);
-		
-		Ogre::Vector3 topLeft(-STROKE_WIDTH/2.0f,STROKE_HEIGHT/2.0f,0);
-		Ogre::Vector3 topRight(STROKE_WIDTH/2.0f,STROKE_HEIGHT/2.0f,0);
-		Ogre::Vector3 bottomLeft(-STROKE_WIDTH/2.0f,-STROKE_HEIGHT/2.0f,0);
-		Ogre::Vector3 bottomRight(STROKE_WIDTH/2.0f,-STROKE_HEIGHT/2.0f,0);
-
-		strokeQuad->position(topLeft);
-		strokeQuad->textureCoord(0,1);
-
-		strokeQuad->position(bottomLeft);
-		strokeQuad->textureCoord(0,0);
-
-		strokeQuad->position(bottomRight);
-		strokeQuad->textureCoord(1,0);
-
-		strokeQuad->position(topRight);
-		strokeQuad->textureCoord(1,1);
-
-		strokeQuad->quad(0,1,2,3);
-		strokeQuad->end();
+		m_overlapStrokes.push_back(overlapStrokeQuad);
+		m_overlapVisible.push_back(false);
 
 		Ogre::SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode();
 		node->attachObject(strokeQuad);
+		Ogre::SceneNode *overlapNode = mSceneMgr->getRootSceneNode()->createChildSceneNode();
+		overlapNode->attachObject(overlapStrokeQuad);
 
 		if(stroke>NUM_STROKES/2)
 		{
 			node->roll(Ogre::Radian(Ogre::Degree(90)));
+			overlapNode->roll(Ogre::Radian(Ogre::Degree(90)));
 		}
 
 		node->setVisible(false);
+		overlapNode->setVisible(false);
 		
 		m_strokeNodes.push_back(node);
+		m_overlapStrokeNodes.push_back(overlapNode);
 	}
 
 	//http://www.ogre3d.org/tikiwiki/Intermediate+Tutorial+7
@@ -339,6 +354,8 @@ void TAMGenerator::createScene(void)
 			//based on http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Render+Target+to+QImage+%5BQT%5D
 			float bestAvgToneDifference = 0;
 			Ogre::Vector2 bestPosition(0,0);
+			bool overlapEnabled = false;
+			Ogre::Vector2 overlapPosition(0,0);
 
 			//get the last average tone
 			m_renderTex->copyContentsToMemory(pixels,Ogre::RenderTarget::FB_AUTO);
@@ -346,13 +363,66 @@ void TAMGenerator::createScene(void)
 
 			//find the best candidate
 			m_strokeNodes[stroke]->setVisible(true);
+			std::vector<Ogre::Vector2> overlapStrokePositions;
+			std::vector<bool> overlapStrokeEnabled;
 
 			for(int candidate = 0 ; candidate < STROKE_CANDIDATES ; candidate++)
 			{
 				//generate new position
-				Ogre::Real randX = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
-				Ogre::Real randY = Ogre::Math::RangeRandom(-(TEX_SIDE/2.0f)-PLACEMENT_OVERLAP,(TEX_SIDE/2.0f)+PLACEMENT_OVERLAP);
+				Ogre::Real randX = (stroke>NUM_STROKES/2)?
+					Ogre::Math::RangeRandom(-(EDGE)+LIMIT_OFFSET+(STROKE_HEIGHT/2.0f),(EDGE)-LIMIT_OFFSET-(STROKE_HEIGHT/2.0f)):
+					Ogre::Math::RangeRandom(-(EDGE)+LIMIT_OFFSET,(EDGE)-LIMIT_OFFSET);
+				Ogre::Real randY = (stroke>NUM_STROKES/2)?
+					Ogre::Math::RangeRandom(-(EDGE)+LIMIT_OFFSET,(EDGE)-LIMIT_OFFSET):
+					Ogre::Math::RangeRandom(-(EDGE)+LIMIT_OFFSET+(STROKE_HEIGHT/2.0f),(EDGE)-LIMIT_OFFSET-(STROKE_HEIGHT/2.0f));
 				m_strokeNodes[stroke]->setPosition(randX,randY,0);
+
+				//create overlap strokes if necessary
+				overlapStrokePositions.push_back(Ogre::Vector2(randX,randY));
+				overlapStrokeEnabled.push_back(false);
+
+				//if vertical strokes - we are looking at the y axis
+				if(stroke>NUM_STROKES/2)
+				{
+					//create new stroke object on the bottom
+					if(randY+(STROKE_WIDTH/2.0f) > EDGE)
+					{
+						overlapStrokeEnabled[candidate] = true;
+						float offset = Ogre::Math::Abs((EDGE)-randY);
+						overlapStrokePositions[candidate].y = -(EDGE)+offset;
+					}
+					//create new stroke object on the top
+					else if(randY-(STROKE_WIDTH/2.0f) < -(EDGE))
+					{
+						overlapStrokeEnabled[candidate] = true;
+						float offset = Ogre::Math::Abs(-(EDGE)-randY);
+						overlapStrokePositions[candidate].y = (EDGE)-offset;
+					}
+				}
+				//if horizontal strokes - we are looking at the x axis
+				else
+				{
+					//create new stroke object on the left
+					if(randX+(STROKE_WIDTH/2.0f) > (EDGE))
+					{
+						overlapStrokeEnabled[candidate] = true;
+						float offset = Ogre::Math::Abs((EDGE)-randX);
+						overlapStrokePositions[candidate].x = -(EDGE)+offset;
+					}
+					//create new stroke object on the right
+					else if(randX-(STROKE_WIDTH/2.0f) < -(EDGE))
+					{
+						overlapStrokeEnabled[candidate] = true;
+						float offset = Ogre::Math::Abs(-(EDGE)-randX);
+						overlapStrokePositions[candidate].x = (EDGE)-offset;
+					}
+				}
+
+				m_overlapStrokeNodes[stroke]->setVisible(overlapStrokeEnabled[candidate]);
+				m_overlapStrokeNodes[stroke]->setPosition(
+					overlapStrokePositions[candidate].x,
+					overlapStrokePositions[candidate].y,
+					0);
 
 				//determine contribution
 				m_renderTex->update(false);
@@ -365,11 +435,16 @@ void TAMGenerator::createScene(void)
 					bestAvgToneDifference = difference;
 					bestPosition.x = randX;
 					bestPosition.y = randY;
+					overlapEnabled = overlapStrokeEnabled[candidate];
+					overlapPosition = overlapStrokePositions[candidate];
 				}
 			}
 
 			//candidate found
 			m_strokeNodes[stroke]->setPosition(bestPosition.x,bestPosition.y,0);
+			m_overlapStrokeNodes[stroke]->setPosition(overlapPosition.x,overlapPosition.y,0);
+			m_overlapStrokeNodes[stroke]->setVisible(overlapEnabled);
+			m_overlapVisible[stroke] = overlapEnabled;
 		}
 
 		m_renderTex->update(false);
@@ -402,6 +477,7 @@ void TAMGenerator::createScene(void)
 		for(int stroke = 0 ; stroke < m_strokeNodes.size() ; stroke++)
 		{
 			m_strokeNodes[stroke]->setVisible(false);
+			m_overlapStrokeNodes[stroke]->setVisible(false);
 			//update stroke
 			Ogre::ManualObject *object = m_strokes[stroke];
 			object->beginUpdate(0);
@@ -437,6 +513,7 @@ void TAMGenerator::createScene(void)
 				{
 					count = 0;
 					m_strokeNodes[stroke]->setVisible(true);
+					m_overlapStrokeNodes[stroke]->setVisible(m_overlapVisible[stroke]);
 				}
 			}
 
