@@ -501,9 +501,10 @@ void CartoonHairSimulation::createCamera(void)
     mCamera = mSceneMgr->createCamera("PlayerCam");
 
     // Position it at 50 in Z direction
-    mCamera->setPosition(Ogre::Vector3(0,0,50));
+    mCamera->setPosition(Ogre::Vector3(-20,30,30));
     // Look back along -Z
-    mCamera->lookAt(Ogre::Vector3(0,0,-1));
+    //mCamera->lookAt(Ogre::Vector3(0,0,-1));
+
 	mCamera->setNearClipDistance(0.1);
 	mCamera->setFarClipDistance(1000);
 
@@ -537,7 +538,7 @@ void CartoonHairSimulation::createFrameListener(void)
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
 
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mMouse, this);
-    mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
+    //mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
     mTrayMgr->hideCursor();
 	mTrayMgr->hideTrays();
 
@@ -728,7 +729,7 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"standardhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
+		"windhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
 		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 
@@ -1051,6 +1052,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			m_hairModel->applyHeadTransform(m_firstTransformation,bonePosition,boneOrientation);
 			btVector3 bBonePosition(bonePosition.x,bonePosition.y,bonePosition.z);
 			btQuaternion bBoneOrientation(boneOrientation.x,boneOrientation.y,boneOrientation.z,boneOrientation.w);
+
+			mCamera->lookAt(bonePosition);
 
 			m_headRigidBody->setWorldTransform(btTransform(bBoneOrientation,bBonePosition));
 			if(m_firstTransformation)

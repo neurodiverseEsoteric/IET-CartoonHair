@@ -33,7 +33,7 @@ void main()
 	proj.s = proj.s*strokeScale;
 	proj.t = proj.t*strokeScale;
 	
-	gl_TexCoord[0] = gl_MultiTexCoord0*(1.0f/strokeScale);
+	gl_TexCoord[0] = gl_MultiTexCoord0*strokeScale;
 	
 	vec4 pos = modelViewProjectionMatrix*gl_Vertex;
 	
