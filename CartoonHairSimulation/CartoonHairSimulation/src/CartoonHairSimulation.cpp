@@ -538,7 +538,7 @@ void CartoonHairSimulation::createFrameListener(void)
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
 
     mTrayMgr = new OgreBites::SdkTrayManager("InterfaceName", mWindow, mMouse, this);
-    //mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
+    mTrayMgr->showFrameStats(OgreBites::TL_BOTTOMLEFT);
     mTrayMgr->hideCursor();
 	mTrayMgr->hideTrays();
 
@@ -729,7 +729,7 @@ void CartoonHairSimulation::createScene(void)
 	Ogre::SkeletonInstance *skeleton = m_character->getSkeleton();
 
 	m_hairModel = new HairModel("../Hair/",
-		"windhairanimation.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
+		"demohair.xml", mCamera,light,mWindow,mSceneMgr,mWorld,
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
 		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 

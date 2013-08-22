@@ -1,5 +1,11 @@
 #include "stdafx.h"
-//http://www.ogre3d.org/docs/api/html/classOgre_1_1CompositorInstance_1_1Listener.html
+/*
+Based upon: http://www.ogre3d.org/docs/api/html/classOgre_1_1CompositorInstance_1_1Listener.html
+Ogre's .compositor scripts do not allow programmatic access to shader program variables like you can using .material scripts.
+In order to get around this, we use a compositor listener which is called when the compositor is in action. By setting the variables
+in this object and then having it pass those values to the materials, we can alter the compositor shaders during run-time.
+*/
+
 class HairCompositorListener : public Ogre::CompositorInstance::Listener
 {
 public:
