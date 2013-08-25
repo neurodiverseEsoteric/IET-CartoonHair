@@ -67,8 +67,8 @@ struct HighlightSort
 };
 
 /*
-This class is the core of the project application. It is responsible for generating the hair strands, adding them to the physics simulation
-and rendering them.
+	This class is the core of the project application. It is responsible for generating the hair strands, adding them to the physics simulation
+	and rendering them.
 */
 class HairModel
 {
@@ -78,6 +78,7 @@ public:
 		float edgeStiffness, float bendingStiffness, float torsionStiffness, float anchorStiffness);
 	~HairModel();
 
+	//the manual objects that make up the hair
 	Ogre::ManualObject* getHairManualObject();
 	Ogre::ManualObject* getNormalsManualObject();
 	Ogre::ManualObject* getEdgeManualObject();
@@ -85,13 +86,24 @@ public:
 	Ogre::ManualObject* getDebugEdgesManualObject();
 	Ogre::RenderTexture* getIdBufferTexture();
 
+	//update the position of the hair - used to bind the hair to the character's head bone
 	void applyHeadTransform(bool first, Ogre::Vector3 translation, Ogre::Quaternion rotation);
+
+	//rebuild the hair strand mesh around the simulated strands, create the silhouettes etc
 	void updateManualObject();
+
+	//move the anchors according to their spline curves
 	void updateAnchors(float timestep);
+
+	//change the collision margins between the hair particles and the head
 	void updateCollisionMargins(float min,float max);
+
+	//determine the physical scale of the simulation since the hair is not defined on a millimetre level by rather a metre level due to bullet
+	//limitations
 	float getSimulationScale();
 	void setCurveValues(float a, float b, float c);
 
+	//called by GUI event handlers
 	void enableBlinnSpecular(bool value);
 	void enableSpecularTexture(bool value);
 	void enableBacklightingTexture(bool value);
@@ -154,7 +166,7 @@ private:
 	void insertSilhouette(std::pair<int,int> element, std::vector<std::pair<int,int>> &temp, std::deque<std::pair<int,int>> &silhouette);
 	bool attemptInsert(std::pair<int,int> element, std::deque<std::pair<int,int>> &silhouette);
 
-	//http://stackoverflow.com/questions/13682074/get-2d-screen-point-from-3d-point
+	//based on http://stackoverflow.com/questions/13682074/get-2d-screen-point-from-3d-point
 	Ogre::Vector3 toDeviceCoordinates(Ogre::Vector3 &point,Ogre::Camera *camera);
 	Ogre::Vector3 toWorldCoordinates(Ogre::Vector3 &point, Ogre::Camera *camera);
 
@@ -177,8 +189,6 @@ private:
 	float m_animationSpeed;
 	bool m_positiveInterpolation;
 
-	//temporally coherent hatching variables
-
 	//silhouette variables
 	Ogre::RenderTexture *m_idBuffer;
 	std::vector<Ogre::ColourValue> m_idColours;
@@ -191,7 +201,7 @@ private:
 	//rendering variables
 	std::vector<Ogre::SimpleSpline> m_hairSplines;
 	Ogre::ManualObject *m_hairMesh,*m_normalMesh,*m_edgeMesh,*m_highlightMesh,*m_debugEdges;
-	//Ogre::BillboardSet *m_edgeSet;
+
 	std::vector<std::vector<Ogre::Vector3>> m_strandVertices;
 	std::vector<std::vector<Ogre::Vector3>> m_strandNormals;
 	std::vector<Ogre::Vector2> m_strandTextureCoordinates;

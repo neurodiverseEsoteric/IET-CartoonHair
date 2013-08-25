@@ -1,5 +1,4 @@
 #version 130
-//the hatching code is based off of http://www.cmlab.csie.ntu.edu.tw/~daniel/projects/hatching/hatching.htm
 
 uniform sampler2D cartoonTexture;
 uniform sampler2D stroke1;
@@ -107,6 +106,7 @@ void main()
 		}
 		else
 		{
+			//the hatching code is based off of the single-pass 6-way blending method by http://www.cmlab.csie.ntu.edu.tw/~daniel/projects/hatching/hatching.htm
 			float weight0;
 			float weight1;
 			float weight2;

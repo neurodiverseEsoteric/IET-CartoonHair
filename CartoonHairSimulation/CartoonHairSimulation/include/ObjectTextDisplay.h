@@ -2,8 +2,10 @@
 
 #include "stdafx.h"
 
-/* This class is taken from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger and is used by the
-skeleton drawer class SkeletonDebug*/
+/* 
+	This class is taken from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger and is used by the
+	skeleton drawer class SkeletonDebug
+*/
 
 #ifndef __MovableTextOverlay_H__
 #define __MovableTextOverlay_H__

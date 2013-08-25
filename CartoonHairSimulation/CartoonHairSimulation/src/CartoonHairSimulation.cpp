@@ -39,6 +39,7 @@ Ogre::Quaternion localToWorldOrientation(Ogre::Bone* bone, Ogre::Entity* entity)
 	return entity->getParentSceneNode()->convertLocalToWorldOrientation(orient);
 }
 
+//the two functions are used to convert set the GUI widget values and to extract any user input values from the GUI
 std::string numberToString(long double value)
 {
 	try
@@ -77,7 +78,7 @@ int stringToInt(std::string value)
 
 /*
 Convenience function from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Basic+Tutorial+7
-Convertes mouse button presses to a format compatible with CEGUI
+Converts mouse button presses to a format compatible with CEGUI
 */
 CEGUI::MouseButton convertButton(OIS::MouseButtonID buttonID)
 {
@@ -733,6 +734,7 @@ void CartoonHairSimulation::createScene(void)
 		HAIR_QUADRATIC_A,HAIR_QUADRATIC_B,HAIR_QUADRATIC_C,BLENDING_QUADRATIC_A,BLENDING_QUADRATIC_B,BLENDING_QUADRATIC_C,
 		EDGE_STIFFNESS,BENDING_STIFFNESS,TORSION_STIFFNESS,ANCHOR_STIFFNESS);
 
+	//find the head bone - the name had to be found using an Ogre model viewer such as Ogre Meshy http://www.ogre3d.org/tikiwiki/Ogre+Meshy
 	if(skeleton->hasBone("Joint8"))
 	{
 		m_headBone = skeleton->getBone("Joint8");
@@ -1056,6 +1058,8 @@ bool CartoonHairSimulation::frameRenderingQueued(const Ogre::FrameEvent& evt)
 			mCamera->lookAt(bonePosition);
 
 			m_headRigidBody->setWorldTransform(btTransform(bBoneOrientation,bBonePosition));
+			//if we don't update update the anchors after doing the initial transformation of the hair - they will be incredibly stretched
+			//and the hair will look very unusual until we update them
 			if(m_firstTransformation)
 			{
 				m_hairModel->updateAnchors(timestep);

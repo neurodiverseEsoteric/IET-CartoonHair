@@ -13,12 +13,13 @@ void main()
 	float dx = 1.0/width;
 	float dy = 1.0/height;
 	
-	//based on http://www.blitzbasic.com/Community/posts.php?topic=85263
+	//sobel method is based on http://www.blitzbasic.com/Community/posts.php?topic=85263
 	//(-1,1) (0,1) (1,1)
 	//(-1,0) (0,0) (1,0)
 	//(-1,-1) (0,-1) (1,-1)
 	vec4 sample[9];
 	
+	//get sampling points
 	sample[0] = texture2D(frameBuffer,texc.xy+vec2(-1*dx,1*dy));
 	sample[1] = texture2D(frameBuffer,texc.xy+vec2(0,1*dy));
 	sample[2] = texture2D(frameBuffer,texc.xy+vec2(1*dx,1*dy));
@@ -31,11 +32,14 @@ void main()
 	sample[7] = texture2D(frameBuffer,texc.xy+vec2(0,-1*dy));
 	sample[8] = texture2D(frameBuffer,texc.xy+vec2(1,-1*dy));
 	
+	//apply kernels
 	vec4 h = sample[2] + (2.0*sample[5]) + sample[8] - (sample[0] + (2.0*sample[3]) + sample[6]);
 	vec4 v = sample[0] + (2.0*sample[1]) + sample[2] - (sample[6] + (2.0*sample[7]) + sample[8]);
 	
+	//determine edge output
 	vec4 edgeOutput = sqrt((h*h)+(v*v));
 	
+	//threshold the edge to get uniform colour
 	vec4 edgeColour = vec4(1);
 	if(edgeOutput.r > edgeThreshold)
 	{

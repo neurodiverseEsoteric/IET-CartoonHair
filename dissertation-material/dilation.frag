@@ -10,6 +10,7 @@ varying vec2 texc;
 
 void main()
 { 
+	//determine the size of a pixel in the texture
 	float dx = 1.0/width;
 	float dy = 1.0/height;
 	
@@ -21,7 +22,7 @@ void main()
 	
 	vec4 pixelColour = vec4(1);
 	
-	//get the colour value of each pixel around the centre
+	//get the colour value of each pixel around the centre - if we encounter an edge then this fragment is also marked as an edge
 	for(int y = startY ; y < endY ; y++)
 	{
 		for(int x = startX ; x < endX ; x++)

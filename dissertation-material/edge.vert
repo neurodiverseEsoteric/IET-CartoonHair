@@ -6,7 +6,8 @@ varying vec2 texc;
 
 void main()
 {
-	//partially derived from http://www.blitzbasic.com/Community/posts.php?topic=85263
+	//we pass the current texture position to the fragment shader so that we can identify the current pixel's position in the id buffer
+	//this method was derived from http://www.blog.nathanhaze.com/glsl-edge-detection/
 	texc = vec2(gl_MultiTexCoord0);
 	idColour = gl_Color;
     gl_Position = modelViewProjectionMatrix*gl_Vertex;

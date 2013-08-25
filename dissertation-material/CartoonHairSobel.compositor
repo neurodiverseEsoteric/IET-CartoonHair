@@ -1,19 +1,21 @@
-//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Compositor
+// This is the compositor script necessary for the image-space silhouette detection
 compositor IETCartoonHair/SilhouetteCompositor
 {
 	technique
 	{
-		
+		//create the textures we need for storing the various layers
 		texture original target_width target_height PF_A8R8G8B8
 		texture scene target_width target_height PF_A8R8G8B8
 		texture edge target_width target_height PF_A8R8G8B8
 		texture dilation target_width target_height PF_A8R8G8B8
 		
+		//get the original scene - this has all the other effects applied such as cartoon shading, hatching and so on
 		target original
 		{
 			input previous
 		}
 		
+		//re-render the scene using solid shaded to get cleaner edge detection
 		target scene
 		{
 			input none
@@ -22,6 +24,7 @@ compositor IETCartoonHair/SilhouetteCompositor
 			
 			}
 			
+			//this tells the material listener to swap all object materials to a solid shaded technique
 			material_scheme solid
 			
 			pass render_scene
@@ -30,6 +33,7 @@ compositor IETCartoonHair/SilhouetteCompositor
 			}
 		}
 
+		//apply the sobel edge detection to the solid shaded scene to produce an edge image with a 1 pixel thick edge
 		target edge
 		{
 			input none
@@ -41,6 +45,7 @@ compositor IETCartoonHair/SilhouetteCompositor
 			}
 		}
 		
+		//apply dilation to the edge image to increase the edge thickness
 		target dilation
 		{
 			input none
@@ -51,6 +56,7 @@ compositor IETCartoonHair/SilhouetteCompositor
 			}
 		}
 		
+		//multiply the dilation and original scene buffers together to give us the final scene
 		target_output
 		{
 			input none

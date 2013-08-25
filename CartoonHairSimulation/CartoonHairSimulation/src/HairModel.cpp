@@ -759,7 +759,7 @@ void HairModel::generateVertices(bool update, int section)
 {
 	btSoftBody* body = m_strandSoftBodies[section];
 
-	//create hair shape copy
+	//create hair shape copy - so that we can rotation it as much as we want without having to worrying about resetting it
 	std::vector<Ogre::Vector3> hairShapeCopy;
 	hairShapeCopy.reserve(m_hairShape.size());
 
@@ -993,6 +993,7 @@ bool HairModel::isSilhouette(Edge *edge,int section, Ogre::Vector3 eyeVector)
 }
 
 //based on A Stylized Cartoon Hair Renderer
+//by Jung Shin, Michael Haller and R. Mukundan
 void HairModel::generateSpecularHighlights(bool update)
 {
 	if (!update)
@@ -1204,14 +1205,16 @@ void HairModel::generateSpecularHighlights(bool update)
 			generateQuadStrip(screenSpacePoints,points,zMin,zMax,HIGHLIGHT_SCALE);
 			m_highlightMesh->beginUpdate(group);
 		
-		/*	for(int i = 0 ; i < points.size() ; i+=2)
+			/*
+			for(int i = 0 ; i < points.size() ; i+=2)
 			{
 				m_highlightMesh->position(points[i]);
 				m_highlightMesh->textureCoord(i/2,1);
 			
 				m_highlightMesh->position(points[i+1]);
 				m_highlightMesh->textureCoord(i/2,0);
-			}*/
+			}
+			*/
 	
 			m_highlightMesh->position(points[0]);
 			m_highlightMesh->textureCoord(0,1);
@@ -1308,7 +1311,8 @@ void HairModel::generateEdges(bool update)
 
 		
 		//we now have the silhouettes - now to convert the points to device coordinates
-		//based off of artistic-sils-300dpi.pdf
+		//based off of artistic-sils-300dpi.pdf - Artistic Silhouettes a Hybrid Approach
+		//by J.D. Northrup and Lee Markosian
 		//and
 		//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=GetScreenspaceCoords
 		float zMin = std::numeric_limits<float>::max();
@@ -1414,7 +1418,7 @@ void HairModel::generateEdges(bool update)
 		}
 		else
 		{
-			//if we don't give texture coordinates - it breaks the texture coordinates of any strands using this section later
+			//even though if we are here - the object is invisible - if we don't give texture coordinates - it breaks the texture coordinates of any strands using this section later
 			m_edgeMesh->position(Ogre::Vector3(0,0,0));
 			m_edgeMesh->textureCoord(0,1);
 			m_edgeMesh->colour(m_idColours[section]);
@@ -1517,7 +1521,7 @@ bool HairModel::attemptInsert(std::pair<int,int> element, std::deque<std::pair<i
 	return false;
 }
 
-//http://gv2.cs.tcd.ie/mcdonner/Teaching/Lectures/ComputerGraphics2012_L2.pdf
+//based off of http://gv2.cs.tcd.ie/mcdonner/Teaching/Lectures/ComputerGraphics2012_L2.pdf
 Ogre::Vector3 HairModel::calculateNormal(Ogre::Vector3 v1, Ogre::Vector3 v2, Ogre::Vector3 v3)
 {
 	//have to flip the order of the normal as the vertex winding appears to have gone wrong

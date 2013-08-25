@@ -1,9 +1,9 @@
 #include "stdafx.h"
 
 /*
-This class is responsible for producing a visualisation for the characters skeleton. 
-It is helpful for determining where to parent the hair.
-The code is take from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger
+	This class is responsible for producing a visualisation for the characters skeleton. 
+	It is helpful for determining where to parent the hair.
+	The code is take from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger
 */
 
 #ifndef SKELETONDEBUG_H_INCLUDED

@@ -1,4 +1,6 @@
-//http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger
+/*
+Taken from http://www.ogre3d.org/tikiwiki/tiki-index.php?page=Skeleton+Debugger
+*/
 
 #include "stdafx.h"
 #include "SkeletonDebug.h"

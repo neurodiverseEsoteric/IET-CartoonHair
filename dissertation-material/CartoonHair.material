@@ -1,3 +1,4 @@
+//references to the shader programs
 vertex_program IETCartoonHair/ToonVertexShader glsl
 {
 	source toon.vert
@@ -48,7 +49,7 @@ fragment_program IETCartoonHair/DilationFragmentShader glsl
 	source dilation.frag
 }
 
-//http://www.ogre3d.org/tikiwiki/Materials#Solid_colour
+//simple black material based on http://www.ogre3d.org/tikiwiki/Materials#Solid_colour
 material IETCartoonHair/BlackMaterial
 {
 	technique
@@ -63,6 +64,7 @@ material IETCartoonHair/BlackMaterial
 	}
 }
 
+//this is the material is used to texture the ID buffer preview quad that can be enabled in the debug menu
 material IETCartoonHair/IdBufferMaterial
 {
 	technique
@@ -79,6 +81,7 @@ material IETCartoonHair/IdBufferMaterial
 	}
 }
 
+//this is used by the hatching texture generator to determine what stroke image we will use as the basis for the hatching texture
 material IETCartoonHair/TAMMaterial
 {
 	technique
@@ -89,12 +92,14 @@ material IETCartoonHair/TAMMaterial
 			lighting off
 			texture_unit
 			{
+				//replace the name of the texture with whatever base stroke you want to appear in the hatching texture
 				texture edge2.png 2d
 			}
 		}
 	}
 }
 
+//simple solid material shader used when applying ID colours
 material IETCartoonHair/SolidMaterial
 {
 	technique
@@ -106,6 +111,7 @@ material IETCartoonHair/SolidMaterial
 	}
 }
 
+//simple solid material shader for use with silhouettes when rendering the ID buffer
 material IETCartoonHair/SolidSilhouetteMaterial
 {
 	technique
@@ -125,10 +131,13 @@ material IETCartoonHair/SolidSilhouetteMaterial
 			fragment_program_ref IETCartoonHair/SolidSilhouetteFragmentShader
 			{
 				param_named edgeTexture int 0
+				//textureEnabled = 0 means the silhouette edge is not included in the ID buffer
+				//1 means the silhouette edge is included
 				param_named textureEnabled int 0
 			}
 			texture_unit 0
 			{
+				//set the texture name to the silhouette texture being used
 				texture finaledge2.png 2d
 				tex_address_mode wrap
 				filtering trilinear
@@ -139,7 +148,7 @@ material IETCartoonHair/SolidSilhouetteMaterial
 
 material IETCartoonHair/EdgeMaterial
 {
-	//http://www.ogre3d.org/tikiwiki/Materials#Stained_Glass_Window
+	//based on code from http://www.ogre3d.org/tikiwiki/Materials#Stained_Glass_Window
 	technique
 	{
 		pass
@@ -160,11 +169,14 @@ material IETCartoonHair/EdgeMaterial
 			{
 				param_named edgeTexture int 0
 				param_named idTexture int 1
+				//ID buffer tolerance - in case of floating point error
 				param_named range float 0.005
 			}
 			
 			texture_unit 0
 			{
+				//set the texture name to the silhouette stroke you wish to use - don't forget to change the texture
+				//name in the solid shader if you do that
 				texture finaledge2.png 2d 0
 				tex_address_mode wrap
 				filtering none
@@ -172,6 +184,7 @@ material IETCartoonHair/EdgeMaterial
 			
 			texture_unit 1
 			{
+				//the ID buffer used to determine silhouette visiblity - do not change as it is set programmatically
 				texture idBuffer 2d
 				filtering none
 			}
@@ -180,6 +193,7 @@ material IETCartoonHair/EdgeMaterial
 	}
 }
 
+//dilation material for image-space silhouette detection compositor pass
 material IETCartoonHair/Dilation
 {
 	technique
@@ -205,6 +219,7 @@ material IETCartoonHair/Dilation
 	}
 }
 
+//sobel material for image-space silhouette detection compositor pass
 material IETCartoonHair/Sobel
 {
 	technique
@@ -230,6 +245,8 @@ material IETCartoonHair/Sobel
 	}
 }
 
+//this pass combines the dilation and original scene buffers together
+//to produce the final image-space silhouette i
 material IETCartoonHair/Composite
 {
 	technique
@@ -252,6 +269,7 @@ material IETCartoonHair/Composite
 	}
 }
 
+//Shin specular sampling highlight method material
 material IETCartoonHair/HighlightMaterial
 {
 	technique
@@ -261,12 +279,14 @@ material IETCartoonHair/HighlightMaterial
 			cull_hardware none
 			cull_software none
 			
+			//alot of experimentation is needed to get the visibility correct
 			//depth_check off
 			depth_bias 2000
 			scene_blend alpha_blend
 			
 			texture_unit 0
 			{
+				//change the texture name to whatever highlight texture you want
 				texture highlight.png 2d
 				tex_address_mode wrap
 				filtering none
@@ -275,6 +295,8 @@ material IETCartoonHair/HighlightMaterial
 	}
 }
 
+//the hair material - applies the cartoon shading, blinn specular, back lighting, depth dependent detail,
+//hatching and so on
 material IETCartoonHair/HairMaterial
 {
     technique
@@ -303,12 +325,16 @@ material IETCartoonHair/HairMaterial
 				param_named backlightingTexture int 8
 			}
 			
+			//the 2D depth-dependent cartoon shading texture
 			texture_unit 0
 			{
 				texture cartoon2d.png 2d
 				tex_address_mode clamp
 				filtering none
 			}
+			
+			//texture_unit 1 to 6 are the hatching texture samplers - they need to be dds format for custom mipmaps
+			//to work
 			texture_unit 1
 			{
 				texture stroke0.dds 2d
@@ -339,7 +365,6 @@ material IETCartoonHair/HairMaterial
 				tex_address_mode wrap
 				filtering none
 			}
-			
 			texture_unit 6
 			{
 				texture stroke5.dds 2d
@@ -347,6 +372,7 @@ material IETCartoonHair/HairMaterial
 				filtering none
 			}
 			
+			//2D custom specular response texture
 			texture_unit 7
 			{
 				texture cartoonSpecular.png 2d
@@ -354,6 +380,7 @@ material IETCartoonHair/HairMaterial
 				filtering none
 			}
 			
+			//2D custom back light response texture
 			texture_unit 8
 			{
 				texture cartoonBacklighting.png
